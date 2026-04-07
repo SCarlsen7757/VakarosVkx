@@ -1,0 +1,136 @@
+@page "/sessions/{Id:int}"
+@using Vakaros.Vkx.Shared.Dtos
+@using Vakaros.Vkx.Web.Services
+@inject VakarosApiClient Api
+@inject NavigationManager Nav
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Session @Id</PageTitle>
+
+<nav>
+    <a href="/sessions">← Sessions</a>
+</nav>
+
+@if (_loading)
+{
+    <p><em>Loading session…</em></p>
+}
+else if (_error is not null)
+{
+    <div class="api-error" role="alert">
+        <span class="api-error-icon">⚠️</span>
+        <div class="api-error-body">
+            <strong>Unable to load session</strong>
+            <p>@_error</p>
+        </div>
+    </div>
+}
+else if (_session is null)
+{
+    <p>Session not found.</p>
+}
+else
+{
+    <h1>@_session.FileName</h1>
+
+    <div class="session-meta">
+        <dl>
+            <dt>Boat</dt>
+            <dd>@(_session.BoatName ?? "—")</dd>
+
+            <dt>Course</dt>
+            <dd>@(_session.CourseName ?? "—")</dd>
+
+            <dt>Started</dt>
+            <dd>@_session.StartedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+
+            <dt>Ended</dt>
+            <dd>@_session.EndedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+
+            <dt>Telemetry Rate</dt>
+            <dd>@_session.TelemetryRateHz Hz</dd>
+
+            <dt>Format Version</dt>
+            <dd>@_session.FormatVersion</dd>
+
+            @if (_session.Notes is not null)
+            {
+                <dt>Notes</dt>
+                <dd>@_session.Notes</dd>
+            }
+        </dl>
+    </div>
+
+    <h2>Races</h2>
+
+    @if (_session.Races.Count == 0)
+    {
+        <p>No races detected in this session.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Race #</th>
+                    <th>Started</th>
+                    <th>Ended</th>
+                    <th>Duration</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var race in _session.Races)
+                {
+                    <tr>
+                        <td>@race.RaceNumber</td>
+                        <td>@race.StartedAt.LocalDateTime.ToString("HH:mm:ss")</td>
+                        <td>@race.EndedAt.LocalDateTime.ToString("HH:mm:ss")</td>
+                        <td>@FormatDuration(race.DurationSeconds)</td>
+                        <td>
+                            <a href="/sessions/@Id/races/@race.RaceNumber" class="btn-view-race">
+                                View Race →
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private SessionDetailDto? _session;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _session = await Api.GetSessionAsync(Id);
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Could not reach the API. Please check that the server is running and try again.";
+        }
+        catch (Exception ex)
+        {
+            _error = $"An unexpected error occurred: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string FormatDuration(double totalSeconds)
+    {
+        var span = TimeSpan.FromSeconds(totalSeconds);
+        return span.TotalHours >= 1
+            ? $"{(int)span.TotalHours}h {span.Minutes:D2}m {span.Seconds:D2}s"
+            : $"{span.Minutes}m {span.Seconds:D2}s";
+    }
+}

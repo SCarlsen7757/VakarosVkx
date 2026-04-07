@@ -1,10 +1,17 @@
 using Vakaros.Vkx.Web.Components;
+using Vakaros.Vkx.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHttpClient<VakarosApiClient>(client =>
+{
+    var baseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:8080";
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 var app = builder.Build();
 

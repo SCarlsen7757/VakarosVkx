@@ -1,3 +1,70 @@
+/* ── App layout ──────────────────────────────────────────────────────── */
+
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+
+.sidebar {
+    width: 220px;
+    background: #1d3557;
+    color: #f1faee;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.sidebar-brand {
+    padding: 1.25rem 1rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+    .sidebar-brand a {
+        color: #a8dadc;
+        text-decoration: none;
+    }
+
+.sidebar-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0.5rem 0;
+}
+
+    .sidebar-nav li a,
+    .sidebar-nav li ::deep a {
+        display: block;
+        padding: 0.6rem 1rem;
+        color: #f1faee;
+        text-decoration: none;
+        transition: background 0.15s;
+    }
+
+        .sidebar-nav li a:hover,
+        .sidebar-nav li ::deep a:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .sidebar-nav li a.active,
+        .sidebar-nav li ::deep a.active {
+            background: rgba(255,255,255,0.15);
+            border-left: 3px solid #a8dadc;
+        }
+
+/* ── Main content ────────────────────────────────────────────────────── */
+
+.main-content {
+    flex: 1;
+    padding: 1.5rem 2rem;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+/* ── Error UI ────────────────────────────────────────────────────────── */
+
 #blazor-error-ui {
     color-scheme: light only;
     background: lightyellow;

@@ -1,6 +1,316 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #212529;
+}
+
 h1:focus {
     outline: none;
 }
+
+/* ── Tables ──────────────────────────────────────────────────────────── */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+    .table thead th {
+        background: #264653;
+        color: #f1faee;
+        padding: 0.65rem 0.9rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .table tbody td {
+        padding: 0.6rem 0.9rem;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 0.9rem;
+    }
+
+    .table tbody tr:hover {
+        background: #f1faee;
+    }
+
+    .table a {
+        color: #1d3557;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+        .table a:hover {
+            text-decoration: underline;
+        }
+
+.btn-view-race {
+    color: #457b9d;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* ── Session detail meta ─────────────────────────────────────────────── */
+
+.session-meta {
+    background: #fff;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+    .session-meta dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.3rem 1.5rem;
+        margin: 0;
+    }
+
+    .session-meta dt {
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.85rem;
+    }
+
+    .session-meta dd {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+/* ── Breadcrumb ──────────────────────────────────────────────────────── */
+
+.breadcrumb,
+nav:has(a[href="/sessions"]) {
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+    .breadcrumb a,
+    nav a {
+        color: #457b9d;
+        text-decoration: none;
+    }
+
+        .breadcrumb a:hover,
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+/* ── Race viewer layout ──────────────────────────────────────────────── */
+
+.race-map-container {
+    height: 45vh;
+    min-height: 350px;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+}
+
+/* ── Mode toggle ─────────────────────────────────────────────────────── */
+
+.mode-toggle {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    width: fit-content;
+}
+
+    .mode-toggle button {
+        padding: 0.5rem 1.5rem;
+        border: 1px solid #dee2e6;
+        background: #fff;
+        color: #495057;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: background 0.15s, color 0.15s;
+    }
+
+        .mode-toggle button:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+
+        .mode-toggle button:last-child {
+            border-radius: 0 6px 6px 0;
+            border-left: none;
+        }
+
+        .mode-toggle button.active {
+            background: #264653;
+            color: #f1faee;
+            border-color: #264653;
+        }
+
+        .mode-toggle button:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+/* ── Charts container ────────────────────────────────────────────────── */
+
+.charts-container {
+    background: #fff;
+    border-radius: 6px;
+    padding: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.telemetry-charts > div {
+    border-bottom: 1px solid #e9ecef;
+}
+
+    .telemetry-charts > div:last-child {
+        border-bottom: none;
+    }
+
+/* ── Gauges grid ─────────────────────────────────────────────────────── */
+
+.gauges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.gauge-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    text-align: center;
+}
+
+.gauge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.gauge-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6c757d;
+    margin-bottom: 0.4rem;
+}
+
+.gauge-value {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.gauge-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1d3557;
+    line-height: 1;
+}
+
+.gauge-unit {
+    font-size: 0.95rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.gauge-no-data {
+    color: #adb5bd;
+}
+
+.gauge-negative {
+    color: #e63946;
+}
+
+.gauge-toggle {
+    background: none;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #495057;
+    line-height: 1;
+}
+
+    .gauge-toggle:hover {
+        background: #e9ecef;
+    }
+
+/* ── Angle gauge SVG ─────────────────────────────────────────────────── */
+
+.angle-visual {
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0;
+}
+
+    .angle-visual svg {
+        display: block;
+    }
+
+.angle-gauge .gauge-header .gauge-label {
+    margin-bottom: 0;
+}
+
+/* ── Mark tooltip (Leaflet) ──────────────────────────────────────────── */
+
+.mark-tooltip {
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(38, 70, 83, 0.9);
+    color: #f1faee;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 6px;
+}
+
+/* ── API connection error ────────────────────────────────────────────── */
+
+.api-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-left: 4px solid #e63946;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    color: #664d03;
+    margin-bottom: 1.5rem;
+}
+
+.api-error-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.api-error-body strong {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.api-error-body p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* ── Validation / error ──────────────────────────────────────────────── */
 
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;

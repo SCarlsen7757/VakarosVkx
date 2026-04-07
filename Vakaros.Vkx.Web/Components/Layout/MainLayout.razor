@@ -1,6 +1,28 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<div class="app-layout">
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <a href="/">Vakaros VKX</a>
+        </div>
+        <ul class="sidebar-nav">
+            <li>
+                <NavLink href="/" Match="NavLinkMatch.All">
+                    Home
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="/sessions" Match="NavLinkMatch.Prefix">
+                    Sessions
+                </NavLink>
+            </li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        @Body
+    </main>
+</div>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

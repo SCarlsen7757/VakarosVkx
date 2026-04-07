@@ -1,4 +1,4 @@
-namespace Vakaros.Vkx.Api.Models.Dtos;
+namespace Vakaros.Vkx.Shared.Dtos;
 
 // ── Boats ───────────────────────────────────────────────────────────────────
 

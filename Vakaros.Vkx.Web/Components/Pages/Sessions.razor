@@ -1,0 +1,92 @@
+@page "/sessions"
+@using Vakaros.Vkx.Shared.Dtos
+@using Vakaros.Vkx.Web.Services
+@inject VakarosApiClient Api
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Sessions</PageTitle>
+
+<h1>Sessions</h1>
+
+@if (_loading)
+{
+    <p><em>Loading sessions…</em></p>
+}
+else if (_error is not null)
+{
+    <div class="api-error" role="alert">
+        <span class="api-error-icon">⚠️</span>
+        <div class="api-error-body">
+            <strong>Unable to load sessions</strong>
+            <p>@_error</p>
+        </div>
+    </div>
+}
+else if (_sessions is null || _sessions.Count == 0)
+{
+    <p>No sessions found. Upload a VKX file via the API to get started.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>File</th>
+                <th>Boat</th>
+                <th>Course</th>
+                <th>Started</th>
+                <th>Duration</th>
+                <th>Races</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in _sessions)
+            {
+                <tr>
+                    <td>
+                        <a href="/sessions/@s.Id">@s.FileName</a>
+                    </td>
+                    <td>@(s.BoatName ?? "—")</td>
+                    <td>@(s.CourseName ?? "—")</td>
+                    <td>@s.StartedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@FormatDuration(s.StartedAt, s.EndedAt)</td>
+                    <td>@s.RaceCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<SessionSummaryDto>? _sessions;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _sessions = await Api.GetSessionsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            _error = "Could not reach the API. Please check that the server is running and try again.";
+        }
+        catch (Exception ex)
+        {
+            _error = $"An unexpected error occurred: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string FormatDuration(DateTimeOffset start, DateTimeOffset end)
+    {
+        var span = end - start;
+        return span.TotalHours >= 1
+            ? $"{(int)span.TotalHours}h {span.Minutes:D2}m"
+            : $"{span.Minutes}m {span.Seconds:D2}s";
+    }
+}
