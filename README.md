@@ -185,7 +185,7 @@ The output JSON is written next to the source file.
 
 ## Roadmap
 
-- [ ] **Web UI in Docker Compose** — add the Blazor frontend to the compose stack for a single-command self-hosted deployment
+- [x] **Web UI in Docker Compose** — add the Blazor frontend to the compose stack for a single-command self-hosted deployment
 - [ ] **Start timing** — when a start line is available, detect the exact moment the boat crosses it and calculate the elapsed time from the start signal to the crossing
 - [ ] **Mark-to-mark VMG** — calculate VMG towards the next course mark when a course is assigned to a session, replacing the current upwind/downwind approximation
 - [ ] **Performance benchmarks** — compare speed, VMG, and tacking angles across multiple sessions on the same course
