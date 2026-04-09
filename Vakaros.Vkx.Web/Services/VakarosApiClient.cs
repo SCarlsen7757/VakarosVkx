@@ -1,6 +1,7 @@
-using Vakaros.Vkx.Shared.Dtos;
-using Vakaros.Vkx.Shared.Dtos.Boat;
+using Vakaros.Vkx.Shared.Dtos.Boats;
 using Vakaros.Vkx.Shared.Dtos.Courses;
+using Vakaros.Vkx.Shared.Dtos.Marks;
+using Vakaros.Vkx.Shared.Dtos.Races;
 using Vakaros.Vkx.Shared.Dtos.Sessions;
 using Vakaros.Vkx.Shared.Dtos.Telemetry;
 

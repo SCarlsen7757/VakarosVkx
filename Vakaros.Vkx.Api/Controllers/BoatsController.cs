@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vakaros.Vkx.Api.Data;
-using Vakaros.Vkx.Shared.Dtos;
 using Vakaros.Vkx.Api.Models.Entities;
-using Vakaros.Vkx.Shared.Dtos.Boat;
+using Vakaros.Vkx.Shared.Dtos.Boats;
 
 namespace Vakaros.Vkx.Api.Controllers;
 
@@ -75,5 +74,34 @@ public class BoatsController(AppDbContext db) : ControllerBase
         await db.SaveChangesAsync(ct);
 
         return NoContent();
+    }
+
+    [HttpGet("{id:int}/stats")]
+    [EndpointSummary("Aggregate statistics for a boat across all its sessions and races.")]
+    public async Task<ActionResult<BoatStatsDto>> GetStats(int id, CancellationToken ct)
+    {
+        var boat = await db.Boats.FindAsync([id], ct);
+        if (boat is null) return NotFound();
+
+        var sessions = await db.Sessions
+            .Where(s => s.BoatId == id)
+            .Include(s => s.Races)
+            .ToListAsync(ct);
+
+        var races = sessions.SelectMany(s => s.Races).ToList();
+
+        var dto = new BoatStatsDto(
+            boat.Id,
+            boat.Name,
+            boat.SailNumber,
+            boat.BoatClass,
+            sessions.Count,
+            races.Count,
+            sessions.Sum(s => (s.EndedAt - s.StartedAt).TotalSeconds),
+            races.Sum(r => (r.EndedAt - r.StartedAt).TotalSeconds),
+            races.Sum(r => r.SailedDistanceMeters),
+            races.Count > 0 ? races.Max(r => r.MaxSpeedOverGround) : 0f);
+
+        return Ok(dto);
     }
 }

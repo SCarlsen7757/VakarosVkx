@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vakaros.Vkx.Api.Data;
-using Vakaros.Vkx.Shared.Dtos;
 using Vakaros.Vkx.Api.Models.Entities;
+using Vakaros.Vkx.Shared.Dtos.Races;
 using Vakaros.Vkx.Shared.Dtos.Telemetry;
 
 namespace Vakaros.Vkx.Api.Controllers;
@@ -24,7 +24,9 @@ public class RacesController(AppDbContext db) : ControllerBase
                 r.RaceNumber,
                 r.StartedAt,
                 r.EndedAt,
-                (r.EndedAt - r.StartedAt).TotalSeconds))
+                (r.EndedAt - r.StartedAt).TotalSeconds,
+                r.SailedDistanceMeters,
+                r.MaxSpeedOverGround))
             .ToListAsync(ct);
 
         return Ok(races);
@@ -51,7 +53,7 @@ public class RacesController(AppDbContext db) : ControllerBase
 
         var duration = (race.EndedAt - race.StartedAt).TotalSeconds;
 
-        return Ok(new RaceDetailDto(race.RaceNumber, race.StartedAt, race.EndedAt, duration, pinEnd, boatEnd));
+        return Ok(new RaceDetailDto(race.RaceNumber, race.StartedAt, race.EndedAt, duration, race.SailedDistanceMeters, race.MaxSpeedOverGround, pinEnd, boatEnd));
     }
 
     [HttpGet("{raceNumber:int}/positions")]

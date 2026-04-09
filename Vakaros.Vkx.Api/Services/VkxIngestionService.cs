@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using Vakaros.Vkx.Api.Data;
+using Vakaros.Vkx.Api.Helpers;
 using Vakaros.Vkx.Api.Models.Entities;
 using Vakaros.Vkx.Parser;
+using Vakaros.Vkx.Parser.Models;
 
 namespace Vakaros.Vkx.Api.Services;
 
@@ -61,6 +63,7 @@ public class VkxIngestionService(AppDbContext db, RaceDetectionService raceDetec
         var races = raceDetection.DetectRaces(vkxSession, session.Id);
         if (races.Count > 0)
         {
+            EnrichRaceMetrics(races, vkxSession.PositionRecords);
             db.Races.AddRange(races);
             await db.SaveChangesAsync(ct);
             session.Races = races;
@@ -70,6 +73,35 @@ public class VkxIngestionService(AppDbContext db, RaceDetectionService raceDetec
         await InsertTimeSeriesDataAsync(vkxSession, session.Id, ct);
 
         return session;
+    }
+
+    /// <summary>
+    /// Computes sailed distance (Haversine sum) and max speed over ground for each race
+    /// using the in-memory position records so we avoid a round-trip to the database.
+    /// </summary>
+    private static void EnrichRaceMetrics(List<Race> races, IEnumerable<PositionRecord> allPositions)
+    {
+        // Materialise once — PositionRecords is a lazy LINQ projection over the record list.
+        foreach (var race in races)
+        {
+            var racePositions = allPositions
+                .Where(p => p.Timestamp >= race.StartedAt && p.Timestamp <= race.EndedAt)
+                .ToList();
+
+            if (racePositions.Count == 0)
+                continue;
+
+            var sailedMeters = 0.0;
+            for (var i = 1; i < racePositions.Count; i++)
+            {
+                sailedMeters += GeoHelper.HaversineMeters(
+                    racePositions[i - 1].Latitude, racePositions[i - 1].Longitude,
+                    racePositions[i].Latitude, racePositions[i].Longitude);
+            }
+
+            race.SailedDistanceMeters = sailedMeters;
+            race.MaxSpeedOverGround = racePositions.Max(p => p.SpeedOverGround);
+        }
     }
 
     private async Task InsertTimeSeriesDataAsync(VkxSession vkxSession, int sessionId, CancellationToken ct)

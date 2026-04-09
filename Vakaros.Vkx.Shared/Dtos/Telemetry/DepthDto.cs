@@ -1,3 +1,3 @@
-namespace Vakaros.Vkx.Shared.Dtos;
+namespace Vakaros.Vkx.Shared.Dtos.Telemetry;
 
 public record DepthDto(DateTimeOffset Time, float Depth);

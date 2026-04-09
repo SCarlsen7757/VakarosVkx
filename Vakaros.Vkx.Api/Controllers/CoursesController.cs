@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vakaros.Vkx.Api.Data;
-using Vakaros.Vkx.Shared.Dtos;
+using Vakaros.Vkx.Api.Helpers;
 using Vakaros.Vkx.Api.Models.Entities;
 using Vakaros.Vkx.Shared.Dtos.Courses;
 
@@ -123,13 +123,27 @@ public class CoursesController(AppDbContext db) : ControllerBase
         return NoContent();
     }
 
-    private static CourseDto MapToDto(Course course) => new(
-        course.Id,
-        course.Name,
-        course.Year,
-        course.Description,
-        course.CreatedAt,
-        [.. course.Legs.OrderBy(l => l.SortOrder).Select(l => new CourseLegDto(
-            l.Id, l.MarkId, l.Mark.Name, l.SortOrder, l.LegName, l.Mark.Latitude, l.Mark.Longitude))]
-    );
+    private static CourseDto MapToDto(Course course)
+    {
+        var orderedLegs = course.Legs.OrderBy(l => l.SortOrder).ToList();
+
+        var totalLengthMeters = 0.0;
+        for (var i = 1; i < orderedLegs.Count; i++)
+        {
+            totalLengthMeters += GeoHelper.HaversineMeters(
+                orderedLegs[i - 1].Mark.Latitude, orderedLegs[i - 1].Mark.Longitude,
+                orderedLegs[i].Mark.Latitude, orderedLegs[i].Mark.Longitude);
+        }
+
+        return new CourseDto(
+            course.Id,
+            course.Name,
+            course.Year,
+            course.Description,
+            course.CreatedAt,
+            totalLengthMeters,
+            [.. orderedLegs.Select(l => new CourseLegDto(
+                l.Id, l.MarkId, l.Mark.Name, l.SortOrder, l.LegName, l.Mark.Latitude, l.Mark.Longitude))]
+        );
+    }
 }

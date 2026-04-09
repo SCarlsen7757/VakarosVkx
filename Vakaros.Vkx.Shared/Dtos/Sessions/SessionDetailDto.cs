@@ -1,3 +1,5 @@
+using Vakaros.Vkx.Shared.Dtos.Races;
+
 namespace Vakaros.Vkx.Shared.Dtos.Sessions;
 
 public record SessionDetailDto(

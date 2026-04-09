@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vakaros.Vkx.Api.Data;
-using Vakaros.Vkx.Shared.Dtos;
 using Vakaros.Vkx.Api.Services;
+using Vakaros.Vkx.Shared.Dtos.Races;
 using Vakaros.Vkx.Shared.Dtos.Sessions;
 
 namespace Vakaros.Vkx.Api.Controllers;
@@ -48,7 +48,9 @@ public class SessionsController(AppDbContext db, VkxIngestionService ingestionSe
                 r.RaceNumber,
                 r.StartedAt,
                 r.EndedAt,
-                (r.EndedAt - r.StartedAt).TotalSeconds))]
+                (r.EndedAt - r.StartedAt).TotalSeconds,
+                r.SailedDistanceMeters,
+                r.MaxSpeedOverGround))]
         );
 
         return CreatedAtAction(nameof(GetById), new { id = session.Id }, dto);
@@ -132,7 +134,9 @@ public class SessionsController(AppDbContext db, VkxIngestionService ingestionSe
                 r.RaceNumber,
                 r.StartedAt,
                 r.EndedAt,
-                (r.EndedAt - r.StartedAt).TotalSeconds))]
+                (r.EndedAt - r.StartedAt).TotalSeconds,
+                r.SailedDistanceMeters,
+                r.MaxSpeedOverGround))]
         );
 
         return Ok(dto);
@@ -181,7 +185,9 @@ public class SessionsController(AppDbContext db, VkxIngestionService ingestionSe
                 r.RaceNumber,
                 r.StartedAt,
                 r.EndedAt,
-                (r.EndedAt - r.StartedAt).TotalSeconds))]
+                (r.EndedAt - r.StartedAt).TotalSeconds,
+                r.SailedDistanceMeters,
+                r.MaxSpeedOverGround))]
         );
 
         return Ok(dto);

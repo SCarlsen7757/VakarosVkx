@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vakaros.Vkx.Api.Data;
-using Vakaros.Vkx.Shared.Dtos;
 using Vakaros.Vkx.Api.Models.Entities;
+using Vakaros.Vkx.Shared.Dtos.Marks;
 
 namespace Vakaros.Vkx.Api.Controllers;
 

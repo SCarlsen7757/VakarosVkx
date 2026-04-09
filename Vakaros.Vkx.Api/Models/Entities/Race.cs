@@ -7,6 +7,8 @@ public class Race
     public int RaceNumber { get; set; }
     public DateTimeOffset StartedAt { get; set; }
     public DateTimeOffset EndedAt { get; set; }
+    public double SailedDistanceMeters { get; set; }
+    public float MaxSpeedOverGround { get; set; }
 
-    public Session Session { get; set; } = null!;
+    public Session? Session { get; set; } = null;
 }

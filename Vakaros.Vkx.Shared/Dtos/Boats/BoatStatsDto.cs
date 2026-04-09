@@ -1,0 +1,17 @@
+namespace Vakaros.Vkx.Shared.Dtos.Boats;
+
+/// <summary>
+/// Aggregate statistics for a single boat across all linked sessions and races.
+/// Distances are in metres; speeds are in metres per second; durations are in seconds.
+/// </summary>
+public record BoatStatsDto(
+    int BoatId,
+    string BoatName,
+    string? SailNumber,
+    string? BoatClass,
+    int SessionCount,
+    int RaceCount,
+    double TotalSessionDurationSeconds,
+    double TotalRaceDurationSeconds,
+    double TotalSailedDistanceMeters,
+    float TopSpeedOverGround);

@@ -5,10 +5,10 @@
 <div id="@_mapElementId" style="height:100%;width:100%;min-height:400px;"></div>
 
 @code {
-    [Parameter] public List<Vakaros.Vkx.Shared.Dtos.PositionDto>? Positions { get; set; }
-    [Parameter] public List<Vakaros.Vkx.Shared.Dtos.CourseLegDto>? CourseLegs { get; set; }
-    [Parameter] public Vakaros.Vkx.Shared.Dtos.LinePositionDto? PinEnd { get; set; }
-    [Parameter] public Vakaros.Vkx.Shared.Dtos.LinePositionDto? BoatEnd { get; set; }
+    [Parameter] public List<Vakaros.Vkx.Shared.Dtos.Telemetry.PositionDto>? Positions { get; set; }
+    [Parameter] public List<Vakaros.Vkx.Shared.Dtos.Courses.CourseLegDto>? CourseLegs { get; set; }
+    [Parameter] public Vakaros.Vkx.Shared.Dtos.Races.LinePositionDto? PinEnd { get; set; }
+    [Parameter] public Vakaros.Vkx.Shared.Dtos.Races.LinePositionDto? BoatEnd { get; set; }
     [Parameter] public EventCallback<string> OnTrackClicked { get; set; }
 
     private readonly string _mapElementId = $"leaflet-map-{Guid.NewGuid():N}";

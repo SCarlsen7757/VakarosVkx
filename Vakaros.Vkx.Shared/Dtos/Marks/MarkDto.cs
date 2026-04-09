@@ -1,3 +1,3 @@
-namespace Vakaros.Vkx.Shared.Dtos;
+namespace Vakaros.Vkx.Shared.Dtos.Marks;
 
 public record MarkDto(int Id, string Name, int Year, double Latitude, double Longitude, string? Description);
