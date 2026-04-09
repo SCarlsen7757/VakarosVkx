@@ -1,3 +1,5 @@
+using Vakaros.Vkx.Shared.Dtos.BoatClasses;
+
 namespace Vakaros.Vkx.Shared.Dtos.Boats;
 
 /// <summary>
@@ -8,7 +10,7 @@ public record BoatStatsDto(
     int BoatId,
     string BoatName,
     string? SailNumber,
-    string? BoatClass,
+    BoatClassSummaryDto BoatClass,
     int SessionCount,
     int RaceCount,
     double TotalSessionDurationSeconds,

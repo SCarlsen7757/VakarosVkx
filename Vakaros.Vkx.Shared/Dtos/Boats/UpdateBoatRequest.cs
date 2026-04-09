@@ -1,3 +1,6 @@
 namespace Vakaros.Vkx.Shared.Dtos.Boats;
 
-public record UpdateBoatRequest(string Name, string? SailNumber, string? BoatClass, string? Description);
+public record UpdateBoatRequest(string Name,
+                                string? SailNumber,
+                                int BoatClassId,
+                                string? Description);

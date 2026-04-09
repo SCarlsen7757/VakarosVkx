@@ -13,20 +13,21 @@ namespace Vakaros.Vkx.Api.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "boats",
+                name: "boat_classes",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     name = table.Column<string>(type: "text", nullable: false),
-                    sail_number = table.Column<string>(type: "text", nullable: true),
-                    boat_class = table.Column<string>(type: "text", nullable: true),
-                    description = table.Column<string>(type: "text", nullable: true),
+                    length_over_all = table.Column<double>(type: "double precision", nullable: true),
+                    beam = table.Column<double>(type: "double precision", nullable: true),
+                    weight = table.Column<double>(type: "double precision", nullable: true),
+                    bowsprit_length = table.Column<double>(type: "double precision", nullable: true),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_boats", x => x.id);
+                    table.PrimaryKey("PK_boat_classes", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -64,6 +65,78 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "boats",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    name = table.Column<string>(type: "text", nullable: false),
+                    sail_number = table.Column<string>(type: "text", nullable: true),
+                    boat_class_id = table.Column<int>(type: "integer", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_boats", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_boats_boat_classes_boat_class_id",
+                        column: x => x.boat_class_id,
+                        principalTable: "boat_classes",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "sails",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    boat_class_id = table.Column<int>(type: "integer", nullable: false),
+                    name = table.Column<string>(type: "text", nullable: false),
+                    area = table.Column<double>(type: "double precision", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_sails", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_sails_boat_classes_boat_class_id",
+                        column: x => x.boat_class_id,
+                        principalTable: "boat_classes",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "course_legs",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    course_id = table.Column<int>(type: "integer", nullable: false),
+                    mark_id = table.Column<int>(type: "integer", nullable: false),
+                    sort_order = table.Column<int>(type: "integer", nullable: false),
+                    leg_name = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_course_legs", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_course_legs_courses_course_id",
+                        column: x => x.course_id,
+                        principalTable: "courses",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_course_legs_marks_mark_id",
+                        column: x => x.mark_id,
+                        principalTable: "marks",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "sessions",
                 columns: table => new
                 {
@@ -96,34 +169,6 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         principalTable: "courses",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "course_legs",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    course_id = table.Column<int>(type: "integer", nullable: false),
-                    mark_id = table.Column<int>(type: "integer", nullable: false),
-                    sort_order = table.Column<int>(type: "integer", nullable: false),
-                    leg_name = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_course_legs", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_course_legs_courses_course_id",
-                        column: x => x.course_id,
-                        principalTable: "courses",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_course_legs_marks_mark_id",
-                        column: x => x.mark_id,
-                        principalTable: "marks",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -360,6 +405,11 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_boats_boat_class_id",
+                table: "boats",
+                column: "boat_class_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_course_legs_course_id",
                 table: "course_legs",
                 column: "course_id");
@@ -410,6 +460,11 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 table: "races",
                 columns: new[] { "session_id", "race_number" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_sails_boat_class_id",
+                table: "sails",
+                column: "boat_class_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_sessions_boat_id",
@@ -476,6 +531,9 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 name: "races");
 
             migrationBuilder.DropTable(
+                name: "sails");
+
+            migrationBuilder.DropTable(
                 name: "shift_angles");
 
             migrationBuilder.DropTable(
@@ -498,6 +556,9 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "courses");
+
+            migrationBuilder.DropTable(
+                name: "boat_classes");
         }
     }
 }

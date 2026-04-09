@@ -31,9 +31,9 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BoatClass")
-                        .HasColumnType("text")
-                        .HasColumnName("boat_class");
+                    b.Property<int>("BoatClassId")
+                        .HasColumnType("integer")
+                        .HasColumnName("boat_class_id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -54,7 +54,48 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BoatClassId");
+
                     b.ToTable("boats", (string)null);
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.BoatClass", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<double?>("Beam")
+                        .HasColumnType("double precision")
+                        .HasColumnName("beam");
+
+                    b.Property<double?>("BowspritLength")
+                        .HasColumnType("double precision")
+                        .HasColumnName("bowsprit_length");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<double?>("LengthOverAll")
+                        .HasColumnType("double precision")
+                        .HasColumnName("length_over_all");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<double?>("Weight")
+                        .HasColumnType("double precision")
+                        .HasColumnName("weight");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("boat_classes", (string)null);
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Course", b =>
@@ -388,6 +429,35 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.ToTable("race_timer_events", (string)null);
                 });
 
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Sail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("Area")
+                        .HasColumnType("double precision")
+                        .HasColumnName("area");
+
+                    b.Property<int>("BoatClassId")
+                        .HasColumnType("integer")
+                        .HasColumnName("boat_class_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BoatClassId");
+
+                    b.ToTable("sails", (string)null);
+                });
+
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Session", b =>
                 {
                     b.Property<int>("Id")
@@ -559,6 +629,17 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.ToTable("wind_readings", (string)null);
                 });
 
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Boat", b =>
+                {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.BoatClass", "BoatClass")
+                        .WithMany()
+                        .HasForeignKey("BoatClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BoatClass");
+                });
+
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.CourseLeg", b =>
                 {
                     b.HasOne("Vakaros.Vkx.Api.Models.Entities.Course", "Course")
@@ -655,6 +736,17 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.Navigation("Session");
                 });
 
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Sail", b =>
+                {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.BoatClass", "BoatClass")
+                        .WithMany("Sails")
+                        .HasForeignKey("BoatClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BoatClass");
+                });
+
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Session", b =>
                 {
                     b.HasOne("Vakaros.Vkx.Api.Models.Entities.Boat", "Boat")
@@ -719,6 +811,11 @@ namespace Vakaros.Vkx.Api.Data.Migrations
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Boat", b =>
                 {
                     b.Navigation("Sessions");
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.BoatClass", b =>
+                {
+                    b.Navigation("Sails");
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Course", b =>

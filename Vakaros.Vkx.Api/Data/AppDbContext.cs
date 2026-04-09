@@ -7,6 +7,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     // Relational tables
     public DbSet<Boat> Boats => Set<Boat>();
+    public DbSet<BoatClass> BoatClasses => Set<BoatClass>();
+    public DbSet<Sail> Sails => Set<Sail>();
     public DbSet<Mark> Marks => Set<Mark>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<CourseLeg> CourseLegs => Set<CourseLeg>();
@@ -27,6 +29,32 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // ── Boat Classes ─────────────────────────────────────────────────────
+        modelBuilder.Entity<BoatClass>(e =>
+        {
+            e.ToTable("boat_classes");
+            e.HasKey(bc => bc.Id);
+            e.Property(bc => bc.Id).HasColumnName("id");
+            e.Property(bc => bc.Name).HasColumnName("name").IsRequired();
+            e.Property(bc => bc.LengthOverAll).HasColumnName("length_over_all");
+            e.Property(bc => bc.Beam).HasColumnName("beam");
+            e.Property(bc => bc.Weight).HasColumnName("weight");
+            e.Property(bc => bc.BowspritLength).HasColumnName("bowsprit_length");
+            e.Property(bc => bc.CreatedAt).HasColumnName("created_at");
+        });
+
+        // ── Sails ────────────────────────────────────────────────────────────
+        modelBuilder.Entity<Sail>(e =>
+        {
+            e.ToTable("sails");
+            e.HasKey(s => s.Id);
+            e.Property(s => s.Id).HasColumnName("id");
+            e.Property(s => s.BoatClassId).HasColumnName("boat_class_id");
+            e.Property(s => s.Name).HasColumnName("name").IsRequired();
+            e.Property(s => s.Area).HasColumnName("area");
+            e.HasOne(s => s.BoatClass).WithMany(bc => bc.Sails).HasForeignKey(s => s.BoatClassId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         // ── Boats ───────────────────────────────────────────────────────────
         modelBuilder.Entity<Boat>(e =>
         {
@@ -35,9 +63,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(b => b.Id).HasColumnName("id");
             e.Property(b => b.Name).HasColumnName("name").IsRequired();
             e.Property(b => b.SailNumber).HasColumnName("sail_number");
-            e.Property(b => b.BoatClass).HasColumnName("boat_class");
+            e.Property(b => b.BoatClassId).HasColumnName("boat_class_id");
             e.Property(b => b.Description).HasColumnName("description");
             e.Property(b => b.CreatedAt).HasColumnName("created_at");
+            e.HasOne(b => b.BoatClass).WithMany().HasForeignKey(b => b.BoatClassId).OnDelete(DeleteBehavior.Restrict);
         });
 
         // ── Marks ───────────────────────────────────────────────────────────
