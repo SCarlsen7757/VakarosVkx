@@ -6,8 +6,6 @@ services:
       POSTGRES_USER: vakaros
       POSTGRES_PASSWORD: vakaros
       POSTGRES_DB: vakaros
-    ports:
-      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -28,8 +26,6 @@ services:
     environment:
       ConnectionStrings__Default: >-
         Host=db;Port=5432;Database=vakaros;Username=vakaros;Password=vakaros
-    ports:
-      - "8080:8080"
 
   web:
     image: ${DOCKER_REGISTRY-}vakarosvkxweb
@@ -41,6 +37,7 @@ services:
       - api
     environment:
       ApiBaseUrl: http://api:8080
+      ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "8081:8080"
 

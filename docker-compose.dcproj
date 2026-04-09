@@ -7,12 +7,11 @@
     <ProjectGuid>a1b2c3d4-e5f6-7890-abcd-ef1234567890</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
     <DockerServiceUrl>{Scheme}://localhost:{ServicePort}</DockerServiceUrl>
-    <DockerServiceName>api</DockerServiceName>
+    <DockerServiceName>web</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
     <None Include="README.md" />
-    <None Include="Vakaros.Vkx.Shared\Dtos.cs" />
   </ItemGroup>
 </Project>
