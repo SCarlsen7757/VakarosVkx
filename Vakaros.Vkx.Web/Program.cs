@@ -9,6 +9,9 @@ builder.WebHost.UseStaticWebAssets();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<UserPreferencesService>();
+
 builder.Services.AddHttpClient<VakarosApiClient>(client =>
 {
     var baseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:8080";

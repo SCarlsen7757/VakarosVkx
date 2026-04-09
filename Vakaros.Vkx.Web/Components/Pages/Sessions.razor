@@ -37,36 +37,89 @@ else
                 <th>Started</th>
                 <th>Duration</th>
                 <th>Races</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var s in _sessions)
             {
-                <tr>
-                    <td>
-                        <a href="/sessions/@s.Id">@s.FileName</a>
-                    </td>
-                    <td>@(s.BoatName ?? "—")</td>
-                    <td>@(s.CourseName ?? "—")</td>
-                    <td>@s.StartedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</td>
-                    <td>@FormatDuration(s.StartedAt, s.EndedAt)</td>
-                    <td>@s.RaceCount</td>
-                </tr>
+                @if (_editingId == s.Id)
+                {
+                    <tr>
+                        <td><a href="/sessions/@s.Id">@s.FileName</a></td>
+                        <td>
+                            <select @bind="_formBoatId">
+                                <option value="0">— none —</option>
+                                @if (_boats is not null)
+                                {
+                                    @foreach (var b in _boats)
+                                    {
+                                        <option value="@b.Id">@b.Name</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                        <td>@(s.CourseName ?? "—")</td>
+                        <td>@s.StartedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@FormatDuration(s.StartedAt, s.EndedAt)</td>
+                        <td>@s.RaceCount</td>
+                        <td>
+                            <button class="btn btn-sm" @onclick="SaveEdit">Save</button>
+                            <button class="btn btn-sm" @onclick="CancelEdit">Cancel</button>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <td>
+                            <a href="/sessions/@s.Id">@s.FileName</a>
+                        </td>
+                        <td>@(s.BoatName ?? "—")</td>
+                        <td>@(s.CourseName ?? "—")</td>
+                        <td>@s.StartedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@FormatDuration(s.StartedAt, s.EndedAt)</td>
+                        <td>@s.RaceCount</td>
+                        <td>
+                            <button class="btn btn-sm" @onclick="() => StartEdit(s)" disabled="@(_editingId is not null)">Edit Boat</button>
+                        </td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
+
+    @if (_actionError is not null)
+    {
+        <div class="api-error" role="alert">
+            <span class="api-error-icon">⚠️</span>
+            <div class="api-error-body">
+                <p>@_actionError</p>
+            </div>
+        </div>
+    }
 }
 
 @code {
     private List<SessionSummaryDto>? _sessions;
+    private List<BoatDto>? _boats;
     private bool _loading = true;
     private string? _error;
+    private string? _actionError;
+
+    // Edit state
+    private int? _editingId;
+    private int? _formBoatId;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            _sessions = await Api.GetSessionsAsync();
+            var sessionsTask = Api.GetSessionsAsync();
+            var boatsTask = Api.GetBoatsAsync();
+            await Task.WhenAll(sessionsTask, boatsTask);
+            _sessions = sessionsTask.Result;
+            _boats = boatsTask.Result;
         }
         catch (HttpRequestException)
         {
@@ -79,6 +132,49 @@ else
         finally
         {
             _loading = false;
+        }
+    }
+
+    private void StartEdit(SessionSummaryDto session)
+    {
+        _actionError = null;
+        _editingId = session.Id;
+        _formBoatId = session.BoatId;
+    }
+
+    private void CancelEdit()
+    {
+        _editingId = null;
+        _actionError = null;
+    }
+
+    private async Task SaveEdit()
+    {
+        _actionError = null;
+        if (_editingId is null) return;
+
+        try
+        {
+            var updated = await Api.PatchSessionAsync(_editingId.Value, new PatchSessionRequest(_formBoatId == 0 ? null : _formBoatId, null, null));
+            if (updated is not null && _sessions is not null)
+            {
+                var idx = _sessions.FindIndex(s => s.Id == _editingId.Value);
+                if (idx >= 0)
+                {
+                    var s = _sessions[idx];
+                    var boatName = _boats?.FirstOrDefault(b => b.Id == updated.BoatId)?.Name;
+                    _sessions[idx] = s with { BoatId = updated.BoatId, BoatName = boatName };
+                }
+            }
+            _editingId = null;
+        }
+        catch (HttpRequestException)
+        {
+            _actionError = "Could not reach the API. Please check that the server is running and try again.";
+        }
+        catch (Exception ex)
+        {
+            _actionError = $"An unexpected error occurred: {ex.Message}";
         }
     }
 
