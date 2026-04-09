@@ -52,7 +52,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     name = table.Column<string>(type: "text", nullable: false),
-                    year = table.Column<int>(type: "integer", nullable: false),
+                    active_from = table.Column<DateOnly>(type: "date", nullable: false),
+                    active_until = table.Column<DateOnly>(type: "date", nullable: true),
                     latitude = table.Column<double>(type: "double precision", nullable: false),
                     longitude = table.Column<double>(type: "double precision", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true)
@@ -389,9 +390,9 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 column: "session_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_marks_name_year",
+                name: "IX_marks_name_active_from",
                 table: "marks",
-                columns: new[] { "name", "year" },
+                columns: new[] { "name", "active_from" },
                 unique: true);
 
             migrationBuilder.CreateIndex(

@@ -4,7 +4,8 @@ public class Mark
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public int Year { get; set; }
+    public DateOnly ActiveFrom { get; set; }
+    public DateOnly? ActiveUntil { get; set; }
     public double Latitude { get; set; }
     public double Longitude { get; set; }
     public string? Description { get; set; }

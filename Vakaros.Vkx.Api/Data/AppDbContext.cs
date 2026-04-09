@@ -47,11 +47,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasKey(m => m.Id);
             e.Property(m => m.Id).HasColumnName("id");
             e.Property(m => m.Name).HasColumnName("name").IsRequired();
-            e.Property(m => m.Year).HasColumnName("year");
+            e.Property(m => m.ActiveFrom).HasColumnName("active_from");
+            e.Property(m => m.ActiveUntil).HasColumnName("active_until");
             e.Property(m => m.Latitude).HasColumnName("latitude");
             e.Property(m => m.Longitude).HasColumnName("longitude");
             e.Property(m => m.Description).HasColumnName("description");
-            e.HasIndex(m => new { m.Name, m.Year }).IsUnique();
+            e.HasIndex(m => new { m.Name, m.ActiveFrom }).IsUnique();
         });
 
         // ── Courses ─────────────────────────────────────────────────────────

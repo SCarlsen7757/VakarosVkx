@@ -236,6 +236,14 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateOnly>("ActiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("active_from");
+
+                    b.Property<DateOnly?>("ActiveUntil")
+                        .HasColumnType("date")
+                        .HasColumnName("active_until");
+
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasColumnName("description");
@@ -253,13 +261,9 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
-                    b.Property<int>("Year")
-                        .HasColumnType("integer")
-                        .HasColumnName("year");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("Name", "Year")
+                    b.HasIndex("Name", "ActiveFrom")
                         .IsUnique();
 
                     b.ToTable("marks", (string)null);
