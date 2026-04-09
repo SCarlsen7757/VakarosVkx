@@ -1,4 +1,8 @@
 using Vakaros.Vkx.Shared.Dtos;
+using Vakaros.Vkx.Shared.Dtos.Boat;
+using Vakaros.Vkx.Shared.Dtos.Courses;
+using Vakaros.Vkx.Shared.Dtos.Sessions;
+using Vakaros.Vkx.Shared.Dtos.Telemetry;
 
 namespace Vakaros.Vkx.Web.Services;
 

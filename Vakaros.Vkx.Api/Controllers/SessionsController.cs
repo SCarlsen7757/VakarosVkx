@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Shared.Dtos;
 using Vakaros.Vkx.Api.Services;
+using Vakaros.Vkx.Shared.Dtos.Sessions;
 
 namespace Vakaros.Vkx.Api.Controllers;
 
