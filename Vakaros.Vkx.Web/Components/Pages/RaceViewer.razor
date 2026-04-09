@@ -46,6 +46,11 @@ else
                     OnTrackClicked="OnMapTrackClicked" />
     </div>
 
+    <!-- Timeline slicer -->
+    <TimelineSlicer @ref="_timelineSlicer"
+                    Positions="_positions"
+                    OnTimestampChanged="OnTimelineChanged" />
+
     <!-- Mode toggle -->
     <div class="mode-toggle">
         <button class="@(_mode == ViewMode.Historical ? "active" : "")" @onclick="() => SetMode(ViewMode.Historical)">
@@ -129,6 +134,7 @@ else
     // Component references
     private LeafletMap? _leafletMap;
     private TelemetryCharts? _charts;
+    private TimelineSlicer? _timelineSlicer;
 
     private bool _loadingMap = true;
     private bool _loadingCharts = true;
@@ -213,6 +219,17 @@ else
             .OrderBy(s => s.Time)
             .ToList();
 
+        // Downsample positions for chart display to avoid overwhelming the browser.
+        // Keep every Nth point so we land at roughly MaxChartPoints entries.
+        const int MaxChartPoints = 500;
+        int step = Math.Max(1, _positions.Count / MaxChartPoints);
+        var sampledPositions = new List<PositionDto>(_positions.Count / step + 1);
+        for (int i = 0; i < _positions.Count; i += step)
+            sampledPositions.Add(_positions[i]);
+        // Always include the last point so the time range is complete
+        if (sampledPositions[^1] != _positions[^1])
+            sampledPositions.Add(_positions[^1]);
+
         _speedData = [];
         _vmgData = [];
         _heelData = [];
@@ -222,7 +239,7 @@ else
         int windIdx = 0;
         int stwIdx = 0;
 
-        foreach (var pos in _positions)
+        foreach (var pos in sampledPositions)
         {
             var time = pos.Time.ToString("O");
 
@@ -295,6 +312,10 @@ else
             }
         }
 
+        // Sync timeline slider
+        if (_timelineSlicer is not null)
+            await _timelineSlicer.SetTimestampAsync(ts);
+
         StateHasChanged();
     }
 
@@ -308,6 +329,24 @@ else
         if (_charts is not null)
         {
             await _charts.SyncCursorAsync(isoTimestamp);
+        }
+
+        // Sync timeline slider
+        if (_timelineSlicer is not null)
+            await _timelineSlicer.SetTimestampAsync(ts);
+
+        StateHasChanged();
+    }
+
+    private async Task OnTimelineChanged(DateTimeOffset ts)
+    {
+        UpdateCurrentValues(ts);
+
+        // Note: map cursor is already moved by JS (timelineInterop.onSliderInput)
+        // so we only need to sync charts and gauges here.
+        if (_charts is not null)
+        {
+            await _charts.SyncCursorAsync(ts.ToString("O"));
         }
 
         StateHasChanged();

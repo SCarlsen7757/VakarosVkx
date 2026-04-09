@@ -31,9 +31,17 @@ window.leafletInterop = (() => {
                 attributionControl: true
             }).setView([0, 0], 2);
 
+            // Base layer – standard OSM
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors',
                 maxZoom: 19
+            }).addTo(map);
+
+            // Nautical overlay – OpenSeaMap
+            L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openseamap.org">OpenSeaMap</a> contributors',
+                maxZoom: 19,
+                opacity: 0.8
             }).addTo(map);
 
             trackLayer = L.layerGroup().addTo(map);

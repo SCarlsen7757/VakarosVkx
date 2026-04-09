@@ -117,6 +117,64 @@ nav:has(a[href="/sessions"]) {
     margin-bottom: 1rem;
 }
 
+/* ── Timeline slicer ─────────────────────────────────────────────────── */
+
+.timeline-slicer {
+    background: #fff;
+    border-radius: 6px;
+    padding: 0.6rem 1rem 0.75rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.timeline-slicer-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.timeline-current {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1d3557;
+}
+
+.timeline-slider {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #dee2e6;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.timeline-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #264653;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    cursor: pointer;
+}
+
+.timeline-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #264653;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    cursor: pointer;
+}
+
 /* ── Mode toggle ─────────────────────────────────────────────────────── */
 
 .mode-toggle {

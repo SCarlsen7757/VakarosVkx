@@ -54,18 +54,6 @@ window.amchartsInterop = (() => {
                 })
             }));
 
-            // Cursor bullet (synced dot)
-            series.bullets.push(() => {
-                return am5.Bullet.new(root, {
-                    sprite: am5.Circle.new(root, {
-                        radius: 5,
-                        fill: am5.color(s.color),
-                        strokeWidth: 2,
-                        stroke: am5.color("#fff")
-                    })
-                });
-            });
-
             seriesList.push(series);
         }
 
