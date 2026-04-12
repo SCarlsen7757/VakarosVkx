@@ -4,7 +4,6 @@
 
 <div class="telemetry-charts">
     <div id="@SpeedChartId" style="width:100%;height:180px;"></div>
-    <div id="@VmgChartId" style="width:100%;height:180px;"></div>
     <div id="@HeelChartId" style="width:100%;height:180px;"></div>
     <div id="@TrimChartId" style="width:100%;height:180px;"></div>
     <div id="@HeadingChartId" style="width:100%;height:180px;"></div>
@@ -12,14 +11,12 @@
 
 @code {
     [Parameter] public List<ChartDataPoint>? SpeedData { get; set; }
-    [Parameter] public List<ChartDataPoint>? VmgData { get; set; }
     [Parameter] public List<ChartDataPoint>? HeelData { get; set; }
     [Parameter] public List<ChartDataPoint>? TrimData { get; set; }
     [Parameter] public List<ChartDataPoint>? HeadingData { get; set; }
     [Parameter] public EventCallback<string> OnCursorMoved { get; set; }
 
     private string SpeedChartId = $"chart-speed-{Guid.NewGuid():N}";
-    private string VmgChartId = $"chart-vmg-{Guid.NewGuid():N}";
     private string HeelChartId = $"chart-heel-{Guid.NewGuid():N}";
     private string TrimChartId = $"chart-trim-{Guid.NewGuid():N}";
     private string HeadingChartId = $"chart-heading-{Guid.NewGuid():N}";
@@ -59,13 +56,6 @@
                 }
             },
             new {
-                containerId = VmgChartId,
-                yAxisLabel = "VMG (kn)",
-                series = new object[] {
-                    new { name = "VMG", valueField = "vmg", color = "#e76f51" }
-                }
-            },
-            new {
                 containerId = HeelChartId,
                 yAxisLabel = "Heel (°)",
                 series = new object[] {
@@ -96,8 +86,6 @@
     {
         if (SpeedData is { Count: > 0 })
             await JS.InvokeVoidAsync("amchartsInterop.setChartData", SpeedChartId, SpeedData);
-        if (VmgData is { Count: > 0 })
-            await JS.InvokeVoidAsync("amchartsInterop.setChartData", VmgChartId, VmgData);
         if (HeelData is { Count: > 0 })
             await JS.InvokeVoidAsync("amchartsInterop.setChartData", HeelChartId, HeelData);
         if (TrimData is { Count: > 0 })
@@ -124,7 +112,14 @@
     {
         if (_chartsInitialized)
         {
-            await JS.InvokeVoidAsync("amchartsInterop.disposeCharts");
+            try
+            {
+                await JS.InvokeVoidAsync("amchartsInterop.disposeCharts");
+            }
+            catch (JSException)
+            {
+                // Ignore JS exceptions during disposal, as the charts may already be cleaned up
+            }
         }
         _dotNetRef?.Dispose();
     }

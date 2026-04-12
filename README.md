@@ -107,14 +107,20 @@ The Blazor web UI is a separate project and is not yet included in the compose f
 docker compose up db
 ```
 
-2. Run the API:
+2. Apply EF Core migrations:
+
+```bash
+dotnet ef migrations add InitialCreate --project Vakaros.Vkx.Api --startup-project Vakaros.Vkx.Api --output-dir Data\Migrations
+```
+
+3. Run the API:
 
 ```bash
 cd Vakaros.Vkx.Api
 dotnet run
 ```
 
-3. Run the web UI (in a separate terminal):
+4. Run the web UI (in a separate terminal):
 
 ```bash
 cd Vakaros.Vkx.Web

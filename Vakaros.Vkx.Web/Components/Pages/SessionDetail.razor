@@ -1,5 +1,7 @@
 @page "/sessions/{Id:int}"
 @using Vakaros.Vkx.Shared.Dtos
+@using Vakaros.Vkx.Shared.Dtos.Courses
+@using Vakaros.Vkx.Shared.Dtos.Races
 @using Vakaros.Vkx.Web.Services
 @inject VakarosApiClient Api
 @inject NavigationManager Nav
@@ -76,26 +78,67 @@ else
                     <th>Started</th>
                     <th>Ended</th>
                     <th>Duration</th>
+                    <th>Course</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var race in _session.Races)
                 {
-                    <tr>
-                        <td>@race.RaceNumber</td>
-                        <td>@race.StartedAt.LocalDateTime.ToString("HH:mm:ss")</td>
-                        <td>@race.EndedAt.LocalDateTime.ToString("HH:mm:ss")</td>
-                        <td>@FormatDuration(race.DurationSeconds)</td>
-                        <td>
-                            <a href="/sessions/@Id/races/@race.RaceNumber" class="btn-view-race">
-                                View Race →
-                            </a>
-                        </td>
-                    </tr>
+                    @if (_editingRaceNumber == race.RaceNumber)
+                    {
+                        <tr>
+                            <td>@race.RaceNumber</td>
+                            <td>@race.StartedAt.LocalDateTime.ToString("HH:mm:ss")</td>
+                            <td>@race.EndedAt.LocalDateTime.ToString("HH:mm:ss")</td>
+                            <td>@FormatDuration(race.DurationSeconds)</td>
+                            <td>
+                                <select @bind="_raceFormCourseId">
+                                    <option value="0">— none —</option>
+                                    @if (_courses is not null)
+                                    {
+                                        @foreach (var c in _courses)
+                                        {
+                                            <option value="@c.Id">@c.Name</option>
+                                        }
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm" @onclick="SaveRaceEdit">Save</button>
+                                <button class="btn btn-sm" @onclick="CancelRaceEdit">Cancel</button>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td>@race.RaceNumber</td>
+                            <td>@race.StartedAt.LocalDateTime.ToString("HH:mm:ss")</td>
+                            <td>@race.EndedAt.LocalDateTime.ToString("HH:mm:ss")</td>
+                            <td>@FormatDuration(race.DurationSeconds)</td>
+                            <td>@(race.CourseName ?? "—")</td>
+                            <td>
+                                <button class="btn btn-sm" @onclick="() => StartRaceEdit(race)" disabled="@(_editingRaceNumber is not null)">Edit Course</button>
+                                <a href="/sessions/@Id/races/@race.RaceNumber" class="btn-view-race">
+                                    View Race →
+                                </a>
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
+
+        @if (_raceActionError is not null)
+        {
+            <div class="api-error" role="alert">
+                <span class="api-error-icon">⚠️</span>
+                <div class="api-error-body">
+                    <p>@_raceActionError</p>
+                </div>
+            </div>
+        }
     }
 }
 
@@ -103,14 +146,24 @@ else
     [Parameter] public int Id { get; set; }
 
     private SessionDetailDto? _session;
+    private List<CourseSummaryDto>? _courses;
     private bool _loading = true;
     private string? _error;
+
+    // Race edit state
+    private int? _editingRaceNumber;
+    private int _raceFormCourseId;
+    private string? _raceActionError;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            _session = await Api.GetSessionAsync(Id);
+            var sessionTask = Api.GetSessionAsync(Id);
+            var coursesTask = Api.GetCoursesAsync();
+            await Task.WhenAll(sessionTask, coursesTask);
+            _session = sessionTask.Result;
+            _courses = coursesTask.Result;
         }
         catch (HttpRequestException)
         {
@@ -123,6 +176,49 @@ else
         finally
         {
             _loading = false;
+        }
+    }
+
+    private void StartRaceEdit(RaceDto race)
+    {
+        _raceActionError = null;
+        _editingRaceNumber = race.RaceNumber;
+        _raceFormCourseId = race.CourseId ?? 0;
+    }
+
+    private void CancelRaceEdit()
+    {
+        _editingRaceNumber = null;
+        _raceActionError = null;
+    }
+
+    private async Task SaveRaceEdit()
+    {
+        _raceActionError = null;
+        if (_editingRaceNumber is null || _session is null) return;
+
+        try
+        {
+            var updated = await Api.PatchRaceAsync(Id, _editingRaceNumber.Value, new PatchRaceRequest(_raceFormCourseId));
+            if (updated is not null)
+            {
+                var idx = _session.Races.FindIndex(r => r.RaceNumber == _editingRaceNumber.Value);
+                if (idx >= 0)
+                {
+                    var r = _session.Races[idx];
+                    var courseName = _courses?.FirstOrDefault(c => c.Id == updated.CourseId)?.Name;
+                    _session.Races[idx] = r with { CourseId = updated.CourseId, CourseName = courseName };
+                }
+            }
+            _editingRaceNumber = null;
+        }
+        catch (HttpRequestException)
+        {
+            _raceActionError = "Could not reach the API. Please check that the server is running and try again.";
+        }
+        catch (Exception ex)
+        {
+            _raceActionError = $"An unexpected error occurred: {ex.Message}";
         }
     }
 

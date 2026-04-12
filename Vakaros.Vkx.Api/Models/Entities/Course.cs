@@ -10,4 +10,5 @@ public class Course
 
     public ICollection<CourseLeg> Legs { get; set; } = [];
     public ICollection<Session> Sessions { get; set; } = [];
+    public ICollection<Race> Races { get; set; } = [];
 }

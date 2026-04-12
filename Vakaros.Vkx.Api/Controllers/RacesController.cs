@@ -22,6 +22,8 @@ public class RacesController(AppDbContext db) : ControllerBase
             .OrderBy(r => r.RaceNumber)
             .Select(r => new RaceDto(
                 r.RaceNumber,
+                r.CourseId,
+                r.Course != null ? r.Course.Name : null,
                 r.StartedAt,
                 r.EndedAt,
                 (r.EndedAt - r.StartedAt).TotalSeconds,
@@ -53,7 +55,7 @@ public class RacesController(AppDbContext db) : ControllerBase
 
         var duration = (race.EndedAt - race.StartedAt).TotalSeconds;
 
-        return Ok(new RaceDetailDto(race.RaceNumber, race.StartedAt, race.EndedAt, duration, race.SailedDistanceMeters, race.MaxSpeedOverGround, pinEnd, boatEnd));
+        return Ok(new RaceDetailDto(race.RaceNumber, race.CourseId, race.StartedAt, race.EndedAt, duration, race.SailedDistanceMeters, race.MaxSpeedOverGround, pinEnd, boatEnd));
     }
 
     [HttpGet("{raceNumber:int}/positions")]
@@ -183,6 +185,33 @@ public class RacesController(AppDbContext db) : ControllerBase
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    [HttpPatch("{raceNumber:int}")]
+    public async Task<ActionResult<RaceDto>> Patch(int sessionId, int raceNumber, PatchRaceRequest request, CancellationToken ct)
+    {
+        var race = await db.Races
+            .Include(r => r.Course)
+            .FirstOrDefaultAsync(r => r.SessionId == sessionId && r.RaceNumber == raceNumber, ct);
+
+        if (race is null) return NotFound();
+
+        if (request.CourseId.HasValue)
+            race.CourseId = request.CourseId.Value == 0 ? null : request.CourseId.Value;
+
+        await db.SaveChangesAsync(ct);
+
+        await db.Entry(race).Reference(r => r.Course).LoadAsync(ct);
+
+        return Ok(new RaceDto(
+            race.RaceNumber,
+            race.CourseId,
+            race.Course?.Name,
+            race.StartedAt,
+            race.EndedAt,
+            (race.EndedAt - race.StartedAt).TotalSeconds,
+            race.SailedDistanceMeters,
+            race.MaxSpeedOverGround));
+    }
 
     private async Task<Race?> FindRaceAsync(int sessionId, int raceNumber, CancellationToken ct)
     {

@@ -78,6 +78,14 @@ public class VakarosApiClient(HttpClient http, IMemoryCache cache)
     public Task<RaceDetailDto?> GetRaceDetailAsync(int sessionId, int raceNumber, CancellationToken ct = default)
         => GetCachedAsync<RaceDetailDto>($"api/sessions/{sessionId}/races/{raceNumber}", DefaultTtl, "races", ct);
 
+    public async Task<RaceDto?> PatchRaceAsync(int sessionId, int raceNumber, PatchRaceRequest request, CancellationToken ct = default)
+    {
+        var response = await http.PatchAsJsonAsync($"api/sessions/{sessionId}/races/{raceNumber}", request, ct);
+        response.EnsureSuccessStatusCode();
+        EvictTag("races");
+        return await response.Content.ReadFromJsonAsync<RaceDto>(ct);
+    }
+
     // ── Telemetry ───────────────────────────────────────────────────────────
 
     public Task<List<PositionDto>?> GetPositionsAsync(int sessionId, int raceNumber, double? from = null, double? to = null, CancellationToken ct = default)

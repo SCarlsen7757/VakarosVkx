@@ -306,6 +306,7 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     session_id = table.Column<int>(type: "integer", nullable: false),
+                    course_id = table.Column<int>(type: "integer", nullable: true),
                     race_number = table.Column<int>(type: "integer", nullable: false),
                     started_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     ended_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -315,6 +316,12 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_races", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_races_courses_course_id",
+                        column: x => x.course_id,
+                        principalTable: "courses",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_races_sessions_session_id",
                         column: x => x.session_id,
@@ -454,6 +461,11 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 name: "IX_race_timer_events_session_id",
                 table: "race_timer_events",
                 column: "session_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_races_course_id",
+                table: "races",
+                column: "course_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_races_session_id_race_number",

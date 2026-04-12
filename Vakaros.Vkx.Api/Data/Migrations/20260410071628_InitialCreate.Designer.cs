@@ -12,7 +12,7 @@ using Vakaros.Vkx.Api.Data;
 namespace Vakaros.Vkx.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260409170709_InitialCreate")]
+    [Migration("20260410071628_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -375,6 +375,10 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CourseId")
+                        .HasColumnType("integer")
+                        .HasColumnName("course_id");
+
                     b.Property<DateTimeOffset>("EndedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("ended_at");
@@ -400,6 +404,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnName("started_at");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
 
                     b.HasIndex("SessionId", "RaceNumber")
                         .IsUnique();
@@ -719,11 +725,18 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Race", b =>
                 {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Course", "Course")
+                        .WithMany("Races")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Vakaros.Vkx.Api.Models.Entities.Session", "Session")
                         .WithMany("Races")
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Course");
 
                     b.Navigation("Session");
                 });
@@ -824,6 +837,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Course", b =>
                 {
                     b.Navigation("Legs");
+
+                    b.Navigation("Races");
 
                     b.Navigation("Sessions");
                 });

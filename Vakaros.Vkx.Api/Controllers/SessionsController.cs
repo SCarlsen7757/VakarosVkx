@@ -46,6 +46,8 @@ public class SessionsController(AppDbContext db, VkxIngestionService ingestionSe
             session.Notes,
             [.. session.Races.OrderBy(r => r.RaceNumber).Select(r => new RaceDto(
                 r.RaceNumber,
+                r.CourseId,
+                r.Course?.Name,
                 r.StartedAt,
                 r.EndedAt,
                 (r.EndedAt - r.StartedAt).TotalSeconds,
@@ -111,6 +113,7 @@ public class SessionsController(AppDbContext db, VkxIngestionService ingestionSe
             .Include(s => s.Boat)
             .Include(s => s.Course)
             .Include(s => s.Races.OrderBy(r => r.RaceNumber))
+                .ThenInclude(r => r.Course)
             .FirstOrDefaultAsync(s => s.Id == id, ct);
 
         if (session is null) return NotFound();
@@ -130,8 +133,10 @@ public class SessionsController(AppDbContext db, VkxIngestionService ingestionSe
             session.EndedAt,
             session.UploadedAt,
             session.Notes,
-            [.. session.Races.Select(r => new RaceDto(
+          [.. session.Races.Select(r => new RaceDto(
                 r.RaceNumber,
+                r.CourseId,
+                r.Course?.Name,
                 r.StartedAt,
                 r.EndedAt,
                 (r.EndedAt - r.StartedAt).TotalSeconds,
@@ -149,6 +154,7 @@ public class SessionsController(AppDbContext db, VkxIngestionService ingestionSe
             .Include(s => s.Boat)
             .Include(s => s.Course)
             .Include(s => s.Races.OrderBy(r => r.RaceNumber))
+                .ThenInclude(r => r.Course)
             .FirstOrDefaultAsync(s => s.Id == id, ct);
 
         if (session is null) return NotFound();
@@ -183,6 +189,8 @@ public class SessionsController(AppDbContext db, VkxIngestionService ingestionSe
             session.Notes,
             [.. session.Races.Select(r => new RaceDto(
                 r.RaceNumber,
+                r.CourseId,
+                r.Course?.Name,
                 r.StartedAt,
                 r.EndedAt,
                 (r.EndedAt - r.StartedAt).TotalSeconds,

@@ -54,7 +54,14 @@
     {
         if (_jsInitialized)
         {
-            await JS.InvokeVoidAsync("timelineInterop.dispose");
+            try
+            {
+                await JS.InvokeVoidAsync("timelineInterop.dispose");
+            }
+            catch
+            {
+                // Ignore any errors during disposal
+            }
         }
         _dotNetRef?.Dispose();
     }

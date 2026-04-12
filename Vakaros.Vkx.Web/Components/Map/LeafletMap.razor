@@ -70,7 +70,15 @@
     {
         if (_mapInitialized)
         {
-            await JS.InvokeVoidAsync("leafletInterop.dispose");
+            try
+            {
+                await JS.InvokeVoidAsync("leafletInterop.dispose");
+            }
+            catch
+            {
+                // Ignore JS interop errors during disposal
+            }
+
         }
         _dotNetRef?.Dispose();
     }
