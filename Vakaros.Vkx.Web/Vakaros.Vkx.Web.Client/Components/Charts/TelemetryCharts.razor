@@ -4,117 +4,116 @@
 @implements IAsyncDisposable
 
 <div class="telemetry-charts">
-    <div id="@SpeedChartId" style="width:100%;height:180px;"></div>
-    <div id="@HeelChartId" style="width:100%;height:180px;"></div>
-    <div id="@TrimChartId" style="width:100%;height:180px;"></div>
-    <div id="@HeadingChartId" style="width:100%;height:180px;"></div>
+    @if (_initError is not null)
+    {
+        <p style="color:red;font-size:0.8rem;padding:0.5rem">Chart error: @_initError</p>
+    }
+    @if (_chartIds is not null)
+    {
+        @foreach (var id in _chartIds)
+        {
+            <div id="@id" style="width:100%;height:180px;"></div>
+        }
+    }
 </div>
 
 @code {
-    [Parameter] public List<ChartDataPoint>? SpeedData { get; set; }
-    [Parameter] public List<ChartDataPoint>? HeelData { get; set; }
-    [Parameter] public List<ChartDataPoint>? TrimData { get; set; }
-    [Parameter] public List<ChartDataPoint>? HeadingData { get; set; }
+    [Parameter] public List<ChartPanelConfig>? Charts { get; set; }
     [Parameter] public EventCallback<string> OnCursorMoved { get; set; }
-
-    private string SpeedChartId = $"chart-speed-{Guid.NewGuid():N}";
-    private string HeelChartId = $"chart-heel-{Guid.NewGuid():N}";
-    private string TrimChartId = $"chart-trim-{Guid.NewGuid():N}";
-    private string HeadingChartId = $"chart-heading-{Guid.NewGuid():N}";
 
     private DotNetObjectReference<TelemetryCharts>? _dotNetRef;
     private bool _chartsInitialized;
 
-    // Change-detection: only re-push data when the list references actually change.
-    private List<ChartDataPoint>? _prevSpeedData;
-    private List<ChartDataPoint>? _prevHeelData;
-    private List<ChartDataPoint>? _prevTrimData;
-    private List<ChartDataPoint>? _prevHeadingData;
+    private List<string>? _chartIds;
+    private List<ChartPanelConfig>? _prevCharts;
+    private string? _initError;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             _dotNetRef = DotNetObjectReference.Create(this);
-            await InitializeChartsAsync();
-            _chartsInitialized = true;
-            await PushDataToChartsAsync();
-            SnapshotDataReferences();
+        }
+
+        if (!_chartsInitialized && _chartIds is { Count: > 0 })
+        {
+            try
+            {
+                await InitializeChartsAsync();
+                _chartsInitialized = true;
+                await PushDataToChartsAsync();
+                _prevCharts = Charts;
+
+                // Tell timeWindowInterop which chart containers exist so it can
+                // push resampled data directly in JS without a WASM round-trip.
+                await JS.InvokeVoidAsync("timeWindowInterop.setChartIds", _chartIds);
+            }
+            catch (JSException ex)
+            {
+                _initError = ex.Message;
+                Console.Error.WriteLine($"[TelemetryCharts] JS initialization failed: {ex.Message}");
+            }
         }
     }
 
     protected override async Task OnParametersSetAsync()
     {
+        if (_chartIds is null && Charts is { Count: > 0 })
+        {
+            _chartIds = Charts.Select(_ => $"chart-{Guid.NewGuid():N}").ToList();
+            return;
+        }
+
         if (_chartsInitialized && HasDataChanged())
         {
             await PushDataToChartsAsync();
-            SnapshotDataReferences();
+            _prevCharts = Charts;
         }
     }
 
-    private bool HasDataChanged() =>
-        !ReferenceEquals(SpeedData, _prevSpeedData) ||
-        !ReferenceEquals(HeelData, _prevHeelData) ||
-        !ReferenceEquals(TrimData, _prevTrimData) ||
-        !ReferenceEquals(HeadingData, _prevHeadingData);
-
-    private void SnapshotDataReferences()
+    private bool HasDataChanged()
     {
-        _prevSpeedData = SpeedData;
-        _prevHeelData = HeelData;
-        _prevTrimData = TrimData;
-        _prevHeadingData = HeadingData;
+        if (!ReferenceEquals(Charts, _prevCharts)) return true;
+        if (Charts is null || _prevCharts is null) return false;
+        if (Charts.Count != _prevCharts.Count) return true;
+        for (int i = 0; i < Charts.Count; i++)
+        {
+            if (!ReferenceEquals(Charts[i].Data, _prevCharts[i].Data)) return true;
+        }
+        return false;
     }
 
     private async Task InitializeChartsAsync()
     {
-        var configs = new object[]
+        if (Charts is null || _chartIds is null) return;
+
+        var configs = Charts.Select((panel, i) => new
         {
-            new {
-                containerId = SpeedChartId,
-                yAxisLabel = "Speed (kn)",
-                series = new object[] {
-                    new { name = "SOG", valueField = "sog", color = "#457b9d" },
-                    new { name = "STW", valueField = "stw", color = "#2a9d8f" }
-                }
-            },
-            new {
-                containerId = HeelChartId,
-                yAxisLabel = "Heel (°)",
-                series = new object[] {
-                    new { name = "Heel", valueField = "heel", color = "#f4a261" }
-                }
-            },
-            new {
-                containerId = TrimChartId,
-                yAxisLabel = "Trim (°)",
-                series = new object[] {
-                    new { name = "Trim", valueField = "trim", color = "#264653" }
-                }
-            },
-            new {
-                containerId = HeadingChartId,
-                yAxisLabel = "Heading (°)",
-                series = new object[] {
-                    new { name = "COG", valueField = "cog", color = "#6a4c93" },
-                    new { name = "True Hdg", valueField = "trueHeading", color = "#1982c4" }
-                }
-            }
-        };
+            containerId = _chartIds[i],
+            yAxisLabel = panel.YAxisLabel,
+            series = panel.Series.Select(s => new { name = s.Name, valueField = s.ValueField, color = s.Color }).ToArray()
+        }).ToArray();
 
         await JS.InvokeVoidAsync("amchartsInterop.initCharts", configs, _dotNetRef, nameof(OnChartCursorMove));
     }
 
     private async Task PushDataToChartsAsync()
     {
-        if (SpeedData is { Count: > 0 })
-            await JS.InvokeVoidAsync("amchartsInterop.setChartData", SpeedChartId, SpeedData);
-        if (HeelData is { Count: > 0 })
-            await JS.InvokeVoidAsync("amchartsInterop.setChartData", HeelChartId, HeelData);
-        if (TrimData is { Count: > 0 })
-            await JS.InvokeVoidAsync("amchartsInterop.setChartData", TrimChartId, TrimData);
-        if (HeadingData is { Count: > 0 })
-            await JS.InvokeVoidAsync("amchartsInterop.setChartData", HeadingChartId, HeadingData);
+        if (Charts is null || _chartIds is null) return;
+
+        for (int i = 0; i < Charts.Count; i++)
+        {
+            var panel = Charts[i];
+            if (panel.Data is not { Count: > 0 }) continue;
+            try
+            {
+                await JS.InvokeVoidAsync("amchartsInterop.setChartData", _chartIds[i], panel.Data);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[TelemetryCharts] setChartData failed for panel {i}: {ex.Message}");
+            }
+        }
     }
 
     public async Task SyncCursorAsync(string isoTimestamp)
@@ -122,6 +121,15 @@
         if (_chartsInitialized)
         {
             await JS.InvokeVoidAsync("amchartsInterop.syncCursor", isoTimestamp);
+        }
+    }
+
+    public async Task SetTimeWindowAsync(DateTimeOffset start, DateTimeOffset end)
+    {
+        if (_chartsInitialized)
+        {
+            await JS.InvokeVoidAsync("amchartsInterop.setTimeWindow",
+                start.ToString("O"), end.ToString("O"));
         }
     }
 
@@ -146,20 +154,5 @@
         }
         _dotNetRef?.Dispose();
     }
-
-    /// <summary>
-    /// Generic chart data point with all possible fields.
-    /// Each chart panel reads only the fields it needs.
-    /// </summary>
-    public class ChartDataPoint
-    {
-        public string Time { get; set; } = "";
-        public double? Sog { get; set; }
-        public double? Stw { get; set; }
-        public double? Vmg { get; set; }
-        public double? Heel { get; set; }
-        public double? Trim { get; set; }
-        public double? Cog { get; set; }
-        public double? TrueHeading { get; set; }
-    }
 }
+

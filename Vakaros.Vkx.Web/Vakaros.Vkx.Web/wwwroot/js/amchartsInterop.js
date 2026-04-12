@@ -6,14 +6,20 @@ window.amchartsInterop = (() => {
     let callbackMethod = null;
 
     function createChartPanel(containerId, config) {
+        const el = document.getElementById(containerId);
+        if (!el) {
+            console.error(`[amchartsInterop] Container not found: #${containerId}`);
+        } else {
+            console.log(`[amchartsInterop] Creating chart in #${containerId} (${el.offsetWidth}x${el.offsetHeight})`);
+        }
         const root = am5.Root.new(containerId);
         root.setThemes([am5themes_Animated.new(root)]);
 
         const chart = root.container.children.push(am5xy.XYChart.new(root, {
-            panX: true,
+            panX: false,
             panY: false,
-            wheelX: "panX",
-            wheelY: "zoomX",
+            wheelX: "none",
+            wheelY: "none",
             layout: root.verticalLayout
         }));
 
@@ -57,18 +63,20 @@ window.amchartsInterop = (() => {
             seriesList.push(series);
         }
 
-        // Cursor with synced behavior
+        // Cursor with synced behavior — always visible
         const cursor = chart.set("cursor", am5xy.XYCursor.new(root, {
             xAxis: xAxis,
-            behavior: "none"
+            behavior: "none",
+            alwaysShow: true
         }));
 
         cursor.lineY.set("visible", false);
-
-        // Scrollbar
-        chart.set("scrollbarX", am5.Scrollbar.new(root, {
-            orientation: "horizontal"
-        }));
+        cursor.lineX.setAll({
+            visible: true,
+            stroke: am5.color(0x457b9d),
+            strokeWidth: 1,
+            strokeDasharray: [4, 4]
+        });
 
         return { root, chart, xAxis, yAxis, cursor, seriesList };
     }
@@ -101,7 +109,11 @@ window.amchartsInterop = (() => {
                         source.xAxis.toAxisPosition(ev.target.getPrivate("positionX"))
                     );
 
-                    // Sync other charts
+                    if (!Number.isFinite(x)) { cursorSyncEnabled = true; return; }
+
+                    const isoTimestamp = new Date(x).toISOString();
+
+                    // Sync other chart cursors
                     for (let j = 0; j < allCursors.length; j++) {
                         if (i === j) continue;
                         const target = allCursors[j];
@@ -109,10 +121,14 @@ window.amchartsInterop = (() => {
                         target.cursor.set("positionX", target.xAxis.toGlobalPosition(position));
                     }
 
-                    // Notify .NET with the timestamp
+                    // Sync timeline slider + map cursor directly in JS — no WASM round-trip
+                    if (window.timelineInterop) {
+                        window.timelineInterop.setTimestamp(isoTimestamp);
+                    }
+
+                    // Notify .NET only for gauge value updates
                     if (dotNetRef && callbackMethod) {
-                        const date = new Date(x);
-                        dotNetRef.invokeMethodAsync(callbackMethod, date.toISOString());
+                        dotNetRef.invokeMethodAsync(callbackMethod, isoTimestamp);
                     }
 
                     cursorSyncEnabled = true;
@@ -122,7 +138,11 @@ window.amchartsInterop = (() => {
 
         setChartData(containerId, data) {
             const instance = chartInstances[containerId];
-            if (!instance) return;
+            if (!instance) {
+                console.error(`[amchartsInterop] setChartData: no chart instance for #${containerId}`);
+                return;
+            }
+            console.log(`[amchartsInterop] setChartData #${containerId}: ${data.length} points, first=`, data[0]);
 
             // Convert ISO timestamps to numeric for amCharts date axis
             const processed = data.map(d => {
@@ -149,6 +169,15 @@ window.amchartsInterop = (() => {
                 instance.cursor.set("positionX", instance.xAxis.toGlobalPosition(position));
             }
             cursorSyncEnabled = true;
+        },
+
+        setTimeWindow(isoStart, isoEnd) {
+            const start = new Date(isoStart).getTime();
+            const end = new Date(isoEnd).getTime();
+            for (const id in chartInstances) {
+                const { xAxis } = chartInstances[id];
+                xAxis.zoomToDates(new Date(start), new Date(end));
+            }
         },
 
         disposeCharts() {

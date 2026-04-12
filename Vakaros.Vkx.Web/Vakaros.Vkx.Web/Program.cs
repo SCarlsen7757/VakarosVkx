@@ -1,5 +1,4 @@
 using Vakaros.Vkx.Web.Components;
-using Vakaros.Vkx.Web.Services;
 using Vakaros.Vkx.Web.Client.Services;
 using Yarp.ReverseProxy.Configuration;
 
@@ -11,7 +10,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
 builder.Services.AddMemoryCache();
-builder.Services.AddScoped<UserPreferencesService>();
+builder.Services.AddScoped<Vakaros.Vkx.Web.Client.Services.UserPreferencesService>();
 
 builder.Services.AddHttpClient<VakarosApiClient>(client =>
 {

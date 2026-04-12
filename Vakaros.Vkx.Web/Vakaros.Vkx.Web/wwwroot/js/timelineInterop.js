@@ -1,6 +1,7 @@
 window.timelineInterop = (() => {
     let positions = null;
     let positionTimesMs = null; // pre-built numeric array for binary search
+    let container = null;
     let sliderEl = null;
     let currentLabel = null;
     let dotNetRef = null;
@@ -56,7 +57,7 @@ window.timelineInterop = (() => {
             dotNetRef = dotNetReference;
             callbackMethod = callback;
 
-            const container = document.getElementById(containerId);
+            container = document.getElementById(containerId);
             if (!container || !positions || positions.length === 0) return;
 
             sliderEl = container.querySelector('.timeline-slider');
@@ -95,9 +96,46 @@ window.timelineInterop = (() => {
                 lo--;
             }
 
+            // Clamp to current window range so slider stays within bounds
+            lo = Math.min(Math.max(lo, parseInt(sliderEl.min, 10)), parseInt(sliderEl.max, 10));
+
             sliderEl.value = lo;
             if (currentLabel) {
                 currentLabel.textContent = formatTime(positions[lo].time);
+            }
+
+            // Keep map cursor in sync without a .NET round-trip
+            if (window.leafletInterop) {
+                const pos = positions[lo];
+                window.leafletInterop.updateCursorPosition(pos.latitude, pos.longitude);
+            }
+        },
+
+        /**
+         * Constrains the cursor slider to [startIdx, endIdx].
+         * Called by timeWindowInterop whenever the window changes.
+         */
+        setRange(startIdx, endIdx) {
+            if (!sliderEl || !positions) return;
+
+            sliderEl.min = startIdx;
+            sliderEl.max = endIdx;
+
+            // Clamp current cursor position inside the new range
+            const current = parseInt(sliderEl.value, 10);
+            const clamped = Math.min(Math.max(current, startIdx), endIdx);
+            if (clamped !== current) {
+                sliderEl.value = clamped;
+                if (currentLabel) {
+                    currentLabel.textContent = formatTime(positions[clamped].time);
+                }
+            }
+
+            // Update boundary labels to show window extents
+            const timeLabels = container?.querySelectorAll('.timeline-time');
+            if (timeLabels && timeLabels.length >= 2) {
+                timeLabels[0].textContent = formatTime(positions[startIdx].time);
+                timeLabels[timeLabels.length - 1].textContent = formatTime(positions[endIdx].time);
             }
         },
 
@@ -108,6 +146,7 @@ window.timelineInterop = (() => {
             clearTimeout(debounceTimer);
             positions = null;
             positionTimesMs = null;
+            container = null;
             sliderEl = null;
             currentLabel = null;
             dotNetRef = null;

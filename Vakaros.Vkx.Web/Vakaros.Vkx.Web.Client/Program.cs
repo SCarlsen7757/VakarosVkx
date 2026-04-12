@@ -5,6 +5,8 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.Services.AddMemoryCache();
 
+builder.Services.AddScoped<UserPreferencesService>();
+
 builder.Services.AddHttpClient<VakarosApiClient>(client =>
 {
     // Always call the Blazor server (same origin). The server proxies /api/** to the

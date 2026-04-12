@@ -1,6 +1,8 @@
 window.leafletInterop = (() => {
     let map = null;
     let trackLayer = null;
+    let highlightLayer = null;
+    let allPositions = null;
     let marksLayer = null;
     let startLineLayer = null;
     let cursorMarker = null;
@@ -46,6 +48,7 @@ window.leafletInterop = (() => {
             }).addTo(map);
 
             trackLayer = L.layerGroup().addTo(map);
+            highlightLayer = L.layerGroup().addTo(map);
             marksLayer = L.layerGroup().addTo(map);
             startLineLayer = L.layerGroup().addTo(map);
 
@@ -55,15 +58,17 @@ window.leafletInterop = (() => {
         addBoatTrack(positions, dotnetRef, callbackMethod) {
             if (!map || !trackLayer) return;
             trackLayer.clearLayers();
+            highlightLayer.clearLayers();
+            allPositions = positions;
 
             if (!positions || positions.length === 0) return;
 
             const latlngs = positions.map(p => [p.latitude, p.longitude]);
 
             const polyline = L.polyline(latlngs, {
-                color: '#457b9d',
+                color: '#adb5bd',
                 weight: 3,
-                opacity: 0.8
+                opacity: 0.4
             }).addTo(trackLayer);
 
             if (dotnetRef && callbackMethod) {
@@ -137,14 +142,40 @@ window.leafletInterop = (() => {
             }
         },
 
+        setTrackWindow(isoStart, isoEnd) {
+            if (!map || !highlightLayer || !allPositions || allPositions.length === 0) return;
+            highlightLayer.clearLayers();
+
+            const startMs = new Date(isoStart).getTime();
+            const endMs = new Date(isoEnd).getTime();
+
+            const windowPoints = allPositions.filter(p => {
+                const t = new Date(p.time).getTime();
+                return t >= startMs && t <= endMs;
+            });
+
+            if (windowPoints.length === 0) return;
+
+            const latlngs = windowPoints.map(p => [p.latitude, p.longitude]);
+            const highlight = L.polyline(latlngs, {
+                color: '#457b9d',
+                weight: 3,
+                opacity: 0.8
+            }).addTo(highlightLayer);
+
+            map.fitBounds(highlight.getBounds(), { padding: [20, 20] });
+        },
+
         clearMap() {
             if (trackLayer) trackLayer.clearLayers();
+            if (highlightLayer) highlightLayer.clearLayers();
             if (marksLayer) marksLayer.clearLayers();
             if (startLineLayer) startLineLayer.clearLayers();
             if (cursorMarker) {
                 cursorMarker.remove();
                 cursorMarker = null;
             }
+            allPositions = null;
         },
 
         fitBounds() {
@@ -162,6 +193,8 @@ window.leafletInterop = (() => {
                 map = null;
             }
             trackLayer = null;
+            highlightLayer = null;
+            allPositions = null;
             marksLayer = null;
             startLineLayer = null;
             cursorMarker = null;

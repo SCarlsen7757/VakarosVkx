@@ -9,6 +9,8 @@
 @using Vakaros.Vkx.Web.Client.Components.Shared
 @using Vakaros.Vkx.Web.Client.Services
 @inject VakarosApiClient Api
+@inject UserPreferencesService Prefs
+@inject IJSRuntime JS
 @rendermode InteractiveWebAssembly
 
 <PageTitle>Race @RaceNumber</PageTitle>
@@ -46,8 +48,15 @@ else
                     CourseLegs="_courseLegs"
                     PinEnd="_raceDetail.PinEnd"
                     BoatEnd="_raceDetail.BoatEnd"
+                    WindowStart="_windowStart"
+                    WindowEnd="_windowEnd"
                     OnTrackClicked="OnMapTrackClicked" />
     </div>
+
+    <!-- Time window slicer -->
+    <TimeWindowSlicer @ref="_timeWindowSlicer"
+                      Positions="_positions"
+                      OnWindowChanged="OnWindowChanged" />
 
     <!-- Timeline slicer -->
     <TimelineSlicer @ref="_timelineSlicer"
@@ -83,10 +92,7 @@ else
         <!-- Historical mode: line charts with synced cursor -->
         <div class="charts-container">
             <TelemetryCharts @ref="_charts"
-                             SpeedData="_speedData"
-                             HeelData="_heelData"
-                             TrimData="_trimData"
-                             HeadingData="_headingData"
+                             Charts="_chartPanels"
                              OnCursorMoved="OnChartCursorMoved" />
         </div>
     }
@@ -94,7 +100,7 @@ else
     {
         <!-- Current mode: gauge readouts -->
         <div class="gauges-grid">
-            <SpeedGauge Label="SOG" Unit="kn" Value="_currentSog" />
+            <SpeedGauge Label="SOG" Unit="@UnitConverter.SpeedLabel(Prefs.SpeedUnit)" Value="_currentSog" />
             <HeadingGauge Value="_currentHeading" />
             <AngleGauge Label="Heel" Mode="AngleGauge.AngleMode.Heel" Value="_currentHeel" />
             <AngleGauge Label="Trim" Mode="AngleGauge.AngleMode.Trim" Value="_currentTrim" />
@@ -112,15 +118,10 @@ else
     // Raw API data
     private RaceDetailDto? _raceDetail;
     private List<PositionDto>? _positions;
-    private List<WindDto>? _windData;
-    private List<SpeedThroughWaterDto>? _stwData;
     private List<CourseLegDto>? _courseLegs;
 
     // Derived chart data
-    private List<TelemetryCharts.ChartDataPoint>? _speedData;
-    private List<TelemetryCharts.ChartDataPoint>? _heelData;
-    private List<TelemetryCharts.ChartDataPoint>? _trimData;
-    private List<TelemetryCharts.ChartDataPoint>? _headingData;
+    private List<ChartPanelConfig>? _chartPanels;
 
     // Current mode values
     private double? _currentSog;
@@ -132,6 +133,11 @@ else
     private LeafletMap? _leafletMap;
     private TelemetryCharts? _charts;
     private TimelineSlicer? _timelineSlicer;
+    private TimeWindowSlicer? _timeWindowSlicer;
+
+    // Time-window state
+    private DateTimeOffset _windowStart;
+    private DateTimeOffset _windowEnd;
 
     private bool _loadingMap = true;
     private bool _loadingCharts = true;
@@ -140,11 +146,11 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await Prefs.LoadAsync();
+
         // Start all tasks in parallel
         var raceTask = Api.GetRaceDetailAsync(SessionId, RaceNumber);
         var posTask = Api.GetPositionsAsync(SessionId, RaceNumber);
-        var windTask = Api.GetWindAsync(SessionId, RaceNumber);
-        var stwTask = Api.GetSpeedThroughWaterAsync(SessionId, RaceNumber);
 
         try
         {
@@ -154,13 +160,16 @@ else
             _raceDetail = raceTask.Result;
             _positions = posTask.Result;
             _loadingMap = false;
+
+            // Initialise window to full race extent
+            if (_positions is { Count: > 0 })
+            {
+                _windowStart = _positions[0].Time;
+                _windowEnd = _positions[^1].Time;
+            }
+
             StateHasChanged();
 
-            // Phase 2: telemetry — charts/gauges render after this completes
-            await Task.WhenAll(windTask, stwTask);
-
-            _windData = windTask.Result;
-            _stwData = stwTask.Result;
 
             if (_raceDetail?.CourseId.HasValue == true)
             {
@@ -168,7 +177,7 @@ else
                 _courseLegs = course?.Legs;
             }
 
-            ComputeDerivedChannels();
+            ComputeDerivedChannels(_windowStart, _windowEnd);
         }
         catch (HttpRequestException ex)
         {
@@ -200,89 +209,119 @@ else
         }
     }
 
-    private void ComputeDerivedChannels()
+    private void ComputeDerivedChannels(DateTimeOffset windowStart, DateTimeOffset windowEnd)
     {
         if (_positions is null || _positions.Count == 0) return;
 
-        // Build a lookup for wind by nearest time
-        var windByTime = _windData?
-            .OrderBy(w => w.Time)
+        // Filter positions to the selected time window
+        var windowedPositions = _positions
+            .Where(p => p.Time >= windowStart && p.Time <= windowEnd)
             .ToList();
 
-        // Build a lookup for STW by nearest time
-        var stwByTime = _stwData?
-            .OrderBy(s => s.Time)
-            .ToList();
+        if (windowedPositions.Count == 0) return;
 
         // Downsample positions for chart display to avoid overwhelming the browser.
         // Keep every Nth point so we land at roughly MaxChartPoints entries.
         const int MaxChartPoints = 500;
-        int step = Math.Max(1, _positions.Count / MaxChartPoints);
-        var sampledPositions = new List<PositionDto>(_positions.Count / step + 1);
-        for (int i = 0; i < _positions.Count; i += step)
-            sampledPositions.Add(_positions[i]);
+        int step = Math.Max(1, windowedPositions.Count / MaxChartPoints);
+        var sampledPositions = new List<PositionDto>(windowedPositions.Count / step + 1);
+        for (int i = 0; i < windowedPositions.Count; i += step)
+            sampledPositions.Add(windowedPositions[i]);
         // Always include the last point so the time range is complete
-        if (sampledPositions[^1] != _positions[^1])
-            sampledPositions.Add(_positions[^1]);
+        if (sampledPositions[^1] != windowedPositions[^1])
+            sampledPositions.Add(windowedPositions[^1]);
 
-        _speedData = [];
-        _heelData = [];
-        _trimData = [];
-        _headingData = [];
-
-        int windIdx = 0;
-        int stwIdx = 0;
+        var speedData = new List<ChartDataPoint>();
+        var heelData = new List<ChartDataPoint>();
+        var trimData = new List<ChartDataPoint>();
+        var headingData = new List<ChartDataPoint>();
 
         foreach (var pos in sampledPositions)
         {
-            var time = pos.Time.ToString("O");
+            var time = pos.Time.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
             var cogDeg = pos.CourseOverGround * (180.0 / Math.PI);
-
-            // Speed data
-            double? stwValue = null;
-            if (stwByTime is { Count: > 0 })
-            {
-                while (stwIdx < stwByTime.Count - 1 && stwByTime[stwIdx + 1].Time <= pos.Time)
-                    stwIdx++;
-                stwValue = stwByTime[stwIdx].ForwardSpeed;
-            }
-
-            _speedData.Add(new TelemetryCharts.ChartDataPoint
-            {
-                Time = time,
-                Sog = pos.SpeedOverGround,
-                Stw = stwValue
-            });
-
-            // VMG
-            double? vmgValue = null;
-            if (windByTime is { Count: > 0 })
-            {
-                while (windIdx < windByTime.Count - 1 && windByTime[windIdx + 1].Time <= pos.Time)
-                    windIdx++;
-                vmgValue = TelemetryMath.ComputeVmg(pos.SpeedOverGround, cogDeg, windByTime[windIdx].WindDirection);
-            }
-
-            // Heel
             var heel = TelemetryMath.ComputeHeel(pos.QuaternionW, pos.QuaternionX, pos.QuaternionY, pos.QuaternionZ);
-            _heelData.Add(new TelemetryCharts.ChartDataPoint { Time = time, Heel = heel });
-
-            // Trim
             var trim = TelemetryMath.ComputeTrim(pos.QuaternionW, pos.QuaternionX, pos.QuaternionY, pos.QuaternionZ);
-            _trimData.Add(new TelemetryCharts.ChartDataPoint { Time = time, Trim = trim });
 
-            // Heading
-            _headingData.Add(new TelemetryCharts.ChartDataPoint
+            var speedPt = new ChartDataPoint { Time = time };
+            var sogKnots = pos.SpeedOverGround * 1.94384;
+            speedPt.Values["sog"] = double.IsFinite(sogKnots)
+                ? UnitConverter.ConvertSpeed(sogKnots, Prefs.SpeedUnit)
+                : 0.0;
+            speedData.Add(speedPt);
+
+            var heelPt = new ChartDataPoint { Time = time };
+            heelPt.Values["heel"] = heel;
+            heelData.Add(heelPt);
+
+            var trimPt = new ChartDataPoint { Time = time };
+            trimPt.Values["trim"] = trim;
+            trimData.Add(trimPt);
+
+            var headingPt = new ChartDataPoint { Time = time };
+            headingPt.Values["cog"] = cogDeg;
+            headingData.Add(headingPt);
+        }
+
+        _chartPanels =
+        [
+            new ChartPanelConfig
             {
-                Time = time,
-                Cog = cogDeg
-            });
+                YAxisLabel = $"SOG ({UnitConverter.SpeedLabel(Prefs.SpeedUnit)})",
+                Series = [new ChartSeriesConfig { Name = "SOG", ValueField = "sog", Color = "#457b9d" }],
+                Data = speedData
+            },
+            new ChartPanelConfig
+            {
+                YAxisLabel = "Heel (\u00b0)",
+                Series = [new ChartSeriesConfig { Name = "Heel", ValueField = "heel", Color = "#f4a261" }],
+                Data = heelData
+            },
+            new ChartPanelConfig
+            {
+                YAxisLabel = "Trim (\u00b0)",
+                Series = [new ChartSeriesConfig { Name = "Trim", ValueField = "trim", Color = "#264653" }],
+                Data = trimData
+            },
+            new ChartPanelConfig
+            {
+                YAxisLabel = "Heading (\u00b0)",
+                Series =
+                [
+                    new ChartSeriesConfig { Name = "COG", ValueField = "cog", Color = "#6a4c93" },
+                    new ChartSeriesConfig { Name = "True Hdg", ValueField = "trueHeading", Color = "#1982c4" }
+                ],
+                Data = headingData
+            }
+        ];
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Push the correct m/s → preferred-unit factor to the JS resampler so that
+            // dragging the time-window slider applies the same conversion as the C# charts.
+            await JS.InvokeVoidAsync("timeWindowInterop.setSogConversion",
+                UnitConverter.ConvertSpeed(1.94384, Prefs.SpeedUnit));
         }
     }
 
     private void SetMode(ViewMode mode)
     {
         _mode = mode;
+    }
+
+    private Task OnWindowChanged((DateTimeOffset Start, DateTimeOffset End) window)
+    {
+        _windowStart = window.Start;
+        _windowEnd = window.End;
+
+        // Chart data + axis zoom + map highlight are already handled in JS
+        // (timeWindowInterop.resampleAndPush). We only update Blazor state
+        // so the LeafletMap WindowStart/WindowEnd parameters stay in sync.
+        StateHasChanged();
+        return Task.CompletedTask;
     }
 
     private async Task OnChartCursorMoved(string isoTimestamp)
@@ -347,7 +386,7 @@ else
         var pos = FindNearestPosition(ts);
         if (pos is null) return;
 
-        _currentSog = pos.SpeedOverGround;
+        _currentSog = UnitConverter.ConvertSpeed(pos.SpeedOverGround * 1.94384, Prefs.SpeedUnit);
         _currentHeading = pos.CourseOverGround * (180.0 / Math.PI);
         _currentHeel = TelemetryMath.ComputeHeel(pos.QuaternionW, pos.QuaternionX, pos.QuaternionY, pos.QuaternionZ);
         _currentTrim = TelemetryMath.ComputeTrim(pos.QuaternionW, pos.QuaternionX, pos.QuaternionY, pos.QuaternionZ);

@@ -1,8 +1,10 @@
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.JSInterop;
+using System.Text.Json;
+using Vakaros.Vkx.Shared;
 
-namespace Vakaros.Vkx.Web.Services;
+namespace Vakaros.Vkx.Web.Client.Services;
 
-public class UserPreferencesService(ProtectedLocalStorage localStorage)
+public class UserPreferencesService(IJSRuntime js)
 {
     private const string StorageKey = "user-preferences";
     private bool _loaded;
@@ -16,17 +18,22 @@ public class UserPreferencesService(ProtectedLocalStorage localStorage)
         if (_loaded) return;
         try
         {
-            var result = await localStorage.GetAsync<StoredPreferences>(StorageKey);
-            if (result.Success && result.Value is not null)
+            var json = await js.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+            if (json is not null)
             {
-                SpeedUnit = result.Value.SpeedUnit;
-                WindSpeedUnit = result.Value.WindSpeedUnit;
-                DistanceUnit = result.Value.DistanceUnit;
+                var stored = JsonSerializer.Deserialize<StoredPreferences>(json);
+                if (stored is not null)
+                {
+                    SpeedUnit = stored.SpeedUnit;
+                    WindSpeedUnit = stored.WindSpeedUnit;
+                    DistanceUnit = stored.DistanceUnit;
+                }
             }
         }
         catch
         {
-            // ProtectedLocalStorage can throw if the data-protection key changed; fall back to defaults.
+            // JS interop is unavailable during server prerendering or if localStorage is
+            // blocked; fall back to defaults.
         }
         _loaded = true;
     }
@@ -49,8 +56,11 @@ public class UserPreferencesService(ProtectedLocalStorage localStorage)
         await PersistAsync();
     }
 
-    private Task PersistAsync()
-        => localStorage.SetAsync(StorageKey, new StoredPreferences(SpeedUnit, WindSpeedUnit, DistanceUnit)).AsTask();
+    private async Task PersistAsync()
+    {
+        var json = JsonSerializer.Serialize(new StoredPreferences(SpeedUnit, WindSpeedUnit, DistanceUnit));
+        await js.InvokeVoidAsync("localStorage.setItem", StorageKey, json);
+    }
 
     private record StoredPreferences(SpeedUnit SpeedUnit, WindSpeedUnit WindSpeedUnit, DistanceUnit DistanceUnit);
 }
