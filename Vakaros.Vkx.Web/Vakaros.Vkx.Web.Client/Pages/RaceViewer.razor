@@ -161,9 +161,12 @@ else
             _positions = posTask.Result;
             _loadingMap = false;
 
-            // Initialise window to full race extent
+            // Push positions to the shared JS store once — child components
+            // (LeafletMap, TimeWindowSlicer, TimelineSlicer) will read from
+            // the store instead of each receiving a separate serialized copy.
             if (_positions is { Count: > 0 })
             {
+                await JS.InvokeVoidAsync("positionStore.set", _positions);
                 _windowStart = _positions[0].Time;
                 _windowEnd = _positions[^1].Time;
             }
@@ -177,7 +180,7 @@ else
                 _courseLegs = course?.Legs;
             }
 
-            ComputeDerivedChannels(_windowStart, _windowEnd);
+            BuildChartConfigs();
         }
         catch (HttpRequestException ex)
         {
@@ -209,85 +212,36 @@ else
         }
     }
 
-    private void ComputeDerivedChannels(DateTimeOffset windowStart, DateTimeOffset windowEnd)
+    /// <summary>
+    /// Builds chart panel configurations (series definitions and axis labels).
+    /// Actual chart data is computed and pushed entirely in JS by
+    /// timeWindowInterop.resampleAndPush — see triggerResample().
+    /// </summary>
+    private void BuildChartConfigs()
     {
         if (_positions is null || _positions.Count == 0) return;
-
-        // Filter positions to the selected time window
-        var windowedPositions = _positions
-            .Where(p => p.Time >= windowStart && p.Time <= windowEnd)
-            .ToList();
-
-        if (windowedPositions.Count == 0) return;
-
-        // Downsample positions for chart display to avoid overwhelming the browser.
-        // Keep every Nth point so we land at roughly MaxChartPoints entries.
-        const int MaxChartPoints = 500;
-        int step = Math.Max(1, windowedPositions.Count / MaxChartPoints);
-        var sampledPositions = new List<PositionDto>(windowedPositions.Count / step + 1);
-        for (int i = 0; i < windowedPositions.Count; i += step)
-            sampledPositions.Add(windowedPositions[i]);
-        // Always include the last point so the time range is complete
-        if (sampledPositions[^1] != windowedPositions[^1])
-            sampledPositions.Add(windowedPositions[^1]);
-
-        var speedData = new List<ChartDataPoint>();
-        var heelData = new List<ChartDataPoint>();
-        var trimData = new List<ChartDataPoint>();
-        var headingData = new List<ChartDataPoint>();
-
-        foreach (var pos in sampledPositions)
-        {
-            var time = pos.Time.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-            var cogDeg = pos.CourseOverGround * TelemetryMath.RadToDeg;
-            var heel = TelemetryMath.ComputeHeel(pos.QuaternionW, pos.QuaternionX, pos.QuaternionY, pos.QuaternionZ);
-            var trim = TelemetryMath.ComputeTrim(pos.QuaternionW, pos.QuaternionX, pos.QuaternionY, pos.QuaternionZ);
-
-            var sogKnots = pos.SpeedOverGround * TelemetryMath.MpsToKnots;
-            var speedPt = new ChartDataPoint { Time = time };
-            speedPt.Values["sog"] = double.IsFinite(sogKnots)
-                ? UnitConverter.ConvertSpeed(sogKnots, Prefs.SpeedUnit)
-                : 0.0;
-            speedData.Add(speedPt);
-
-            var heelPt = new ChartDataPoint { Time = time };
-            heelPt.Values["heel"] = heel;
-            heelData.Add(heelPt);
-
-            var trimPt = new ChartDataPoint { Time = time };
-            trimPt.Values["trim"] = trim;
-            trimData.Add(trimPt);
-
-            var headingPt = new ChartDataPoint { Time = time };
-            headingPt.Values["cog"] = cogDeg;
-            headingData.Add(headingPt);
-        }
 
         _chartPanels =
         [
             new ChartPanelConfig
             {
                 YAxisLabel = $"SOG ({UnitConverter.SpeedLabel(Prefs.SpeedUnit)})",
-                Series = [new ChartSeriesConfig { Name = "SOG", ValueField = "sog", Color = "#457b9d" }],
-                Data = speedData
+                Series = [new ChartSeriesConfig { Name = "SOG", ValueField = "sog", Color = "#457b9d" }]
             },
             new ChartPanelConfig
             {
                 YAxisLabel = "Heel (\u00b0)",
-                Series = [new ChartSeriesConfig { Name = "Heel", ValueField = "heel", Color = "#f4a261" }],
-                Data = heelData
+                Series = [new ChartSeriesConfig { Name = "Heel", ValueField = "heel", Color = "#f4a261" }]
             },
             new ChartPanelConfig
             {
                 YAxisLabel = "Trim (\u00b0)",
-                Series = [new ChartSeriesConfig { Name = "Trim", ValueField = "trim", Color = "#264653" }],
-                Data = trimData
+                Series = [new ChartSeriesConfig { Name = "Trim", ValueField = "trim", Color = "#264653" }]
             },
             new ChartPanelConfig
             {
                 YAxisLabel = "Heading (\u00b0)",
-                Series = [new ChartSeriesConfig { Name = "COG", ValueField = "cog", Color = "#6a4c93" }],
-                Data = headingData
+                Series = [new ChartSeriesConfig { Name = "COG", ValueField = "cog", Color = "#6a4c93" }]
             }
         ];
     }

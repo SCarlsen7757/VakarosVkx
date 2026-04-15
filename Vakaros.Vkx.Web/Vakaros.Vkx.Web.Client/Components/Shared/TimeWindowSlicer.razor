@@ -28,8 +28,9 @@
         if (firstRender && Positions is { Count: > 0 })
         {
             _dotNetRef = DotNetObjectReference.Create(this);
+            // Positions already live in window.positionStore (set by RaceViewer).
             await JS.InvokeVoidAsync("timeWindowInterop.init",
-                _containerId, Positions, _dotNetRef, nameof(OnWindowChangedFromJs));
+                _containerId, _dotNetRef, nameof(OnWindowChangedFromJs));
             _jsInitialized = true;
         }
     }

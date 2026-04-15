@@ -134,11 +134,11 @@ window.timeWindowInterop = (() => {
     }
 
     return {
-        init(containerId, positionData, dotNetReference, callback) {
+        init(containerId, dotNetReference, callback) {
             this.dispose();
 
-            positions = positionData;
-            positionTimesMs = positions.map(p => new Date(p.time).getTime());
+            positions = window.positionStore.get();
+            positionTimesMs = window.positionStore.getTimesMs();
             dotNetRef = dotNetReference;
             callbackMethod = callback;
 
@@ -172,6 +172,18 @@ window.timeWindowInterop = (() => {
         /** Called from .NET after charts are initialised, so JS knows the container IDs */
         setChartIds(ids) {
             chartContainerIds = ids;
+        },
+
+        /**
+         * Triggers an initial resampleAndPush using the current slider range.
+         * Called once after charts are initialised so the first data set comes
+         * from the same JS path used for all subsequent window changes.
+         */
+        triggerResample() {
+            if (!positions || !startSlider || !endSlider) return;
+            const si = parseInt(startSlider.value, 10);
+            const ei = parseInt(endSlider.value, 10);
+            resampleAndPush(si, ei);
         },
 
         /** Called from .NET after preferences load to set the m/s → preferred-unit factor */

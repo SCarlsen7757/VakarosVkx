@@ -49,3 +49,43 @@ window.telemetryUtils = (() => {
 
     return { formatTime, computeHeel, computeTrim, formatDuration };
 })();
+
+/**
+ * Shared position data store.
+ * Positions are serialized from WASM once and consumed by leafletInterop,
+ * timeWindowInterop, and timelineInterop — avoiding 3× serialization of the
+ * same large array across the JS interop boundary.
+ */
+window.positionStore = (() => {
+    let positions = null;
+    let timesMs = null;
+
+    return {
+        /** Called once from .NET after positions are fetched. */
+        set(positionData) {
+            positions = positionData;
+            timesMs = positions ? positions.map(p => new Date(p.time).getTime()) : null;
+        },
+
+        /** Returns the raw position array (or null). */
+        get() {
+            return positions;
+        },
+
+        /** Returns the pre-computed epoch-ms array (or null). */
+        getTimesMs() {
+            return timesMs;
+        },
+
+        /** Returns position count, or 0 if not loaded. */
+        count() {
+            return positions ? positions.length : 0;
+        },
+
+        /** Releases the stored data. */
+        clear() {
+            positions = null;
+            timesMs = null;
+        }
+    };
+})();

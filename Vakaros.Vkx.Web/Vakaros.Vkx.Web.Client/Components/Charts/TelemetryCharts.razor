@@ -25,7 +25,6 @@
     private bool _chartsInitialized;
 
     private List<string>? _chartIds;
-    private List<ChartPanelConfig>? _prevCharts;
     private string? _initError;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -41,12 +40,12 @@
             {
                 await InitializeChartsAsync();
                 _chartsInitialized = true;
-                await PushDataToChartsAsync();
-                _prevCharts = Charts;
 
-                // Tell timeWindowInterop which chart containers exist so it can
-                // push resampled data directly in JS without a WASM round-trip.
+                // Register chart containers with timeWindowInterop, then trigger
+                // the initial data push via the same JS resample path used for
+                // all subsequent window changes — no duplicate C# computation.
                 await JS.InvokeVoidAsync("timeWindowInterop.setChartIds", _chartIds);
+                await JS.InvokeVoidAsync("timeWindowInterop.triggerResample");
             }
             catch (JSException ex)
             {
@@ -56,31 +55,13 @@
         }
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override Task OnParametersSetAsync()
     {
         if (_chartIds is null && Charts is { Count: > 0 })
         {
             _chartIds = Charts.Select(_ => $"chart-{Guid.NewGuid():N}").ToList();
-            return;
         }
-
-        if (_chartsInitialized && HasDataChanged())
-        {
-            await PushDataToChartsAsync();
-            _prevCharts = Charts;
-        }
-    }
-
-    private bool HasDataChanged()
-    {
-        if (!ReferenceEquals(Charts, _prevCharts)) return true;
-        if (Charts is null || _prevCharts is null) return false;
-        if (Charts.Count != _prevCharts.Count) return true;
-        for (int i = 0; i < Charts.Count; i++)
-        {
-            if (!ReferenceEquals(Charts[i].Data, _prevCharts[i].Data)) return true;
-        }
-        return false;
+        return Task.CompletedTask;
     }
 
     private async Task InitializeChartsAsync()
@@ -95,25 +76,6 @@
         }).ToArray();
 
         await JS.InvokeVoidAsync("echartsInterop.initCharts", configs, _dotNetRef, nameof(OnChartCursorMove));
-    }
-
-    private async Task PushDataToChartsAsync()
-    {
-        if (Charts is null || _chartIds is null) return;
-
-        for (int i = 0; i < Charts.Count; i++)
-        {
-            var panel = Charts[i];
-            if (panel.Data is not { Count: > 0 }) continue;
-            try
-            {
-                await JS.InvokeVoidAsync("echartsInterop.setChartData", _chartIds[i], panel.Data);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"[TelemetryCharts] setChartData failed for panel {i}: {ex.Message}");
-            }
-        }
     }
 
     public async Task SyncCursorAsync(string isoTimestamp)

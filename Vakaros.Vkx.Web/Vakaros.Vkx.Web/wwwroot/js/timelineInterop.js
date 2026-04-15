@@ -42,12 +42,12 @@ window.timelineInterop = (() => {
     }
 
     return {
-        init(containerId, positionData, dotNetReference, callback) {
+        init(containerId, dotNetReference, callback) {
             // Clean up previous instance if any
             this.dispose();
 
-            positions = positionData;
-            positionTimesMs = positions.map(p => new Date(p.time).getTime());
+            positions = window.positionStore.get();
+            positionTimesMs = window.positionStore.getTimesMs();
             dotNetRef = dotNetReference;
             callbackMethod = callback;
 

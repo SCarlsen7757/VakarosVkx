@@ -11,6 +11,5 @@ namespace Vakaros.Vkx.Web.Client.Components.Charts
     {
         public string YAxisLabel { get; set; } = "";
         public List<ChartSeriesConfig> Series { get; set; } = [];
-        public List<ChartDataPoint> Data { get; set; } = [];
     }
 }

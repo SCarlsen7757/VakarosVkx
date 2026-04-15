@@ -69,7 +69,9 @@
     {
         if (Positions is { Count: > 0 })
         {
-            await JS.InvokeVoidAsync("leafletInterop.addBoatTrack", Positions, _dotNetRef, nameof(OnMapTrackClick));
+            // Positions already live in window.positionStore (set by RaceViewer).
+            // Pass only the dotNetRef + callback name — JS reads positions from the store.
+            await JS.InvokeVoidAsync("leafletInterop.addBoatTrack", _dotNetRef, nameof(OnMapTrackClick));
         }
 
         if (CourseLegs is { Count: > 0 })

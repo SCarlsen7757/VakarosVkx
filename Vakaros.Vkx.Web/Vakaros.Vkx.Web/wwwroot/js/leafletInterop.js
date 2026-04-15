@@ -55,10 +55,12 @@ window.leafletInterop = (() => {
             return true;
         },
 
-        addBoatTrack(positions, dotnetRef, callbackMethod) {
+        addBoatTrack(dotnetRef, callbackMethod) {
             if (!map || !trackLayer) return;
             trackLayer.clearLayers();
             highlightLayer.clearLayers();
+
+            const positions = window.positionStore.get();
             allPositions = positions;
 
             if (!positions || positions.length === 0) return;
