@@ -8,13 +8,7 @@ window.timelineInterop = (() => {
     let callbackMethod = null;
     let debounceTimer = null;
 
-    function formatTime(isoString) {
-        const d = new Date(isoString);
-        const h = String(d.getHours()).padStart(2, '0');
-        const m = String(d.getMinutes()).padStart(2, '0');
-        const s = String(d.getSeconds()).padStart(2, '0');
-        return `${h}:${m}:${s}`;
-    }
+    const { formatTime } = window.telemetryUtils;
 
     function onSliderInput() {
         if (!positions || !sliderEl) return;

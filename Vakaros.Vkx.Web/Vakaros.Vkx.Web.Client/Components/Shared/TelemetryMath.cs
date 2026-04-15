@@ -2,9 +2,16 @@ namespace Vakaros.Vkx.Web.Client.Components.Shared;
 
 /// <summary>
 /// Utility methods for computing derived sailing channels from raw telemetry.
+/// JS mirror: wwwroot/js/telemetryUtils.js — keep both in sync.
 /// </summary>
 public static class TelemetryMath
 {
+    /// <summary>Metres-per-second to knots conversion factor.</summary>
+    public const double MpsToKnots = 1.94384;
+
+    /// <summary>Radians to degrees conversion factor.</summary>
+    public const double RadToDeg = 180.0 / Math.PI;
+
     /// <summary>
     /// Compute VMG (Velocity Made Good) = SOG × cos(COG − WindDirection).
     /// All angles in degrees.
@@ -18,6 +25,7 @@ public static class TelemetryMath
     /// <summary>
     /// Compute heel (roll) angle from quaternion, returned in degrees.
     /// Positive = starboard heel.
+    /// JS mirror: telemetryUtils.computeHeel
     /// </summary>
     public static double ComputeHeel(float qw, float qx, float qy, float qz)
     {
@@ -29,6 +37,7 @@ public static class TelemetryMath
     /// <summary>
     /// Compute trim (pitch) angle from quaternion, returned in degrees.
     /// Positive = bow up.
+    /// JS mirror: telemetryUtils.computeTrim
     /// </summary>
     public static double ComputeTrim(float qw, float qx, float qy, float qz)
     {

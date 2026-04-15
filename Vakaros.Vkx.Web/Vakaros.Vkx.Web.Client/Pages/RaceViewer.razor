@@ -239,12 +239,12 @@ else
         foreach (var pos in sampledPositions)
         {
             var time = pos.Time.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-            var cogDeg = pos.CourseOverGround * (180.0 / Math.PI);
+            var cogDeg = pos.CourseOverGround * TelemetryMath.RadToDeg;
             var heel = TelemetryMath.ComputeHeel(pos.QuaternionW, pos.QuaternionX, pos.QuaternionY, pos.QuaternionZ);
             var trim = TelemetryMath.ComputeTrim(pos.QuaternionW, pos.QuaternionX, pos.QuaternionY, pos.QuaternionZ);
 
+            var sogKnots = pos.SpeedOverGround * TelemetryMath.MpsToKnots;
             var speedPt = new ChartDataPoint { Time = time };
-            var sogKnots = pos.SpeedOverGround * 1.94384;
             speedPt.Values["sog"] = double.IsFinite(sogKnots)
                 ? UnitConverter.ConvertSpeed(sogKnots, Prefs.SpeedUnit)
                 : 0.0;
@@ -286,11 +286,7 @@ else
             new ChartPanelConfig
             {
                 YAxisLabel = "Heading (\u00b0)",
-                Series =
-                [
-                    new ChartSeriesConfig { Name = "COG", ValueField = "cog", Color = "#6a4c93" },
-                    new ChartSeriesConfig { Name = "True Hdg", ValueField = "trueHeading", Color = "#1982c4" }
-                ],
+                Series = [new ChartSeriesConfig { Name = "COG", ValueField = "cog", Color = "#6a4c93" }],
                 Data = headingData
             }
         ];
@@ -303,7 +299,7 @@ else
             // Push the correct m/s → preferred-unit factor to the JS resampler so that
             // dragging the time-window slider applies the same conversion as the C# charts.
             await JS.InvokeVoidAsync("timeWindowInterop.setSogConversion",
-                UnitConverter.ConvertSpeed(1.94384, Prefs.SpeedUnit));
+                UnitConverter.ConvertSpeed(TelemetryMath.MpsToKnots, Prefs.SpeedUnit));
         }
     }
 
@@ -328,16 +324,12 @@ else
     {
         if (!DateTimeOffset.TryParse(isoTimestamp, out var ts)) return;
 
-        UpdateCurrentValues(ts);
+        var nearest = UpdateCurrentValues(ts);
 
         // Update map cursor
-        if (_leafletMap is not null && _positions is { Count: > 0 })
+        if (_leafletMap is not null && nearest is not null)
         {
-            var nearest = FindNearestPosition(ts);
-            if (nearest is not null)
-            {
-                await _leafletMap.UpdateCursorAsync(nearest.Latitude, nearest.Longitude);
-            }
+            await _leafletMap.UpdateCursorAsync(nearest.Latitude, nearest.Longitude);
         }
 
         // Sync timeline slider
@@ -351,14 +343,12 @@ else
     {
         if (!DateTimeOffset.TryParse(isoTimestamp, out var ts)) return;
 
-        UpdateCurrentValues(ts);
+        var nearest = UpdateCurrentValues(ts);
 
         // Move the boat cursor directly so it works even if timelineInterop isn't ready yet.
-        if (_leafletMap is not null && _positions is { Count: > 0 })
+        if (_leafletMap is not null && nearest is not null)
         {
-            var nearest = FindNearestPosition(ts);
-            if (nearest is not null)
-                await _leafletMap.UpdateCursorAsync(nearest.Latitude, nearest.Longitude);
+            await _leafletMap.UpdateCursorAsync(nearest.Latitude, nearest.Longitude);
         }
 
         // Sync charts to this timestamp
@@ -376,7 +366,7 @@ else
 
     private void OnTimelineChanged(DateTimeOffset ts)
     {
-        UpdateCurrentValues(ts);
+        _ = UpdateCurrentValues(ts);
 
         // Chart cursors are now synced directly by JS (timelineInterop → echartsInterop).
         // Map cursor is already moved by JS (timelineInterop.onSliderInput).
@@ -387,17 +377,18 @@ else
         }
     }
 
-    private void UpdateCurrentValues(DateTimeOffset ts)
+    private PositionDto? UpdateCurrentValues(DateTimeOffset ts)
     {
-        if (_positions is null || _positions.Count == 0) return;
+        if (_positions is null || _positions.Count == 0) return null;
 
         var pos = FindNearestPosition(ts);
-        if (pos is null) return;
+        if (pos is null) return null;
 
-        _currentSog = UnitConverter.ConvertSpeed(pos.SpeedOverGround * 1.94384, Prefs.SpeedUnit);
-        _currentHeading = pos.CourseOverGround * (180.0 / Math.PI);
+        _currentSog = UnitConverter.ConvertSpeed(pos.SpeedOverGround * TelemetryMath.MpsToKnots, Prefs.SpeedUnit);
+        _currentHeading = pos.CourseOverGround * TelemetryMath.RadToDeg;
         _currentHeel = TelemetryMath.ComputeHeel(pos.QuaternionW, pos.QuaternionX, pos.QuaternionY, pos.QuaternionZ);
         _currentTrim = TelemetryMath.ComputeTrim(pos.QuaternionW, pos.QuaternionX, pos.QuaternionY, pos.QuaternionZ);
+        return pos;
     }
 
     private PositionDto? FindNearestPosition(DateTimeOffset ts)
