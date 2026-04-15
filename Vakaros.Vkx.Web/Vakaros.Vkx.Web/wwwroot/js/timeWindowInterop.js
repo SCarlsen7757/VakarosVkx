@@ -52,7 +52,7 @@ window.timeWindowInterop = (() => {
     }
 
     function resampleAndPush(startIdx, endIdx) {
-        if (!positions || !window.amchartsInterop || !chartContainerIds) return;
+        if (!positions || !window.echartsInterop || !chartContainerIds) return;
 
         const windowCount = endIdx - startIdx + 1;
         const step = Math.max(1, Math.floor(windowCount / MAX_CHART_POINTS));
@@ -93,13 +93,13 @@ window.timeWindowInterop = (() => {
         // Push directly to amcharts — panels are ordered: speed, heel, trim, heading
         const panelData = [speedData, heelData, trimData, headingData];
         for (let i = 0; i < chartContainerIds.length && i < panelData.length; i++) {
-            window.amchartsInterop.setChartData(chartContainerIds[i], panelData[i]);
+            window.echartsInterop.setChartData(chartContainerIds[i], panelData[i]);
         }
 
         // Zoom x-axis to the window
         const startIso = positions[startIdx].time;
         const endIso = positions[endIdx].time;
-        window.amchartsInterop.setTimeWindow(startIso, endIso);
+        window.echartsInterop.setTimeWindow(startIso, endIso);
 
         // Update map highlight
         if (window.leafletInterop) {

@@ -37,8 +37,8 @@ window.timelineInterop = (() => {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
             // Sync chart cursors directly in JS — avoids .NET → JS round-trip
-            if (window.amchartsInterop) {
-                window.amchartsInterop.syncCursor(pos.time);
+            if (window.echartsInterop) {
+                window.echartsInterop.syncCursor(pos.time);
             }
 
             if (dotNetRef && callbackMethod) {

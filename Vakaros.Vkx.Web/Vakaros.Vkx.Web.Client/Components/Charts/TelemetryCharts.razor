@@ -94,7 +94,7 @@
             series = panel.Series.Select(s => new { name = s.Name, valueField = s.ValueField, color = s.Color }).ToArray()
         }).ToArray();
 
-        await JS.InvokeVoidAsync("amchartsInterop.initCharts", configs, _dotNetRef, nameof(OnChartCursorMove));
+        await JS.InvokeVoidAsync("echartsInterop.initCharts", configs, _dotNetRef, nameof(OnChartCursorMove));
     }
 
     private async Task PushDataToChartsAsync()
@@ -107,7 +107,7 @@
             if (panel.Data is not { Count: > 0 }) continue;
             try
             {
-                await JS.InvokeVoidAsync("amchartsInterop.setChartData", _chartIds[i], panel.Data);
+                await JS.InvokeVoidAsync("echartsInterop.setChartData", _chartIds[i], panel.Data);
             }
             catch (Exception ex)
             {
@@ -120,7 +120,7 @@
     {
         if (_chartsInitialized)
         {
-            await JS.InvokeVoidAsync("amchartsInterop.syncCursor", isoTimestamp);
+            await JS.InvokeVoidAsync("echartsInterop.syncCursor", isoTimestamp);
         }
     }
 
@@ -128,7 +128,7 @@
     {
         if (_chartsInitialized)
         {
-            await JS.InvokeVoidAsync("amchartsInterop.setTimeWindow",
+            await JS.InvokeVoidAsync("echartsInterop.setTimeWindow",
                 start.ToString("O"), end.ToString("O"));
         }
     }
@@ -145,7 +145,7 @@
         {
             try
             {
-                await JS.InvokeVoidAsync("amchartsInterop.disposeCharts");
+                await JS.InvokeVoidAsync("echartsInterop.disposeCharts");
             }
             catch (JSException)
             {

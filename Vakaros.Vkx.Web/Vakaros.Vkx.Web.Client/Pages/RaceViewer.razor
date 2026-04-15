@@ -353,6 +353,14 @@ else
 
         UpdateCurrentValues(ts);
 
+        // Move the boat cursor directly so it works even if timelineInterop isn't ready yet.
+        if (_leafletMap is not null && _positions is { Count: > 0 })
+        {
+            var nearest = FindNearestPosition(ts);
+            if (nearest is not null)
+                await _leafletMap.UpdateCursorAsync(nearest.Latitude, nearest.Longitude);
+        }
+
         // Sync charts to this timestamp
         if (_charts is not null)
         {
@@ -370,7 +378,7 @@ else
     {
         UpdateCurrentValues(ts);
 
-        // Chart cursors are now synced directly by JS (timelineInterop → amchartsInterop).
+        // Chart cursors are now synced directly by JS (timelineInterop → echartsInterop).
         // Map cursor is already moved by JS (timelineInterop.onSliderInput).
         // Only re-render when gauges are visible so Blazor can update their values.
         if (_mode == ViewMode.Current)
