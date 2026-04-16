@@ -16,9 +16,9 @@ window.leafletInterop = (() => {
     function makeBoatCursorIcon(headingDeg) {
         return L.divIcon({
             className: 'boat-cursor-icon',
-            html: `<svg width="16" height="16" viewBox="0 0 16 16" style="transform:rotate(${headingDeg}deg);display:block;"><polygon points="8,1 15,15 8,11 1,15" fill="${boatColor}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
+            html: `<svg width="26" height="26" viewBox="0 0 16 16" style="transform:rotate(${headingDeg}deg);display:block;"><polygon points="8,1 15,15 8,11 1,15" fill="${boatColor}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
         });
     }
 
