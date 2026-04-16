@@ -6,7 +6,8 @@ window.timelineInterop = (() => {
     let currentLabel = null;
     let dotNetRef = null;
     let callbackMethod = null;
-    let debounceTimer = null;
+    let throttleTimer = null;
+    let throttlePending = false;
 
     const { formatTime } = window.telemetryUtils;
 
@@ -27,19 +28,33 @@ window.timelineInterop = (() => {
             window.leafletInterop.updateCursorPosition(pos.latitude, pos.longitude, headingDeg);
         }
 
-        // Debounce the .NET callback so charts/gauges sync after the user
-        // settles, rather than on every pixel of slider movement.
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            // Sync chart cursors directly in JS — avoids .NET → JS round-trip
+        // Throttle the .NET callback to ~60fps so gauges stay snappy during drag
+        // without flooding the interop boundary.
+        if (!throttleTimer) {
+            throttleTimer = setTimeout(() => {
+                throttleTimer = null;
+                if (throttlePending) {
+                    throttlePending = false;
+                    // Sync chart cursors directly in JS — avoids .NET → JS round-trip
+                    if (window.echartsInterop) {
+                        window.echartsInterop.syncCursor(pos.time);
+                    }
+
+                    if (dotNetRef && callbackMethod) {
+                        dotNetRef.invokeMethodAsync(callbackMethod, pos.time);
+                    }
+                }
+            }, 16);
+            // Fire immediately on the leading edge
             if (window.echartsInterop) {
                 window.echartsInterop.syncCursor(pos.time);
             }
-
             if (dotNetRef && callbackMethod) {
                 dotNetRef.invokeMethodAsync(callbackMethod, pos.time);
             }
-        }, 80);
+        } else {
+            throttlePending = true;
+        }
     }
 
     return {
@@ -139,7 +154,9 @@ window.timelineInterop = (() => {
             if (sliderEl) {
                 sliderEl.removeEventListener('input', onSliderInput);
             }
-            clearTimeout(debounceTimer);
+            clearTimeout(throttleTimer);
+            throttleTimer = null;
+            throttlePending = false;
             positions = null;
             positionTimesMs = null;
             container = null;
