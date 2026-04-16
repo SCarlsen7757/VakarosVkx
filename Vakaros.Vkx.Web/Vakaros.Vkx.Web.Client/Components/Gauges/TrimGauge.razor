@@ -17,7 +17,7 @@
     else if (!ShowAngle)
     {
         <div class="angle-visual inclinometer-visual">
-            <svg viewBox="0 35 140 85" width="100%">
+            <svg viewBox="0 35 140 60" width="100%">
                 <g transform="translate(70, 0)">
                     <!-- Minimal smooth track -->
                     <path d="M -42.42 42.42 A 60 60 0 0 0 42.42 42.42" fill="none" stroke="#e9ecef" stroke-width="6" stroke-linecap="round" />
@@ -47,7 +47,7 @@
                     </g>
                 </g>
                 <!-- Central digital readout -->
-                @((MarkupString)$"<text x='70' y='110' text-anchor='middle' fill='currentColor' font-size='15' font-weight='bold'>{Value.Value.ToString("F1")}°</text>")
+                @((MarkupString)$"<text x='70' y='50' text-anchor='middle' fill='currentColor' font-size='15' font-weight='bold'>{Value.Value.ToString("F1")}°</text>")
             </svg>
         </div>
     }
@@ -89,7 +89,7 @@
     [Parameter] public string Label { get; set; } = "Trim";
     [Parameter] public double? Value { get; set; }
 
-    private bool ShowAngle { get; set; } = true;
+    private bool ShowAngle { get; set; } = false;
 
     private double ClampedAngle => Value.HasValue ? Math.Clamp(Value.Value, -5, 5) : 0;
 

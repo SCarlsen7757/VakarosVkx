@@ -245,7 +245,7 @@ nav:has(a[href="/sessions"]) {
 .gauge-card {
     background: #fff;
     border-radius: 8px;
-    padding: 1.25rem;
+    padding: 0.75rem 1rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     text-align: center;
 }
@@ -274,14 +274,14 @@ nav:has(a[href="/sessions"]) {
 }
 
 .gauge-number {
-    font-size: 2.2rem;
+    font-size: 5.5rem;
     font-weight: 700;
     color: #1d3557;
     line-height: 1;
 }
 
 .gauge-unit {
-    font-size: 0.95rem;
+    font-size: 1.95rem;
     color: #6c757d;
     font-weight: 500;
 }
