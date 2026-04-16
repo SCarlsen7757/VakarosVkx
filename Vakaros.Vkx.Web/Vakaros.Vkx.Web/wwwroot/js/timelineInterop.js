@@ -23,7 +23,8 @@ window.timelineInterop = (() => {
 
         // Move map boat cursor instantly — no server round-trip
         if (window.leafletInterop) {
-            window.leafletInterop.updateCursorPosition(pos.latitude, pos.longitude);
+            const headingDeg = (pos.courseOverGround ?? 0) * (180 / Math.PI);
+            window.leafletInterop.updateCursorPosition(pos.latitude, pos.longitude, headingDeg);
         }
 
         // Debounce the .NET callback so charts/gauges sync after the user
@@ -101,7 +102,8 @@ window.timelineInterop = (() => {
             // Keep map cursor in sync without a .NET round-trip
             if (window.leafletInterop) {
                 const pos = positions[lo];
-                window.leafletInterop.updateCursorPosition(pos.latitude, pos.longitude);
+                const headingDeg = (pos.courseOverGround ?? 0) * (180 / Math.PI);
+                window.leafletInterop.updateCursorPosition(pos.latitude, pos.longitude, headingDeg);
             }
         },
 

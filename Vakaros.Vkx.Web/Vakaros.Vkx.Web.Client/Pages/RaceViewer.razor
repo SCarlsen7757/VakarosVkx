@@ -49,8 +49,7 @@ else
                     PinEnd="_raceDetail.PinEnd"
                     BoatEnd="_raceDetail.BoatEnd"
                     WindowStart="_windowStart"
-                    WindowEnd="_windowEnd"
-                    OnTrackClicked="OnMapTrackClicked" />
+                    WindowEnd="_windowEnd" />
     </div>
 
     <!-- Time window slicer -->
@@ -135,9 +134,9 @@ else
     private TimelineSlicer? _timelineSlicer;
     private TimeWindowSlicer? _timeWindowSlicer;
 
-    // Time-window state
-    private DateTimeOffset _windowStart;
-    private DateTimeOffset _windowEnd;
+    // Time-window state (null = no highlight drawn on the map)
+    private DateTimeOffset? _windowStart;
+    private DateTimeOffset? _windowEnd;
 
     private bool _loadingMap = true;
     private bool _loadingCharts = true;
@@ -167,8 +166,8 @@ else
             if (_positions is { Count: > 0 })
             {
                 await JS.InvokeVoidAsync("positionStore.set", _positions);
-                _windowStart = _positions[0].Time;
-                _windowEnd = _positions[^1].Time;
+                // Don't pre-set the window — leave it null so the map shows
+                // the plain red track until the user moves the time slicer.
             }
 
             StateHasChanged();
@@ -283,32 +282,7 @@ else
         // Update map cursor
         if (_leafletMap is not null && nearest is not null)
         {
-            await _leafletMap.UpdateCursorAsync(nearest.Latitude, nearest.Longitude);
-        }
-
-        // Sync timeline slider
-        if (_timelineSlicer is not null)
-            await _timelineSlicer.SetTimestampAsync(ts);
-
-        StateHasChanged();
-    }
-
-    private async Task OnMapTrackClicked(string isoTimestamp)
-    {
-        if (!DateTimeOffset.TryParse(isoTimestamp, out var ts)) return;
-
-        var nearest = UpdateCurrentValues(ts);
-
-        // Move the boat cursor directly so it works even if timelineInterop isn't ready yet.
-        if (_leafletMap is not null && nearest is not null)
-        {
-            await _leafletMap.UpdateCursorAsync(nearest.Latitude, nearest.Longitude);
-        }
-
-        // Sync charts to this timestamp
-        if (_charts is not null)
-        {
-            await _charts.SyncCursorAsync(isoTimestamp);
+            await _leafletMap.UpdateCursorAsync(nearest.Latitude, nearest.Longitude, nearest.CourseOverGround * TelemetryMath.RadToDeg);
         }
 
         // Sync timeline slider

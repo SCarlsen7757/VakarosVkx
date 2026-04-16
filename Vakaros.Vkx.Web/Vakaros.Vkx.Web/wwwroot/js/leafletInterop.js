@@ -7,16 +7,38 @@ window.leafletInterop = (() => {
     let startLineLayer = null;
     let cursorMarker = null;
 
-    const boatIcon = L.divIcon({
-        className: 'boat-cursor-icon',
-        html: '<div style="width:14px;height:14px;background:#e63946;border:2px solid #fff;border-radius:50%;box-shadow:0 0 6px rgba(0,0,0,0.4);"></div>',
-        iconSize: [14, 14],
-        iconAnchor: [7, 7]
+    const boatColor = "#005AFF";
+    const courseMarksColor = "#FF2600";
+    const startMarksColor = "#FF2600";
+    const startLineColor = "#D9FF00";
+    const routeLineColor = "#FF2600";
+
+    function makeBoatCursorIcon(headingDeg) {
+        return L.divIcon({
+            className: 'boat-cursor-icon',
+            html: `<svg width="16" height="16" viewBox="0 0 16 16" style="transform:rotate(${headingDeg}deg);display:block;"><polygon points="8,1 15,15 8,11 1,15" fill="${boatColor}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+    }
+
+    const pinIcon = L.divIcon({
+        className: 'start-pin-icon',
+        html: `<svg width="20" height="20" viewBox="0 0 20 20"><polygon points="7,1 13,13 1,13" fill="${startMarksColor}" stroke-linejoin="round"/></svg>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+    });
+
+    const boatEndIcon = L.divIcon({
+        className: 'start-boat-icon',
+        html: `<div style="width:12px;height:12px;background:${startMarksColor};"></div>`,
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
     });
 
     const markIcon = L.divIcon({
         className: 'course-mark-icon',
-        html: '<div style="width:12px;height:12px;background:#ff9f1c;border:2px solid #fff;border-radius:50%;box-shadow:0 0 4px rgba(0,0,0,0.3);"></div>',
+        html: `<div style="width:12px;height:12px;background:${courseMarksColor};border:2px solid #fff;border-radius:50%;"></div>`,
         iconSize: [12, 12],
         iconAnchor: [6, 6]
     });
@@ -55,7 +77,7 @@ window.leafletInterop = (() => {
             return true;
         },
 
-        addBoatTrack(dotnetRef, callbackMethod) {
+        addBoatTrack() {
             if (!map || !trackLayer) return;
             trackLayer.clearLayers();
             highlightLayer.clearLayers();
@@ -68,28 +90,10 @@ window.leafletInterop = (() => {
             const latlngs = positions.map(p => [p.latitude, p.longitude]);
 
             const polyline = L.polyline(latlngs, {
-                color: '#adb5bd',
+                color: routeLineColor,
                 weight: 3,
                 opacity: 0.4
             }).addTo(trackLayer);
-
-            if (dotnetRef && callbackMethod) {
-                polyline.on('click', (e) => {
-                    // Find nearest position by distance
-                    let minDist = Infinity;
-                    let nearestIdx = 0;
-                    for (let i = 0; i < positions.length; i++) {
-                        const dx = positions[i].latitude - e.latlng.lat;
-                        const dy = positions[i].longitude - e.latlng.lng;
-                        const dist = dx * dx + dy * dy;
-                        if (dist < minDist) {
-                            minDist = dist;
-                            nearestIdx = i;
-                        }
-                    }
-                    dotnetRef.invokeMethodAsync(callbackMethod, positions[nearestIdx].time);
-                });
-            }
 
             map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
         },
@@ -120,27 +124,29 @@ window.leafletInterop = (() => {
 
             L.polyline(
                 [[pinEnd.latitude, pinEnd.longitude], [boatEnd.latitude, boatEnd.longitude]],
-                { color: '#e63946', weight: 3, dashArray: '8,6', opacity: 0.9 }
+                { color: startLineColor, weight: 3, dashArray: '8,6', opacity: 0.9 }
             ).addTo(startLineLayer);
 
-            // Pin end marker
-            L.circleMarker([pinEnd.latitude, pinEnd.longitude], {
-                radius: 5, color: '#e63946', fillColor: '#e63946', fillOpacity: 1
-            }).bindTooltip('Pin', { direction: 'left' }).addTo(startLineLayer);
+            // Pin end marker – triangle
+            L.marker([pinEnd.latitude, pinEnd.longitude], { icon: pinIcon })
+                .bindTooltip('Pin', { direction: 'left' })
+                .addTo(startLineLayer);
 
-            // Boat end marker
-            L.circleMarker([boatEnd.latitude, boatEnd.longitude], {
-                radius: 5, color: '#e63946', fillColor: '#e63946', fillOpacity: 1
-            }).bindTooltip('Boat', { direction: 'right' }).addTo(startLineLayer);
+            // Boat end marker – square
+            L.marker([boatEnd.latitude, boatEnd.longitude], { icon: boatEndIcon })
+                .bindTooltip('Boat', { direction: 'right' })
+                .addTo(startLineLayer);
         },
 
-        updateCursorPosition(lat, lng) {
+        updateCursorPosition(lat, lng, headingDeg) {
             if (!map) return;
 
+            const icon = makeBoatCursorIcon(headingDeg ?? 0);
             if (!cursorMarker) {
-                cursorMarker = L.marker([lat, lng], { icon: boatIcon, zIndexOffset: 1000 }).addTo(map);
+                cursorMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).addTo(map);
             } else {
                 cursorMarker.setLatLng([lat, lng]);
+                cursorMarker.setIcon(icon);
             }
         },
 
@@ -160,9 +166,9 @@ window.leafletInterop = (() => {
 
             const latlngs = windowPoints.map(p => [p.latitude, p.longitude]);
             const highlight = L.polyline(latlngs, {
-                color: '#457b9d',
+                color: routeLineColor,
                 weight: 3,
-                opacity: 0.8
+                opacity: 1.0
             }).addTo(highlightLayer);
 
             map.fitBounds(highlight.getBounds(), { padding: [20, 20] });
