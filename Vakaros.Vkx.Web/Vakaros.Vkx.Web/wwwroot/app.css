@@ -404,3 +404,36 @@ nav:has(a[href="/sessions"]) {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* ── Skeleton loading ────────────────────────────────────────────────── */
+
+@keyframes skeleton-shimmer {
+    0% { background-position: -600px 0; }
+    100% { background-position: 600px 0; }
+}
+
+.skeleton {
+    border-radius: 6px;
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 1200px 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+    margin-bottom: 1rem;
+}
+
+.skeleton-map {
+    height: 45vh;
+    min-height: 350px;
+}
+
+.skeleton-slicer {
+    height: 56px;
+}
+
+.skeleton-mode-toggle {
+    height: 36px;
+    width: 200px;
+}
+
+.skeleton-charts {
+    height: 320px;
+}

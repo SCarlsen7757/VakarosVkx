@@ -33,7 +33,12 @@
 }
 else if (_loadingMap)
 {
-    <p><em>Loading race data…</em></p>
+    <!-- Skeleton: map + slicers + mode toggle + charts -->
+    <div class="skeleton skeleton-map"></div>
+    <div class="skeleton skeleton-slicer"></div>
+    <div class="skeleton skeleton-slicer"></div>
+    <div class="skeleton skeleton-mode-toggle"></div>
+    <div class="skeleton skeleton-charts"></div>
 }
 else if (_raceDetail is null)
 {
@@ -84,7 +89,7 @@ else
     }
     else if (_loadingCharts)
     {
-        <p><em>Loading telemetry…</em></p>
+        <div class="skeleton skeleton-charts"></div>
     }
     else if (_mode == ViewMode.Historical)
     {
@@ -145,6 +150,10 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Skip API calls during SSR pre-render — the component will re-run
+        // once WASM is interactive, preventing a transient error banner.
+        if (!RendererInfo.IsInteractive) return;
+
         await Prefs.LoadAsync();
 
         // Start all tasks in parallel
