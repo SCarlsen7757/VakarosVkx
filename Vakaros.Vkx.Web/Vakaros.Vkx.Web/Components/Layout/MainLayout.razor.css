@@ -31,14 +31,16 @@
     color: #ffffff;
 }
 
-/* Show/hide hamburger vs close icon */
+/* Show/hide hamburger vs close icon (mobile only) */
 .sidebar-open .sidebar-toggle .icon-menu { display: none; }
 .sidebar-open .sidebar-toggle .icon-close { display: block; }
-.sidebar-collapsed .sidebar-toggle .icon-menu { display: block; }
-.sidebar-collapsed .sidebar-toggle .icon-close { display: none; }
+.sidebar-toggle .icon-close { display: none; }
 
-.sidebar-open .sidebar-toggle {
-    left: 168px;
+/* Hide toggle on desktop & tablet — only needed on mobile */
+@media (min-width: 768px) {
+    .sidebar-toggle {
+        display: none;
+    }
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────────────── */
@@ -113,39 +115,41 @@
     transition: opacity 0.2s;
 }
 
-/* ── Collapsed state (desktop: icon-only) ────────────────────────────── */
-
-.sidebar-collapsed .sidebar {
-    width: 52px;
-}
-
-.sidebar-collapsed .sidebar-brand,
-.sidebar-collapsed .nav-label {
-    opacity: 0;
-    width: 0;
-}
-
-.sidebar-collapsed .sidebar-header {
-    padding-left: 0.75rem;
-    justify-content: center;
-}
-
-.sidebar-collapsed .sidebar-nav li ::deep a {
-    justify-content: center;
-    padding: 0.6rem 0;
-}
-
-.sidebar-collapsed .sidebar-toggle {
-    left: 0.55rem;
-}
-
-/* ── Mobile: sidebar as overlay ──────────────────────────────────────── */
+/* ── Tablet: auto-collapse to icon-only ──────────────────────────────── */
 
 .sidebar-backdrop {
     display: none;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1023px) and (min-width: 768px) {
+    .sidebar {
+        width: 52px;
+    }
+
+    .sidebar-brand,
+    .nav-label {
+        opacity: 0;
+        width: 0;
+    }
+
+    .sidebar-header {
+        padding-left: 0.75rem;
+        justify-content: center;
+    }
+
+    .sidebar-nav li ::deep a {
+        justify-content: center;
+        padding: 0.6rem 0;
+    }
+
+    .sidebar-toggle {
+        display: none;
+    }
+}
+
+/* ── Mobile: sidebar as overlay ──────────────────────────────────────── */
+
+@media (max-width: 767px) {
     .sidebar {
         position: fixed;
         top: 0;
@@ -163,11 +167,6 @@
 
     .sidebar-open .sidebar-toggle {
         left: 188px;
-    }
-
-    .sidebar-collapsed .sidebar {
-        width: 220px;
-        transform: translateX(-100%);
     }
 
     .sidebar-backdrop {
