@@ -27,10 +27,29 @@ public class RaceDetectionService
         var raceNumber = 0;
         Race? currentRace = null;
 
+        // Track the most recent countdown trigger (Start or Sync) so we can
+        // record when the pre-race countdown procedure began.
+        DateTimeOffset? countdownStart = null;
+        int? countdownDuration = null;
+
         foreach (var evt in events)
         {
             switch (evt.EventType)
             {
+                case TimerEventType.Start:
+                case TimerEventType.Sync:
+                    // Remember the latest countdown trigger; a Sync after a Start
+                    // supersedes the earlier value (timer was re-synced).
+                    countdownStart = evt.Timestamp;
+                    countdownDuration = evt.TimerValue;
+                    break;
+
+                case TimerEventType.Reset:
+                    // Timer was reset — discard any pending countdown info.
+                    countdownStart = null;
+                    countdownDuration = null;
+                    break;
+
                 case TimerEventType.RaceStart when state == RaceState.Idle:
                     state = RaceState.Racing;
                     raceNumber++;
@@ -38,9 +57,15 @@ public class RaceDetectionService
                     {
                         SessionId = sessionId,
                         RaceNumber = raceNumber,
+                        CountdownStartedAt = countdownStart,
+                        CountdownDurationSeconds = countdownDuration,
                         StartedAt = evt.Timestamp
                     };
                     races.Add(currentRace);
+
+                    // Reset countdown state for the next race.
+                    countdownStart = null;
+                    countdownDuration = null;
                     break;
 
                 case TimerEventType.RaceEnd when state == RaceState.Racing:
@@ -51,7 +76,7 @@ public class RaceDetectionService
             }
         }
 
-        // If still racing at EOF, ended_at remains null.
+        // If still racing at EOF, EndedAt remains null.
         return races;
     }
 

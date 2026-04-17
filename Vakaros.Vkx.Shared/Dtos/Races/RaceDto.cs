@@ -4,8 +4,11 @@ public record RaceDto(
     int RaceNumber,
     int? CourseId,
     string? CourseName,
+    DateTimeOffset? CountdownStartedAt,
+    int? CountdownDurationSeconds,
     DateTimeOffset StartedAt,
-    DateTimeOffset EndedAt,
-    double DurationSeconds,
+    DateTimeOffset? EndedAt,
+    double? DurationSeconds,
     double SailedDistanceMeters,
-    float MaxSpeedOverGround);
+    float MaxSpeedOverGround,
+    string? Notes);

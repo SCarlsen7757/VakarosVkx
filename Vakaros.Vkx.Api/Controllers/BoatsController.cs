@@ -135,8 +135,8 @@ public class BoatsController(AppDbContext db) : ControllerBase
             sessions.Count,
             races.Count,
             sessions.Sum(s => (s.EndedAt - s.StartedAt).TotalSeconds),
-            races.Sum(r => (r.EndedAt - r.StartedAt).TotalSeconds),
-            races.Sum(r => r.SailedDistanceMeters),
+            races.Where(r => r.EndedAt.HasValue).Sum(r => (r.EndedAt!.Value - r.StartedAt).TotalSeconds),
+            races.Where(r => r.EndedAt.HasValue).Sum(r => r.SailedDistanceMeters),
             races.Count > 0 ? races.Max(r => r.MaxSpeedOverGround) : 0f);
 
         return Ok(dto);

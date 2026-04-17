@@ -12,6 +12,7 @@
     [Parameter] public Vakaros.Vkx.Shared.Dtos.Races.LinePositionDto? BoatEnd { get; set; }
     [Parameter] public DateTimeOffset? WindowStart { get; set; }
     [Parameter] public DateTimeOffset? WindowEnd { get; set; }
+    [Parameter] public DateTimeOffset? RaceStartedAt { get; set; }
     private readonly string _mapElementId = $"leaflet-map-{Guid.NewGuid():N}";
     private bool _mapInitialized;
 
@@ -65,7 +66,8 @@
     {
         if (Positions is { Count: > 0 })
         {
-            await JS.InvokeVoidAsync("leafletInterop.addBoatTrack");
+            await JS.InvokeVoidAsync("leafletInterop.addBoatTrack",
+                RaceStartedAt?.ToString("O"));
         }
 
         if (CourseLegs is { Count: > 0 })

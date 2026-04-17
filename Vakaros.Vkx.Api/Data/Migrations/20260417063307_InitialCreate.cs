@@ -308,10 +308,13 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     session_id = table.Column<int>(type: "integer", nullable: false),
                     course_id = table.Column<int>(type: "integer", nullable: true),
                     race_number = table.Column<int>(type: "integer", nullable: false),
+                    countdown_started_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    countdown_duration_seconds = table.Column<int>(type: "integer", nullable: true),
                     started_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    ended_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ended_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     sailed_distance_meters = table.Column<double>(type: "double precision", nullable: false),
-                    max_speed_over_ground = table.Column<float>(type: "real", nullable: false)
+                    max_speed_over_ground = table.Column<float>(type: "real", nullable: false),
+                    notes = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {

@@ -27,8 +27,8 @@ public class StatsController(AppDbContext db) : ControllerBase
             sessions.Count,
             races.Count,
             sessions.Count > 0 ? sessions.Sum(s => (s.EndedAt - s.StartedAt).TotalSeconds) : 0.0,
-            races.Count > 0 ? races.Sum(r => (r.EndedAt - r.StartedAt).TotalSeconds) : 0.0,
-            races.Count > 0 ? races.Sum(r => r.SailedDistanceMeters) : 0.0,
+            races.Count > 0 ? races.Where(r => r.EndedAt.HasValue).Sum(r => (r.EndedAt!.Value - r.StartedAt).TotalSeconds) : 0.0,
+            races.Count > 0 ? races.Where(r => r.EndedAt.HasValue).Sum(r => r.SailedDistanceMeters) : 0.0,
             races.Count > 0 ? races.Max(r => r.MaxSpeedOverGround) : 0f,
             sessions.Count > 0 ? sessions.Min(s => s.StartedAt) : null,
             sessions.Count > 0 ? sessions.Max(s => s.StartedAt) : null);

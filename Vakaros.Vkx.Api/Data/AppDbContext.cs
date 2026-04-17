@@ -140,10 +140,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(r => r.SessionId).HasColumnName("session_id");
             e.Property(r => r.CourseId).HasColumnName("course_id");
             e.Property(r => r.RaceNumber).HasColumnName("race_number");
+            e.Property(r => r.CountdownStartedAt).HasColumnName("countdown_started_at");
+            e.Property(r => r.CountdownDurationSeconds).HasColumnName("countdown_duration_seconds");
             e.Property(r => r.StartedAt).HasColumnName("started_at");
             e.Property(r => r.EndedAt).HasColumnName("ended_at");
             e.Property(r => r.SailedDistanceMeters).HasColumnName("sailed_distance_meters");
             e.Property(r => r.MaxSpeedOverGround).HasColumnName("max_speed_over_ground");
+            e.Property(r => r.Notes).HasColumnName("notes");
             e.HasIndex(r => new { r.SessionId, r.RaceNumber }).IsUnique();
             e.HasOne(r => r.Session).WithMany(s => s.Races).HasForeignKey(r => r.SessionId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(r => r.Course).WithMany(c => c.Races).HasForeignKey(r => r.CourseId).OnDelete(DeleteBehavior.SetNull);

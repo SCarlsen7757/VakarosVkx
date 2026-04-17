@@ -3,10 +3,13 @@ namespace Vakaros.Vkx.Shared.Dtos.Races;
 public record RaceDetailDto(
     int RaceNumber,
     int? CourseId,
+    DateTimeOffset? CountdownStartedAt,
+    int? CountdownDurationSeconds,
     DateTimeOffset StartedAt,
-    DateTimeOffset EndedAt,
-    double DurationSeconds,
+    DateTimeOffset? EndedAt,
+    double? DurationSeconds,
     double SailedDistanceMeters,
     float MaxSpeedOverGround,
+    string? Notes,
     LinePositionDto? PinEnd,
     LinePositionDto? BoatEnd);

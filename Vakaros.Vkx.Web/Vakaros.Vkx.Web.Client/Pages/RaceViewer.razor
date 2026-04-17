@@ -53,6 +53,7 @@ else
                     CourseLegs="_courseLegs"
                     PinEnd="_raceDetail.PinEnd"
                     BoatEnd="_raceDetail.BoatEnd"
+                    RaceStartedAt="_raceDetail.StartedAt"
                     WindowStart="_windowStart"
                     WindowEnd="_windowEnd" />
     </div>
@@ -158,15 +159,21 @@ else
 
         // Start all tasks in parallel
         var raceTask = Api.GetRaceDetailAsync(SessionId, RaceNumber);
-        var posTask = Api.GetPositionsAsync(SessionId, RaceNumber);
 
         try
         {
-            // Phase 1: map critical path — show the track as soon as possible
-            await Task.WhenAll(raceTask, posTask);
+            // Phase 1: get race detail first so we know the countdown window.
+            _raceDetail = await raceTask;
 
-            _raceDetail = raceTask.Result;
-            _positions = posTask.Result;
+            // If a countdown start is known, compute a negative offset (in seconds)
+            // relative to StartedAt so the API returns pre-race positions too.
+            double? fromOffset = null;
+            if (_raceDetail?.CountdownStartedAt is not null)
+            {
+                fromOffset = (_raceDetail.CountdownStartedAt.Value - _raceDetail.StartedAt).TotalSeconds; // negative value
+            }
+
+            _positions = await Api.GetPositionsAsync(SessionId, RaceNumber, from: fromOffset);
             _loadingMap = false;
 
             // Push positions to the shared JS store once — child components

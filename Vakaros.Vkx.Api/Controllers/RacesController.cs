@@ -24,11 +24,14 @@ public class RacesController(AppDbContext db) : ControllerBase
                 r.RaceNumber,
                 r.CourseId,
                 r.Course != null ? r.Course.Name : null,
+                r.CountdownStartedAt,
+                r.CountdownDurationSeconds,
                 r.StartedAt,
                 r.EndedAt,
-                (r.EndedAt - r.StartedAt).TotalSeconds,
+                r.EndedAt.HasValue ? (r.EndedAt.Value - r.StartedAt).TotalSeconds : null,
                 r.SailedDistanceMeters,
-                r.MaxSpeedOverGround))
+                r.MaxSpeedOverGround,
+                r.Notes))
             .ToListAsync(ct);
 
         return Ok(races);
@@ -53,9 +56,9 @@ public class RacesController(AppDbContext db) : ControllerBase
             .Select(l => new LinePositionDto(l.Time, l.Latitude, l.Longitude))
             .FirstOrDefaultAsync(ct);
 
-        var duration = (race.EndedAt - race.StartedAt).TotalSeconds;
+        var duration = race.EndedAt.HasValue ? (race.EndedAt.Value - race.StartedAt).TotalSeconds : (double?)null;
 
-        return Ok(new RaceDetailDto(race.RaceNumber, race.CourseId, race.StartedAt, race.EndedAt, duration, race.SailedDistanceMeters, race.MaxSpeedOverGround, pinEnd, boatEnd));
+        return Ok(new RaceDetailDto(race.RaceNumber, race.CourseId, race.CountdownStartedAt, race.CountdownDurationSeconds, race.StartedAt, race.EndedAt, duration, race.SailedDistanceMeters, race.MaxSpeedOverGround, race.Notes, pinEnd, boatEnd));
     }
 
     [HttpGet("{raceNumber:int}/positions")]
@@ -198,6 +201,9 @@ public class RacesController(AppDbContext db) : ControllerBase
         if (request.CourseId.HasValue)
             race.CourseId = request.CourseId.Value == 0 ? null : request.CourseId.Value;
 
+        if (request.Notes is not null)
+            race.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes;
+
         await db.SaveChangesAsync(ct);
 
         await db.Entry(race).Reference(r => r.Course).LoadAsync(ct);
@@ -206,11 +212,14 @@ public class RacesController(AppDbContext db) : ControllerBase
             race.RaceNumber,
             race.CourseId,
             race.Course?.Name,
+            race.CountdownStartedAt,
+            race.CountdownDurationSeconds,
             race.StartedAt,
             race.EndedAt,
-            (race.EndedAt - race.StartedAt).TotalSeconds,
+            race.EndedAt.HasValue ? (race.EndedAt.Value - race.StartedAt).TotalSeconds : null,
             race.SailedDistanceMeters,
-            race.MaxSpeedOverGround));
+            race.MaxSpeedOverGround,
+            race.Notes));
     }
 
     private async Task<Race?> FindRaceAsync(int sessionId, int raceNumber, CancellationToken ct)
@@ -230,7 +239,7 @@ public class RacesController(AppDbContext db) : ControllerBase
 
         var end = toSeconds.HasValue
             ? race.StartedAt.AddSeconds(toSeconds.Value)
-            : race.EndedAt;
+            : race.EndedAt ?? race.StartedAt;
 
         return (start, end);
     }

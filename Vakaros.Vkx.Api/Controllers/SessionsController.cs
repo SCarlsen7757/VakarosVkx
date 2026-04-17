@@ -48,11 +48,14 @@ public class SessionsController(AppDbContext db, VkxIngestionService ingestionSe
                 r.RaceNumber,
                 r.CourseId,
                 r.Course?.Name,
+                r.CountdownStartedAt,
+                r.CountdownDurationSeconds,
                 r.StartedAt,
                 r.EndedAt,
-                (r.EndedAt - r.StartedAt).TotalSeconds,
+                r.EndedAt.HasValue ? (r.EndedAt.Value - r.StartedAt).TotalSeconds : null,
                 r.SailedDistanceMeters,
-                r.MaxSpeedOverGround))]
+                r.MaxSpeedOverGround,
+                r.Notes))]
         );
 
         return CreatedAtAction(nameof(GetById), new { id = session.Id }, dto);
@@ -137,11 +140,14 @@ public class SessionsController(AppDbContext db, VkxIngestionService ingestionSe
                 r.RaceNumber,
                 r.CourseId,
                 r.Course?.Name,
+                r.CountdownStartedAt,
+                r.CountdownDurationSeconds,
                 r.StartedAt,
                 r.EndedAt,
-                (r.EndedAt - r.StartedAt).TotalSeconds,
+                r.EndedAt.HasValue ? (r.EndedAt.Value - r.StartedAt).TotalSeconds : null,
                 r.SailedDistanceMeters,
-                r.MaxSpeedOverGround))]
+                r.MaxSpeedOverGround,
+                r.Notes))]
         );
 
         return Ok(dto);
@@ -191,11 +197,14 @@ public class SessionsController(AppDbContext db, VkxIngestionService ingestionSe
                 r.RaceNumber,
                 r.CourseId,
                 r.Course?.Name,
+                r.CountdownStartedAt,
+                r.CountdownDurationSeconds,
                 r.StartedAt,
                 r.EndedAt,
-                (r.EndedAt - r.StartedAt).TotalSeconds,
+                r.EndedAt.HasValue ? (r.EndedAt.Value - r.StartedAt).TotalSeconds : null,
                 r.SailedDistanceMeters,
-                r.MaxSpeedOverGround))]
+                r.MaxSpeedOverGround,
+                r.Notes))]
         );
 
         return Ok(dto);

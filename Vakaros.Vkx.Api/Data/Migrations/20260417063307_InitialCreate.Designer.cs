@@ -12,7 +12,7 @@ using Vakaros.Vkx.Api.Data;
 namespace Vakaros.Vkx.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260410071628_InitialCreate")]
+    [Migration("20260417063307_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -375,17 +375,29 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CountdownDurationSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("countdown_duration_seconds");
+
+                    b.Property<DateTimeOffset?>("CountdownStartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("countdown_started_at");
+
                     b.Property<int?>("CourseId")
                         .HasColumnType("integer")
                         .HasColumnName("course_id");
 
-                    b.Property<DateTimeOffset>("EndedAt")
+                    b.Property<DateTimeOffset?>("EndedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("ended_at");
 
                     b.Property<float>("MaxSpeedOverGround")
                         .HasColumnType("real")
                         .HasColumnName("max_speed_over_ground");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
 
                     b.Property<int>("RaceNumber")
                         .HasColumnType("integer")

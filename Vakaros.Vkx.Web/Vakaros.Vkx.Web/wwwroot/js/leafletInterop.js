@@ -6,12 +6,14 @@ window.leafletInterop = (() => {
     let marksLayer = null;
     let startLineLayer = null;
     let cursorMarker = null;
+    let raceStartMs = null;
 
     const boatColor = "#005AFF";
     const courseMarksColor = "#FF2600";
     const startMarksColor = "#FF2600";
     const startLineColor = "#D9FF00";
-    const routeLineColor = "#FF2600";
+    const postStartRouteLineColor = "#FF2600";
+    const preStartRouteLineColor = "#888888";
 
     function makeBoatCursorIcon(headingDeg) {
         return L.divIcon({
@@ -77,7 +79,7 @@ window.leafletInterop = (() => {
             return true;
         },
 
-        addBoatTrack() {
+        addBoatTrack(raceStartedAtIso) {
             if (!map || !trackLayer) return;
             trackLayer.clearLayers();
             highlightLayer.clearLayers();
@@ -87,15 +89,56 @@ window.leafletInterop = (() => {
 
             if (!positions || positions.length === 0) return;
 
-            const latlngs = positions.map(p => [p.latitude, p.longitude]);
+            raceStartMs = raceStartedAtIso ? new Date(raceStartedAtIso).getTime() : null;
 
-            const polyline = L.polyline(latlngs, {
-                color: routeLineColor,
-                weight: 3,
-                opacity: 0.4
-            }).addTo(trackLayer);
+            if (raceStartMs) {
+                // Split positions into pre-race (countdown) and race segments.
+                const preRace = [];
+                const race = [];
+                for (const p of positions) {
+                    const t = new Date(p.time).getTime();
+                    if (t < raceStartMs) {
+                        preRace.push([p.latitude, p.longitude]);
+                    } else {
+                        race.push([p.latitude, p.longitude]);
+                    }
+                }
 
-            map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+                // Overlap: add the first race point to pre-race so the lines connect.
+                if (preRace.length > 0 && race.length > 0) {
+                    preRace.push(race[0]);
+                }
+
+                if (preRace.length > 1) {
+                    L.polyline(preRace, {
+                        color: preStartRouteLineColor,
+                        weight: 3,
+                        opacity: 0.4,
+                        dashArray: '8, 6'
+                    }).addTo(trackLayer);
+                }
+
+                if (race.length > 0) {
+                    const raceLine = L.polyline(race, {
+                        color: postStartRouteLineColor,
+                        weight: 3,
+                        opacity: 0.4
+                    }).addTo(trackLayer);
+
+                    map.fitBounds(raceLine.getBounds(), { padding: [30, 30] });
+                }
+            } else {
+                // No countdown data — single solid line as before.
+                const latlngs = positions.map(p => [p.latitude, p.longitude]);
+
+                const polyline = L.polyline(latlngs, {
+                    color: postStartRouteLineColor,
+                    weight: 3,
+                    opacity: 0.4
+                }).addTo(trackLayer);
+
+                map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+            }
         },
 
         addCourseMarks(marks) {
@@ -164,14 +207,54 @@ window.leafletInterop = (() => {
 
             if (windowPoints.length === 0) return;
 
-            const latlngs = windowPoints.map(p => [p.latitude, p.longitude]);
-            const highlight = L.polyline(latlngs, {
-                color: routeLineColor,
-                weight: 3,
-                opacity: 1.0
-            }).addTo(highlightLayer);
+            if (raceStartMs) {
+                const preRace = [];
+                const race = [];
+                for (const p of windowPoints) {
+                    const t = new Date(p.time).getTime();
+                    if (t < raceStartMs) {
+                        preRace.push([p.latitude, p.longitude]);
+                    } else {
+                        race.push([p.latitude, p.longitude]);
+                    }
+                }
 
-            map.fitBounds(highlight.getBounds(), { padding: [20, 20] });
+                // Connect the two segments.
+                if (preRace.length > 0 && race.length > 0) {
+                    preRace.push(race[0]);
+                }
+
+                let bounds = null;
+
+                if (preRace.length > 1) {
+                    const preLine = L.polyline(preRace, {
+                        color: preStartRouteLineColor,
+                        weight: 3,
+                        opacity: 1.0,
+                        dashArray: '8, 6'
+                    }).addTo(highlightLayer);
+                    bounds = preLine.getBounds();
+                }
+
+                if (race.length > 0) {
+                    const raceLine = L.polyline(race, {
+                        color: postStartRouteLineColor,
+                        weight: 3,
+                        opacity: 1.0
+                    }).addTo(highlightLayer);
+                    bounds = bounds ? bounds.extend(raceLine.getBounds()) : raceLine.getBounds();
+                }
+
+                if (bounds) map.fitBounds(bounds, { padding: [20, 20] });
+            } else {
+                const latlngs = windowPoints.map(p => [p.latitude, p.longitude]);
+                const highlight = L.polyline(latlngs, {
+                    color: postStartRouteLineColor,
+                    weight: 3,
+                    opacity: 1.0
+                }).addTo(highlightLayer);
+                map.fitBounds(highlight.getBounds(), { padding: [20, 20] });
+            }
         },
 
         clearMap() {
@@ -184,6 +267,7 @@ window.leafletInterop = (() => {
                 cursorMarker = null;
             }
             allPositions = null;
+            raceStartMs = null;
         },
 
         fitBounds() {
@@ -203,6 +287,7 @@ window.leafletInterop = (() => {
             trackLayer = null;
             highlightLayer = null;
             allPositions = null;
+            raceStartMs = null;
             marksLayer = null;
             startLineLayer = null;
             cursorMarker = null;

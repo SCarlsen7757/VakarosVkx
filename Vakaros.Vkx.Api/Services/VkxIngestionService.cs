@@ -84,6 +84,8 @@ public class VkxIngestionService(AppDbContext db, RaceDetectionService raceDetec
         // Materialise once — PositionRecords is a lazy LINQ projection over the record list.
         foreach (var race in races)
         {
+            if (race.EndedAt is null) continue;
+
             var racePositions = allPositions
                 .Where(p => p.Timestamp >= race.StartedAt && p.Timestamp <= race.EndedAt)
                 .ToList();

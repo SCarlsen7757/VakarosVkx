@@ -89,8 +89,8 @@ else
                         <tr>
                             <td>@race.RaceNumber</td>
                             <td>@race.StartedAt.LocalDateTime.ToString("HH:mm:ss")</td>
-                            <td>@race.EndedAt.LocalDateTime.ToString("HH:mm:ss")</td>
-                            <td>@FormatDuration(race.DurationSeconds)</td>
+                            <td>@race.EndedAt?.LocalDateTime.ToString("HH:mm:ss")</td>
+                            <td>@FormatDuration(race.DurationSeconds ?? 0)</td>
                             <td>
                                 <select @bind="_raceFormCourseId">
                                     <option value="0">— none —</option>
@@ -114,8 +114,8 @@ else
                         <tr>
                             <td>@race.RaceNumber</td>
                             <td>@race.StartedAt.LocalDateTime.ToString("HH:mm:ss")</td>
-                            <td>@race.EndedAt.LocalDateTime.ToString("HH:mm:ss")</td>
-                            <td>@FormatDuration(race.DurationSeconds)</td>
+                            <td>@race.EndedAt?.LocalDateTime.ToString("HH:mm:ss")</td>
+                            <td>@FormatDuration(race.DurationSeconds ?? 0)</td>
                             <td>@(race.CourseName ?? "—")</td>
                             <td>
                                 <button class="btn btn-sm" @onclick="() => StartRaceEdit(race)" disabled="@(_editingRaceNumber is not null)">Edit Course</button>
@@ -198,7 +198,7 @@ else
 
         try
         {
-            var updated = await Api.PatchRaceAsync(Id, _editingRaceNumber.Value, new PatchRaceRequest(_raceFormCourseId));
+            var updated = await Api.PatchRaceAsync(Id, _editingRaceNumber.Value, new PatchRaceRequest(_raceFormCourseId, null));
             if (updated is not null)
             {
                 var idx = _session.Races.FindIndex(r => r.RaceNumber == _editingRaceNumber.Value);
