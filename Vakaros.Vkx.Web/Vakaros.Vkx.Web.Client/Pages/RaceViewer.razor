@@ -33,12 +33,17 @@
 }
 else if (_loadingMap)
 {
-    <!-- Skeleton: map + slicers + mode toggle + charts -->
-    <div class="skeleton skeleton-map"></div>
-    <div class="skeleton skeleton-slicer"></div>
-    <div class="skeleton skeleton-slicer"></div>
-    <div class="skeleton skeleton-mode-toggle"></div>
-    <div class="skeleton skeleton-charts"></div>
+    <div class="race-layout">
+        <div class="race-layout-map">
+            <div class="skeleton skeleton-map"></div>
+        </div>
+        <div class="race-layout-panel">
+            <div class="skeleton skeleton-slicer"></div>
+            <div class="skeleton skeleton-slicer"></div>
+            <div class="skeleton skeleton-mode-toggle"></div>
+            <div class="skeleton skeleton-charts"></div>
+        </div>
+    </div>
 }
 else if (_raceDetail is null)
 {
@@ -46,71 +51,76 @@ else if (_raceDetail is null)
 }
 else
 {
-    <!-- Map section -->
-    <div class="race-map-container">
-        <LeafletMap @ref="_leafletMap"
-                    Positions="_positions"
-                    CourseLegs="_courseLegs"
-                    PinEnd="_raceDetail.PinEnd"
-                    BoatEnd="_raceDetail.BoatEnd"
-                    RaceStartedAt="_raceDetail.StartedAt"
-                    WindowStart="_windowStart"
-                    WindowEnd="_windowEnd" />
-    </div>
-
-    <!-- Time window slicer -->
-    <TimeWindowSlicer @ref="_timeWindowSlicer"
-                      Positions="_positions"
-                      OnWindowChanged="OnWindowChanged" />
-
-    <!-- Timeline slicer -->
-    <TimelineSlicer @ref="_timelineSlicer"
-                    Positions="_positions"
-                    OnTimestampChanged="OnTimelineChanged" />
-
-    <!-- Mode toggle -->
-    <div class="mode-toggle">
-        <button class="@(_mode == ViewMode.Historical ? "active" : "")" @onclick="() => SetMode(ViewMode.Historical)">
-            Historical
-        </button>
-        <button class="@(_mode == ViewMode.Current ? "active" : "")" @onclick="() => SetMode(ViewMode.Current)">
-            Current
-        </button>
-    </div>
-
-    @if (_chartsError is not null)
-    {
-        <div class="api-error" role="alert">
-            <span class="api-error-icon">⚠️</span>
-            <div class="api-error-body">
-                <strong>Unable to load telemetry</strong>
-                <p>@_chartsError</p>
+    <div class="race-layout">
+        <!-- Left: Map -->
+        <div class="race-layout-map">
+            <div class="race-map-container">
+                <LeafletMap @ref="_leafletMap"
+                            Positions="_positions"
+                            CourseLegs="_courseLegs"
+                            PinEnd="_raceDetail.PinEnd"
+                            BoatEnd="_raceDetail.BoatEnd"
+                            RaceStartedAt="_raceDetail.StartedAt"
+                            WindowStart="_windowStart"
+                            WindowEnd="_windowEnd" />
             </div>
         </div>
-    }
-    else if (_loadingCharts)
-    {
-        <div class="skeleton skeleton-charts"></div>
-    }
-    else if (_mode == ViewMode.Historical)
-    {
-        <!-- Historical mode: line charts with synced cursor -->
-        <div class="charts-container">
-            <TelemetryCharts @ref="_charts"
-                             Charts="_chartPanels"
-                             OnCursorMoved="OnChartCursorMoved" />
+
+        <!-- Right: Controls + Data -->
+        <div class="race-layout-panel">
+            <!-- Time window slicer -->
+            <TimeWindowSlicer @ref="_timeWindowSlicer"
+                              Positions="_positions"
+                              OnWindowChanged="OnWindowChanged" />
+
+            <!-- Timeline slicer -->
+            <TimelineSlicer @ref="_timelineSlicer"
+                            Positions="_positions"
+                            OnTimestampChanged="OnTimelineChanged" />
+
+            <!-- Mode toggle -->
+            <div class="mode-toggle">
+                <button class="@(_mode == ViewMode.Historical ? "active" : "")" @onclick="() => SetMode(ViewMode.Historical)">
+                    Historical
+                </button>
+                <button class="@(_mode == ViewMode.Current ? "active" : "")" @onclick="() => SetMode(ViewMode.Current)">
+                    Current
+                </button>
+            </div>
+
+            @if (_chartsError is not null)
+            {
+                <div class="api-error" role="alert">
+                    <span class="api-error-icon">⚠️</span>
+                    <div class="api-error-body">
+                        <strong>Unable to load telemetry</strong>
+                        <p>@_chartsError</p>
+                    </div>
+                </div>
+            }
+            else if (_loadingCharts)
+            {
+                <div class="skeleton skeleton-charts"></div>
+            }
+            else if (_mode == ViewMode.Historical)
+            {
+                <div class="charts-container">
+                    <TelemetryCharts @ref="_charts"
+                                     Charts="_chartPanels"
+                                     OnCursorMoved="OnChartCursorMoved" />
+                </div>
+            }
+            else
+            {
+                <div class="gauges-grid">
+                    <SpeedGauge Label="SOG" Unit="@UnitConverter.SpeedLabel(Prefs.SpeedUnit)" Value="_currentSog" />
+                    <HeadingGauge Value="_currentHeading" />
+                    <HeelGauge Label="Heel" Value="_currentHeel" />
+                    <TrimGauge Label="Trim" Value="_currentTrim" />
+                </div>
+            }
         </div>
-    }
-    else
-    {
-        <!-- Current mode: gauge readouts -->
-        <div class="gauges-grid">
-            <SpeedGauge Label="SOG" Unit="@UnitConverter.SpeedLabel(Prefs.SpeedUnit)" Value="_currentSog" />
-            <HeadingGauge Value="_currentHeading" />
-            <HeelGauge Label="Heel" Value="_currentHeel" />
-            <TrimGauge Label="Trim" Value="_currentTrim" />
-        </div>
-    }
+    </div>
 }
 
 @code {

@@ -12,7 +12,7 @@
 
 .tw-label-duration {
     font-weight: 600;
-    color: #457b9d;
+    color: #2563eb;
 }
 
 .tw-track {
@@ -43,7 +43,7 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #457b9d;
+    background: #2563eb;
     border: 2px solid #fff;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
     cursor: pointer;
@@ -70,7 +70,7 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #457b9d;
+    background: #2563eb;
     border: 2px solid #fff;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
     cursor: pointer;
