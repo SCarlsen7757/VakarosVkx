@@ -26,7 +26,7 @@ The active tab / sidebar item is visually highlighted.
 ### Navigation tabs / sidebar items
 
 | Icon | Label | Route | Notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 🏠 | Home | `/` | |
 | ⬆️ | Upload | `/upload` | |
 | 📋 | Sessions | `/sessions` | |
@@ -68,7 +68,7 @@ The Race Viewer hides the bottom tab bar and left sidebar entirely to maximise s
 The landing page. Displays a card grid of six global statistics:
 
 | Card | Value |
-|---|---|
+| --- | --- |
 | Boats | Total number of registered boats |
 | Sessions | Total number of uploaded sessions |
 | Races | Total number of detected races |
@@ -105,7 +105,7 @@ A table of all recorded sessions.
 **Columns:**
 
 | Column | Notes |
-|---|---|
+| --- | --- |
 | File | File name; clicking navigates to Session Detail |
 | Boat | Assigned boat name |
 | Course | Assigned course name |
@@ -114,6 +114,7 @@ A table of all recorded sessions.
 | Races | Number of detected races in the session |
 
 **API used:**
+
 - `GET /api/sessions` – session list
 - `GET /api/boats` – boat list for the dropdown
 
@@ -128,7 +129,7 @@ Detail view for a single session.
 **Metadata panel:**
 
 | Field | Notes |
-|---|---|
+| --- | --- |
 | File name | |
 | Boat | |
 | Course | |
@@ -141,7 +142,7 @@ Detail view for a single session.
 **Race table:**
 
 | Column | Notes |
-|---|---|
+| --- | --- |
 | Race # | Sequential number |
 | Started | Local time |
 | Ended | Local time |
@@ -155,6 +156,7 @@ Detail view for a single session.
 **View Race →** navigates to the Race Viewer for that race.
 
 **API used:**
+
 - `GET /api/sessions/{id}`
 - `GET /api/courses` – course list for the dropdown
 - `PATCH /api/sessions/{id}` – save boat assignment
@@ -183,7 +185,7 @@ The map auto-fits its view to the full track on load.
 
 #### 5.2 Controls (right column, top)
 
-**Time Window Slicer**
+##### Time Window Slicer
 
 A dual-handle range slider spanning the full duration of the race. The slider covers the race duration only (it does not extend before or after the race). The user drags the left and right handles to define a sub-window of interest. The user can also drag the entire window (the bar between the two handles) to shift it in time; the window silently clamps when it reaches either boundary.
 
@@ -192,7 +194,7 @@ Moving either handle:
 - Highlights the corresponding segment on the map.
 - Resamples and updates the telemetry charts to cover only the selected window.
 
-**Timeline Slicer**
+##### Timeline Slicer
 
 A single-handle scrubber also spanning the full race duration. Dragging the handle:
 
@@ -202,11 +204,12 @@ A single-handle scrubber also spanning the full race duration. Dragging the hand
 Both slicers are independent: the time window defines *what the charts show*, while the timeline
 cursor defines *where the crosshair is* within that window.
 
-**Replay Controls**
+##### Replay Controls
+
 Play / pause buttons that automatically advance the timeline cursor. When playing, the timeline cursor moves forward and the charts/gauges update accordingly. When the cursor reaches the end of the selected time window it automatically loops back to the beginning of that window. When paused, the user can still move the timeline cursor manually.
 There is also a speed multiplier dropdown (e.g. 0.5×, 1×, 2×, 4×) that controls how fast the timeline cursor advances relative to real time.
 
-**Mode Toggle**
+##### Mode Toggle
 
 A two-button toggle that switches the data panel between:
 
@@ -219,7 +222,7 @@ A set of time-series chart panels. Each panel has a labelled Y-axis and one or m
 The X-axis is shared across all panels and represents elapsed race time.
 
 | Panel | Series | Unit |
-|---|---|---|
+| --- | --- | --- |
 | Speed (SOG) | Speed over ground | User preference (kn / km/h) |
 | Heading | Course over ground | Degrees |
 | Wind | Wind speed · Wind direction | User preference (kn / m/s) · Degrees |
@@ -235,7 +238,7 @@ All chart crosshairs are **locked together** – moving the crosshair on any one
 **Derived channels** (computed from raw telemetry, not stored in the API):
 
 | Channel | Formula |
-|---|---|
+| --- | --- |
 | Heel | Derived from IMU quaternion (positive = starboard heel) |
 | Trim | Derived from IMU quaternion (positive = bow up) |
 
@@ -244,17 +247,19 @@ All chart crosshairs are **locked together** – moving the crosshair on any one
 Four analogue-style gauges showing the interpolated values at the cursor position:
 
 | Gauge | Value |
-|---|---|
+| --- | --- |
 | Speed | Speed over ground (user unit) |
 | Heading | Heading in degrees, compass-style |
 | Heel | Heel angle in degrees |
 | Trim | Trim angle in degrees |
 
 For the Heading gauge, there needs to be two display modes:
+
 - **Numeric** – just show the heading value in degrees (e.g. "135°").
 - **Compass** – show the heading on a compass rose, with a pointer indicating the direction. The compass should be oriented so that the boat's current course is always pointing up, and the rose rotates around it to show the heading relative to the course.
 
 For the Heel and Trim gauges, there needs to be two display modes:
+
 - **Numeric** – just show the angle value in degrees (e.g. "15°").
 - **Inclinometer** – show the angle on a semicircular gauge, with a pointer indicating the angle. The gauge should be oriented so that 0° is in the center, positive angles (e.g. starboard heel) point to the right, and negative angles (e.g. port heel) point to the left. Heel is typically a larger angle (e.g. up to 45° or more), while Trim is usually smaller (e.g. up to 5°), so the gauge scales should reflect that.
 
@@ -269,6 +274,7 @@ All data fetches for the Race Viewer are fired **in parallel** when the page loa
 The frontend **caches each response** keyed by `(sessionId, raceNumber, channel)`. Navigating back to the same race reuses the cached data without re-fetching, making reloads near-instant.
 
 **API used:**
+
 - `GET /api/sessions/{id}/races/{n}`
 - `GET /api/sessions/{id}/races/{n}/positions`
 - `GET /api/courses/{courseId}`
@@ -294,6 +300,7 @@ Clicking a boat's **Name** navigates to the Boat Detail page.
 **Create:** A *+ New Boat* button adds an inline editable row at the top of the table.
 
 **Edit:** Clicking *Edit* on a row turns all cells into inputs:
+
 - Name – text input
 - Sail Number – text input (optional)
 - Boat Class – dropdown populated from the Boat Classes list
@@ -317,7 +324,7 @@ Detail and statistics page for a single boat.
 **Metadata panel:**
 
 | Field | Notes |
-|---|---|
+| --- | --- |
 | Name | |
 | Sail Number | Only shown when present |
 | Boat Class | Links to the Boat Classes section |
@@ -326,7 +333,7 @@ Detail and statistics page for a single boat.
 **Statistics cards:**
 
 | Card | Value |
-|---|---|
+| --- | --- |
 | Sessions | Total number of sessions this boat has been used in |
 | Races | Total number of races sailed |
 | Total Distance | Total distance sailed across all sessions (user's preferred unit) |
@@ -335,6 +342,7 @@ Detail and statistics page for a single boat.
 | Total Race Time | Accumulated time spent racing (race start to finish only) |
 
 **API used:**
+
 - `GET /api/boats/{id}`
 - `GET /api/boats/{id}/stats`
 
@@ -349,7 +357,7 @@ Full CRUD management of boat class templates.
 **Create / Edit form** (shown as a panel below the list or in a side panel):
 
 | Field | Input type |
-|---|---|
+| --- | --- |
 | Name | Text |
 | LOA – length overall | Number (metres, 2 decimal places) |
 | Beam | Number (metres, 2 decimal places) |
@@ -368,7 +376,7 @@ Full CRUD management of physical course marks (buoys, fixed points on the water)
 **List table columns:**
 
 | Column | Notes |
-|---|---|
+| --- | --- |
 | Name | |
 | Latitude | Decimal degrees, 6 decimal places |
 | Longitude | Decimal degrees, 6 decimal places |
@@ -397,7 +405,7 @@ The **Distance** column shows the total length of the course, calculated as the 
 **Create / Edit form** (shown as a panel):
 
 | Field | Input type |
-|---|---|
+| --- | --- |
 | Name | Text |
 | Year | Number (integer) |
 | Description | Text (optional) |
@@ -406,7 +414,7 @@ The **Distance** column shows the total length of the course, calculated as the 
 **Legs sub-table** – defines the sequence of mark roundings that make up the course:
 
 | Column | Notes |
-|---|---|
+| --- | --- |
 | # | Row number (display only) |
 | Mark | Dropdown – select from known marks |
 | Leg Name | Text (optional label for the leg, e.g. "Beat to windward") |
@@ -432,7 +440,7 @@ they persist between visits without requiring a user account.
 **Preference fields:**
 
 | Preference | Options | Default |
-|---|---|---|
+| --- | --- | --- |
 | Boat Speed unit | Knots (kn), Kilometres per hour (km/h), Miles per hour (mph) | Knots |
 | Wind Speed unit | Knots (kn), Metres per second (m/s) | Knots |
 | Course Length unit | Metres (m), Kilometres (km), Nautical miles (NM) | Nautical miles (NM) |
@@ -450,7 +458,7 @@ proxy on the same origin so the browser never calls the API host directly. All l
 support optional query parameters for filtering.
 
 | Domain | Endpoints used |
-|---|---|
+| --- | --- |
 | Stats | `GET /api/stats/summary` |
 | Sessions | `GET /api/sessions` , `GET /api/sessions/{id}` , `POST /api/sessions/upload` , `PATCH /api/sessions/{id}` , `DELETE /api/sessions/{id}` |
 | Races | `GET /api/sessions/{id}/races` , `GET /api/sessions/{id}/races/{n}` , `PATCH /api/sessions/{id}/races/{n}` |
