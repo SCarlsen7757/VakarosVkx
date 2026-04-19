@@ -62,7 +62,7 @@ export function TelemetryPanels({ sessionId, raceNumber }: Props) {
   const cogSeries: ChartSeries = {
     name: "COG (°)",
     color: COLORS.secondary,
-    data: (positions.data ?? []).map((p) => ({ t: new Date(p.time).getTime(), v: n(p.courseOverGround) })),
+    data: (positions.data ?? []).map((p) => ({ t: new Date(p.time).getTime(), v: radiansToDegrees(n(p.courseOverGround)) })),
   };
   const windSpeedSeries: ChartSeries = {
     name: `Wind speed (${windUnitLabel(prefs.wind)})`,
@@ -73,7 +73,7 @@ export function TelemetryPanels({ sessionId, raceNumber }: Props) {
     name: "Wind dir (°)",
     color: COLORS.yellow,
     yAxisIndex: 1,
-    data: (wind.data ?? []).map((p) => ({ t: new Date(p.time).getTime(), v: n(p.windDirection) })),
+    data: (wind.data ?? []).map((p) => ({ t: new Date(p.time).getTime(), v: radiansToDegrees(n(p.windDirection)) })),
   };
 
   const heelTrim = (positions.data ?? []).map((p) => {
@@ -91,9 +91,11 @@ export function TelemetryPanels({ sessionId, raceNumber }: Props) {
       <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
         <TelemetryChart title="Heading (COG)" series={[cogSeries]} yAxes={[{ min: 0, max: 360 }]} />
       </div>
+      {wind.data && wind.data.length > 0 && (
       <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
         <TelemetryChart title="Wind" series={[windSpeedSeries, windDirSeries]} yAxes={[{ name: "Speed" }, { name: "Dir", min: 0, max: 360 }]} />
       </div>
+      )}
       <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
         <TelemetryChart title="Heel & Trim" series={[heelSeries, trimSeries]} yAxes={[{ name: "Heel", min: -45, max: 45 }, { name: "Trim", min: -10, max: 10 }]} />
       </div>
@@ -127,7 +129,7 @@ export function TelemetryPanels({ sessionId, raceNumber }: Props) {
       )}
       {shifts.data && shifts.data.length > 0 && (
         <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
-          <TelemetryChart title="Shift angles (heading °)" series={[{ name: "True heading", color: COLORS.green, data: shifts.data.map((p) => ({ t: new Date(p.time).getTime(), v: n(p.trueHeading) })) }]} yAxes={[{ min: 0, max: 360 }]} />
+          <TelemetryChart title="Shift angles (heading °)" series={[{ name: "True heading", color: COLORS.green, data: shifts.data.map((p) => ({ t: new Date(p.time).getTime(), v: radiansToDegrees(n(p.trueHeading)) })) }]} yAxes={[{ min: 0, max: 360 }]} />
         </div>
       )}
     </div>

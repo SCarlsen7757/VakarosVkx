@@ -1,16 +1,34 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { StartAnalysis } from "@/lib/schemas";
 import { n } from "@/lib/schemas";
 import { Card } from "@/components/ui/controls";
 import { useUnitPrefs } from "@/store/settings";
 import { convertSpeed, speedUnitLabel } from "@/lib/units";
 
-export function StartAnalysisPanel({ data }: { data: StartAnalysis | null | undefined }) {
+interface Props {
+  data: StartAnalysis | null | undefined;
+  sessionId: string | number;
+  raceNumber: number;
+}
+
+export function StartAnalysisPanel({ data, sessionId, raceNumber }: Props) {
   const { prefs } = useUnitPrefs();
+  const [lineLength, setLineLength] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!data) return;
+    fetch(`/api/sessions/${sessionId}/races/${raceNumber}/start-line-length`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((v) => setLineLength(typeof v === "number" ? v : null))
+      .catch(() => null);
+  }, [sessionId, raceNumber, data]);
+
   if (!data) return null;
   const bias = n(data.timeBiasSeconds);
   const biasColor = bias > 0 ? "text-warning" : "text-success";
+  const fractionMeters = lineLength != null ? (n(data.lineFraction) * lineLength).toFixed(1) + " m" : null;
   return (
     <Card className="p-4">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text-secondary">Start analysis</h3>
@@ -29,7 +47,7 @@ export function StartAnalysisPanel({ data }: { data: StartAnalysis | null | unde
         </div>
         <div>
           <div className="text-xs text-text-secondary">Line fraction</div>
-          <div className="font-mono text-lg">{(n(data.lineFraction) * 100).toFixed(0)}%</div>
+          <div className="font-mono text-lg">{fractionMeters ?? "—"}</div>
         </div>
         <div>
           <div className="text-xs text-text-secondary">Crossed at</div>

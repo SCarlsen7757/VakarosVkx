@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, Polyline, CircleMarker, Marker, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useTheme } from "next-themes";
 import { n } from "@/lib/schemas";
 import type { RaceMapProps, TrackMode } from "./race-map";
 
@@ -71,6 +72,10 @@ export default function MapView({
   positions, race, legs, startLine, playbackPosition, preRacePositions,
   openSeaMap, trackMode, recenterTick, fitTick,
 }: InternalProps) {
+  const { resolvedTheme } = useTheme();
+  const tileUrl = resolvedTheme === "dark"
+    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
   const points = useMemo(
     () => (positions ?? []).map((p) => [n(p.latitude), n(p.longitude)] as [number, number]),
     [positions]
@@ -96,7 +101,8 @@ export default function MapView({
   return (
     <MapContainer center={center as L.LatLngExpression} zoom={14} className="h-full w-full">
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        key={tileUrl}
+        url={tileUrl}
         attribution='&copy; OpenStreetMap &copy; CARTO'
       />
       {openSeaMap && (
@@ -142,6 +148,12 @@ export default function MapView({
         </CircleMarker>
       ))}
 
+      {startLine?.pin && startLine?.boat && (
+        <Polyline
+          positions={[[startLine.pin.lat, startLine.pin.lon], [startLine.boat.lat, startLine.boat.lon]]}
+          pathOptions={{ color: "#00CCFF", weight: 2, dashArray: "6,4", opacity: 0.9 }}
+        />
+      )}
       {startLine?.pin && (
         <Marker
           position={[startLine.pin.lat, startLine.pin.lon]}

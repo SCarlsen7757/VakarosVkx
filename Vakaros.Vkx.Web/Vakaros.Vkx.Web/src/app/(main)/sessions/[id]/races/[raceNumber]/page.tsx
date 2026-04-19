@@ -8,7 +8,7 @@ import { TelemetryPanels } from "@/components/charts/telemetry-panels";
 import { PlaybackControls } from "@/components/race-viewer/playback-controls";
 import { StartAnalysisPanel } from "@/components/race-viewer/start-analysis-panel";
 import { AiSummary } from "@/components/race-viewer/ai-summary";
-import { CompassRose, Inclinometer, NumericGauge } from "@/components/gauges/gauges";
+import { CompassRose, HeelTrimCard, NumericGauge } from "@/components/gauges/gauges";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import type { RaceDetail, Position, Course } from "@/lib/schemas";
@@ -33,6 +33,7 @@ export default function RaceViewerPage({ params }: PageProps) {
   const raceNum = Number(raceNumber);
   const { prefs } = useUnitPrefs();
   const position = useRaceViewerStore((s) => s.position);
+  const mode = useRaceViewerStore((s) => s.mode);
 
   const [race, setRace] = useState<RaceDetail | null>(null);
   const [positions, setPositions] = useState<Position[] | null>(null);
@@ -62,12 +63,14 @@ export default function RaceViewerPage({ params }: PageProps) {
   const startMs = race ? new Date(race.startedAt).getTime() : 0;
   const duration = race ? n(race.durationSeconds) : 0;
   const raceStartOffset = race?.countdownDurationSeconds != null ? n(race.countdownDurationSeconds) : 0;
+  const totalDuration = raceStartOffset + duration;
 
   const racePositions = useMemo(() => positions?.filter((p) => new Date(p.time).getTime() >= startMs) ?? null, [positions, startMs]);
   const preRacePositions = useMemo(() => positions?.filter((p) => new Date(p.time).getTime() < startMs) ?? null, [positions, startMs]);
 
   // Resolve current position from playback time
-  const targetMs = startMs + position * 1000;
+  // position 0 = countdown start; position raceStartOffset = gun; total = totalDuration
+  const targetMs = startMs + (position - raceStartOffset) * 1000;
   const currentPos = useMemo(() => {
     if (!positions || !positions.length) return null;
     let lo = 0, hi = positions.length - 1, best = 0, bestD = Infinity;
@@ -81,7 +84,7 @@ export default function RaceViewerPage({ params }: PageProps) {
     return positions[best];
   }, [positions, targetMs]);
 
-  const playbackArrow = currentPos ? { lat: n(currentPos.latitude), lon: n(currentPos.longitude), cog: n(currentPos.courseOverGround) } : null;
+  const playbackArrow = currentPos ? { lat: n(currentPos.latitude), lon: n(currentPos.longitude), cog: radiansToDegrees(n(currentPos.courseOverGround)) } : null;
 
   const heelTrim = currentPos ? quatToHeelTrim(n(currentPos.quaternionW), n(currentPos.quaternionX), n(currentPos.quaternionY), n(currentPos.quaternionZ)) : null;
 
@@ -105,7 +108,7 @@ export default function RaceViewerPage({ params }: PageProps) {
         {course && <span className="text-text-secondary">· {course.name}</span>}
       </div>
 
-      <PlaybackControls raceStartOffset={raceStartOffset} duration={duration} />
+      <PlaybackControls raceStartOffset={raceStartOffset} duration={totalDuration} />
 
       <RaceMap
         race={race}
@@ -116,16 +119,17 @@ export default function RaceViewerPage({ params }: PageProps) {
         playbackPosition={playbackArrow}
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {mode === "current" && (
+      <div className="grid grid-cols-3 gap-3">
         <NumericGauge label="SOG" value={currentPos ? convertSpeed(n(currentPos.speedOverGround), prefs.boatSpeed) : null} unit={speedUnitLabel(prefs.boatSpeed)} big />
-        <CompassRose headingDeg={currentPos ? n(currentPos.courseOverGround) : null} />
-        <Inclinometer label="Heel (°)" value={heelTrim?.heel ?? null} range={45} />
-        <Inclinometer label="Trim (°)" value={heelTrim?.trim ?? null} range={10} />
+        <CompassRose headingDeg={currentPos ? radiansToDegrees(n(currentPos.courseOverGround)) : null} />
+        <HeelTrimCard heel={heelTrim?.heel ?? null} trim={heelTrim?.trim ?? null} />
       </div>
+      )}
 
-      <StartAnalysisPanel data={race.startAnalysis} />
+      <StartAnalysisPanel data={race.startAnalysis} sessionId={id} raceNumber={raceNum} />
 
-      <TelemetryPanels sessionId={id} raceNumber={raceNum} />
+      {mode === "historical" && <TelemetryPanels sessionId={id} raceNumber={raceNum} />}
 
       <AiSummary sessionId={id} raceNumber={raceNum} />
     </div>

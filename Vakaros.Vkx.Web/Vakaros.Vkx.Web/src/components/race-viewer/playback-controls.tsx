@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import * as Slider from "@radix-ui/react-slider";
 import { Play, Pause } from "lucide-react";
 import { useRaceViewerStore } from "@/store/race-viewer";
 import { formatSignedClock } from "@/lib/units";
@@ -31,9 +32,10 @@ export function PlaybackControls({ raceStartOffset, duration }: { raceStartOffse
     const loop = (now: number) => {
       const dt = (now - lastRef.current) / 1000;
       lastRef.current = now;
-      const next = position + dt * speed;
-      if (next >= windowEnd) {
-        setPosition(windowEnd);
+      const current = useRaceViewerStore.getState();
+      const next = current.position + dt * speed;
+      if (next >= current.windowEnd) {
+        setPosition(current.windowEnd);
         useRaceViewerStore.setState({ isPlaying: false });
         return;
       }
@@ -106,20 +108,27 @@ export function PlaybackControls({ raceStartOffset, duration }: { raceStartOffse
           <span>Time window</span>
           <span className="font-mono">{windowStart.toFixed(0)}s – {windowEnd.toFixed(0)}s</span>
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="range" min={0} max={duration} step={1}
-            value={windowStart}
-            onChange={(e) => setWindow(Math.min(Number(e.target.value), windowEnd - 1), windowEnd)}
-            className="w-full accent-info"
+        <Slider.Root
+          className="relative flex w-full touch-none select-none items-center"
+          min={0}
+          max={duration}
+          step={1}
+          value={[windowStart, windowEnd]}
+          onValueChange={([start, end]) => setWindow(start, end)}
+          minStepsBetweenThumbs={1}
+        >
+          <Slider.Track className="relative h-1.5 w-full grow rounded-full bg-bg-elevated">
+            <Slider.Range className="absolute h-full rounded-full bg-info" />
+          </Slider.Track>
+          <Slider.Thumb
+            className="block h-4 w-4 rounded-full border border-border-default bg-bg-surface shadow ring-info focus:outline-none focus:ring-2"
+            aria-label="Window start"
           />
-          <input
-            type="range" min={0} max={duration} step={1}
-            value={windowEnd}
-            onChange={(e) => setWindow(windowStart, Math.max(Number(e.target.value), windowStart + 1))}
-            className="w-full accent-info"
+          <Slider.Thumb
+            className="block h-4 w-4 rounded-full border border-border-default bg-bg-surface shadow ring-info focus:outline-none focus:ring-2"
+            aria-label="Window end"
           />
-        </div>
+        </Slider.Root>
       </div>
     </div>
   );

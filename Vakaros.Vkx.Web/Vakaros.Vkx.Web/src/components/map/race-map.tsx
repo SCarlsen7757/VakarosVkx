@@ -39,7 +39,7 @@ export function RaceMap(props: RaceMapProps) {
         recenterTick={recenterTick}
         fitTick={fitTick}
       />
-      <div className="pointer-events-none absolute right-3 top-3 z-[1000] flex flex-col gap-2">
+      <div className="pointer-events-none absolute right-3 top-3 z-[1000] flex flex-col items-end gap-2">
         <div className="pointer-events-auto rounded-md bg-bg-elevated/95 p-1 shadow-lg ring-1 ring-border-default">
           <select
             value={trackMode}
@@ -57,14 +57,14 @@ export function RaceMap(props: RaceMapProps) {
         <button
           onClick={() => setRecenterTick((v) => v + 1)}
           className="pointer-events-auto rounded-md bg-bg-elevated/95 p-2 text-text-primary ring-1 ring-border-default hover:bg-bg-base"
-          title="Re-center"
+          title="Auto-pan with boat"
         >
           <Crosshair className="h-4 w-4" />
         </button>
         <button
           onClick={() => setFitTick((v) => v + 1)}
           className="pointer-events-auto rounded-md bg-bg-elevated/95 p-2 text-text-primary ring-1 ring-border-default hover:bg-bg-base"
-          title="Fit to track"
+          title="Fit track to map"
         >
           <Maximize2 className="h-4 w-4" />
         </button>
