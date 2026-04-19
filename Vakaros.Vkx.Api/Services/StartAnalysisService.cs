@@ -4,6 +4,7 @@ using Vakaros.Vkx.Api.Helpers;
 using Vakaros.Vkx.Api.Models.Entities;
 using Vakaros.Vkx.Shared.Dtos.Races;
 
+
 namespace Vakaros.Vkx.Api.Services;
 
 public class StartAnalysisService(AppDbContext db)
@@ -90,6 +91,22 @@ public class StartAnalysisService(AppDbContext db)
         }
 
         return lastCrossing;
+    }
+
+    /// <summary>
+    /// Computes the length of the start line in metres using the Haversine formula.
+    /// Returns null when either line end position is missing.
+    /// </summary>
+    public static StartLineLengthDto? ComputeLineLength(LinePositionDto? pinEnd, LinePositionDto? boatEnd)
+    {
+        if (pinEnd is null || boatEnd is null)
+            return null;
+
+        var lengthMeters = GeoHelper.HaversineMeters(
+            pinEnd.Latitude, pinEnd.Longitude,
+            boatEnd.Latitude, boatEnd.Longitude);
+
+        return new StartLineLengthDto(lengthMeters);
     }
 
     private static float Lerp(float a, float b, double t) => (float)(a + (b - a) * t);

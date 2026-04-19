@@ -192,6 +192,30 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
+    [HttpGet("{raceNumber:int}/start-line-length")]
+    public async Task<ActionResult<StartLineLengthDto>> GetStartLineLength(int sessionId, int raceNumber, CancellationToken ct)
+    {
+        var race = await FindRaceAsync(sessionId, raceNumber, ct);
+        if (race is null) return NotFound();
+
+        var pinEnd = await db.LinePositions
+            .Where(l => l.SessionId == sessionId && l.LineEnd == 0 && l.Time <= race.StartedAt)
+            .OrderByDescending(l => l.Time)
+            .Select(l => new LinePositionDto(l.Time, l.Latitude, l.Longitude))
+            .FirstOrDefaultAsync(ct);
+
+        var boatEnd = await db.LinePositions
+            .Where(l => l.SessionId == sessionId && l.LineEnd == 1 && l.Time <= race.StartedAt)
+            .OrderByDescending(l => l.Time)
+            .Select(l => new LinePositionDto(l.Time, l.Latitude, l.Longitude))
+            .FirstOrDefaultAsync(ct);
+
+        var result = StartAnalysisService.ComputeLineLength(pinEnd, boatEnd);
+        if (result is null) return NoContent();
+
+        return Ok(result);
+    }
+
     [HttpPatch("{raceNumber:int}")]
     public async Task<ActionResult<RaceDto>> Patch(int sessionId, int raceNumber, PatchRaceRequest request, CancellationToken ct)
     {
