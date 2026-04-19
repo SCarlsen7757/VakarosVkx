@@ -4,7 +4,7 @@ import type { paths } from "./api-types";
 // Browser uses same-origin "/api/*"; server-side rendering uses internal API_BASE_URL.
 const isServer = typeof window === "undefined";
 const baseUrl = isServer
-  ? (process.env.API_BASE_URL ?? "http://localhost:5000")
+  ? (process.env.API_BASE_URL ?? "http://localhost:5223")
   : "";
 
 const errorMiddleware: Middleware = {
