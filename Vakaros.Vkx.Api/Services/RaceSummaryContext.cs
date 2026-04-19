@@ -14,4 +14,5 @@ public record RaceSummaryContext(
     float AvgSpeedOverGroundMs,
     float? AvgWindSpeedMs,
     float? AvgWindDirectionDeg,
-    StartAnalysisDto? StartAnalysis);
+    StartAnalysisDto? StartAnalysis,
+    double? StartLineLengthMeters);

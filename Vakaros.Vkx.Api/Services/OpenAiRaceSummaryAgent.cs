@@ -1,5 +1,5 @@
-using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
+using System.Runtime.CompilerServices;
 
 namespace Vakaros.Vkx.Api.Services;
 
@@ -56,6 +56,8 @@ public class OpenAiRaceSummaryAgent(IChatClient chatClient) : IRaceSummaryAgent
             lines.Add($"Speed at crossing: {sa.SpeedAtCrossingMs:F2} m/s");
             lines.Add($"Approach course: {sa.ApproachCourseDegrees:F0}°");
             lines.Add($"Line fraction: {sa.LineFraction:F2} (0 = pin end, 1 = boat end)");
+            if (ctx.StartLineLengthMeters.HasValue)
+                lines.Add($"Position on line: {sa.LineFraction * ctx.StartLineLengthMeters.Value:F1} m from pin end (line length: {ctx.StartLineLengthMeters.Value:F1} m)");
         }
 
         return string.Join("\n", lines.Where(l => l is not null));

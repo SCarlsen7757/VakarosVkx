@@ -60,6 +60,7 @@ public class RaceSummaryService(
             .FirstOrDefaultAsync(ct);
 
         var startAnalysis = await startAnalysisService.ComputeAsync(race, sessionId, pinEnd, boatEnd, ct);
+        var startLineLength = StartAnalysisService.ComputeLineLength(pinEnd, boatEnd);
 
         var context = new RaceSummaryContext(
             BoatName: session.Boat?.Name ?? "Unknown",
@@ -73,7 +74,8 @@ public class RaceSummaryService(
             AvgSpeedOverGroundMs: avgSog,
             AvgWindSpeedMs: avgWindSpeed,
             AvgWindDirectionDeg: avgWindDir,
-            StartAnalysis: startAnalysis);
+            StartAnalysis: startAnalysis,
+            StartLineLengthMeters: startLineLength?.LengthMeters);
 
         var hash = ComputeContextHash(context);
         return (context, hash);
