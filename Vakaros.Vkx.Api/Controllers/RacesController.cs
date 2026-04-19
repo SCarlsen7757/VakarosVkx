@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Api.Models.Entities;
+using Vakaros.Vkx.Api.Services;
 using Vakaros.Vkx.Shared.Dtos.Races;
 using Vakaros.Vkx.Shared.Dtos.Telemetry;
 
@@ -9,7 +10,7 @@ namespace Vakaros.Vkx.Api.Controllers;
 
 [ApiController]
 [Route("api/sessions/{sessionId:int}/races")]
-public class RacesController(AppDbContext db) : ControllerBase
+public class RacesController(AppDbContext db, StartAnalysisService startAnalysis) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<RaceDto>>> GetAll(int sessionId, CancellationToken ct)
@@ -58,7 +59,9 @@ public class RacesController(AppDbContext db) : ControllerBase
 
         var duration = race.EndedAt.HasValue ? (race.EndedAt.Value - race.StartedAt).TotalSeconds : (double?)null;
 
-        return Ok(new RaceDetailDto(race.RaceNumber, race.CourseId, race.CountdownStartedAt, race.CountdownDurationSeconds, race.StartedAt, race.EndedAt, duration, race.SailedDistanceMeters, race.MaxSpeedOverGround, race.Notes, pinEnd, boatEnd));
+        var startAnalysisResult = await startAnalysis.ComputeAsync(race, sessionId, pinEnd, boatEnd, ct);
+
+        return Ok(new RaceDetailDto(race.RaceNumber, race.CourseId, race.CountdownStartedAt, race.CountdownDurationSeconds, race.StartedAt, race.EndedAt, duration, race.SailedDistanceMeters, race.MaxSpeedOverGround, race.Notes, pinEnd, boatEnd, startAnalysisResult));
     }
 
     [HttpGet("{raceNumber:int}/positions")]

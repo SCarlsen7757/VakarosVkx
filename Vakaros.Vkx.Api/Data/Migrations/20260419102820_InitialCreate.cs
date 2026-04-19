@@ -280,6 +280,30 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "race_summary_reports",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    session_id = table.Column<int>(type: "integer", nullable: false),
+                    race_number = table.Column<int>(type: "integer", nullable: false),
+                    content = table.Column<string>(type: "text", nullable: false),
+                    model = table.Column<string>(type: "text", nullable: false),
+                    context_hash = table.Column<string>(type: "text", nullable: false),
+                    generated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_race_summary_reports", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_race_summary_reports_sessions_session_id",
+                        column: x => x.session_id,
+                        principalTable: "sessions",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "race_timer_events",
                 columns: table => new
                 {
@@ -461,6 +485,12 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 column: "session_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_race_summary_reports_session_id_race_number",
+                table: "race_summary_reports",
+                columns: new[] { "session_id", "race_number" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_race_timer_events_session_id",
                 table: "race_timer_events",
                 column: "session_id");
@@ -538,6 +568,9 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "positions");
+
+            migrationBuilder.DropTable(
+                name: "race_summary_reports");
 
             migrationBuilder.DropTable(
                 name: "race_timer_events");

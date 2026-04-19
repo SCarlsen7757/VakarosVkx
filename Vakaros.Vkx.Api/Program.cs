@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
+using OpenAI;
 using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Api.Services;
 
@@ -20,6 +22,27 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<RaceDetectionService>();
 builder.Services.AddScoped<VkxIngestionService>();
+builder.Services.AddScoped<StartAnalysisService>();
+
+// AI summary agent — configured via RaceSummary:* settings
+var raceSummaryApiKey = builder.Configuration["RaceSummary:ApiKey"];
+if (!string.IsNullOrEmpty(raceSummaryApiKey))
+{
+    var model = builder.Configuration["RaceSummary:Model"] ?? "gpt-4o-mini";
+    var endpoint = builder.Configuration["RaceSummary:Endpoint"];
+
+    builder.Services.AddSingleton<IChatClient>(sp =>
+    {
+        var options = endpoint is not null
+            ? new OpenAIClientOptions { Endpoint = new Uri(endpoint) }
+            : new OpenAIClientOptions();
+        var credential = new System.ClientModel.ApiKeyCredential(raceSummaryApiKey);
+        var client = new OpenAIClient(credential, options);
+        return client.GetChatClient(model).AsIChatClient();
+    });
+    builder.Services.AddScoped<IRaceSummaryAgent, OpenAiRaceSummaryAgent>();
+    builder.Services.AddScoped<RaceSummaryService>();
+}
 
 var app = builder.Build();
 

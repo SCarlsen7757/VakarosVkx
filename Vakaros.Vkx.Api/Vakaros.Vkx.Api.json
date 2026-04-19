@@ -1664,6 +1664,121 @@
         }
       }
     },
+    "/api/sessions/{sessionId}/races/{raceNumber}/summary": {
+      "get": {
+        "tags": [
+          "RaceSummary"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "raceNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceSummaryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceSummaryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceSummaryDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RaceSummary"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "raceNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "RaceSummary"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "raceNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Sessions/upload": {
       "post": {
         "tags": [
@@ -2972,7 +3087,8 @@
           "maxSpeedOverGround",
           "notes",
           "pinEnd",
-          "boatEnd"
+          "boatEnd",
+          "startAnalysis"
         ],
         "type": "object",
         "properties": {
@@ -3068,6 +3184,16 @@
               },
               {
                 "$ref": "#/components/schemas/LinePositionDto"
+              }
+            ]
+          },
+          "startAnalysis": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/StartAnalysisDto"
               }
             ]
           }
@@ -3169,6 +3295,30 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "RaceSummaryDto": {
+        "required": [
+          "content",
+          "model",
+          "generatedAt",
+          "isStale"
+        ],
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isStale": {
+            "type": "boolean"
           }
         }
       },
@@ -3505,6 +3655,54 @@
           }
         }
       },
+      "StartAnalysisDto": {
+        "required": [
+          "crossedAt",
+          "timeBiasSeconds",
+          "speedAtCrossingMs",
+          "approachCourseDegrees",
+          "lineFraction"
+        ],
+        "type": "object",
+        "properties": {
+          "crossedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timeBiasSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "speedAtCrossingMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "float"
+          },
+          "approachCourseDegrees": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "float"
+          },
+          "lineFraction": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "TemperatureDto": {
         "required": [
           "time",
@@ -3748,6 +3946,9 @@
     },
     {
       "name": "Races"
+    },
+    {
+      "name": "RaceSummary"
     },
     {
       "name": "Sessions"

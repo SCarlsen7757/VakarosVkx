@@ -14,6 +14,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CourseLeg> CourseLegs => Set<CourseLeg>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<Race> Races => Set<Race>();
+    public DbSet<RaceSummaryReport> RaceSummaryReports => Set<RaceSummaryReport>();
 
     // Hypertables
     public DbSet<PositionReading> Positions => Set<PositionReading>();
@@ -150,6 +151,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(r => new { r.SessionId, r.RaceNumber }).IsUnique();
             e.HasOne(r => r.Session).WithMany(s => s.Races).HasForeignKey(r => r.SessionId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(r => r.Course).WithMany(c => c.Races).HasForeignKey(r => r.CourseId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── Race Summary Reports ─────────────────────────────────────────
+        modelBuilder.Entity<RaceSummaryReport>(e =>
+        {
+            e.ToTable("race_summary_reports");
+            e.HasKey(r => r.Id);
+            e.Property(r => r.Id).HasColumnName("id");
+            e.Property(r => r.SessionId).HasColumnName("session_id");
+            e.Property(r => r.RaceNumber).HasColumnName("race_number");
+            e.Property(r => r.Content).HasColumnName("content").IsRequired();
+            e.Property(r => r.Model).HasColumnName("model").IsRequired();
+            e.Property(r => r.ContextHash).HasColumnName("context_hash").IsRequired();
+            e.Property(r => r.GeneratedAt).HasColumnName("generated_at");
+            e.HasIndex(r => new { r.SessionId, r.RaceNumber }).IsUnique();
+            e.HasOne(r => r.Session).WithMany()
+                .HasForeignKey(r => r.SessionId).OnDelete(DeleteBehavior.Cascade);
         });
 
         // ── Hypertables ─────────────────────────────────────────────────────

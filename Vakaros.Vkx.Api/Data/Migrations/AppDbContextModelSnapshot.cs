@@ -17,7 +17,7 @@ namespace Vakaros.Vkx.Api.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -422,6 +422,50 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.ToTable("races", (string)null);
                 });
 
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.RaceSummaryReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<string>("ContextHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("context_hash");
+
+                    b.Property<DateTimeOffset>("GeneratedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("generated_at");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("model");
+
+                    b.Property<int>("RaceNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("race_number");
+
+                    b.Property<int>("SessionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("session_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId", "RaceNumber")
+                        .IsUnique();
+
+                    b.ToTable("race_summary_reports", (string)null);
+                });
+
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.RaceTimerEvent", b =>
                 {
                     b.Property<DateTimeOffset>("Time")
@@ -746,6 +790,17 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Course");
+
+                    b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.RaceSummaryReport", b =>
+                {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Session", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Session");
                 });

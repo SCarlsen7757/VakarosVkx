@@ -12,4 +12,5 @@ public record RaceDetailDto(
     float MaxSpeedOverGround,
     string? Notes,
     LinePositionDto? PinEnd,
-    LinePositionDto? BoatEnd);
+    LinePositionDto? BoatEnd,
+    StartAnalysisDto? StartAnalysis);
