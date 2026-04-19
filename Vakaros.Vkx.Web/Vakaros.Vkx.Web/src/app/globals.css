@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-base: 245 247 249;
+  --bg-surface: 255 255 255;
+  --bg-elevated: 255 255 255;
+  --text-primary: 17 24 39;
+  --text-secondary: 107 114 128;
+  --text-disabled: 156 163 175;
+  --border-default: 229 231 235;
+  --border-active: 255 69 0;
+  --action-primary: 255 69 0;
+  --action-hover: 255 106 0;
+}
+
+.dark {
+  --bg-base: 15 17 21;
+  --bg-surface: 26 29 36;
+  --bg-elevated: 37 41 51;
+  --text-primary: 249 250 251;
+  --text-secondary: 156 163 175;
+  --text-disabled: 75 85 99;
+  --border-default: 55 65 81;
+  --border-active: 0 204 255;
+}
+
+html, body { height: 100%; }
+body {
+  background-color: rgb(var(--bg-base));
+  color: rgb(var(--text-primary));
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.leaflet-container { background: rgb(var(--bg-surface)); }

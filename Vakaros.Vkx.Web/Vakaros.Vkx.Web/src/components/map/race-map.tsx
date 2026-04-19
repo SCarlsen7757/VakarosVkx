@@ -1,0 +1,77 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
+import type { Position, RaceDetail } from "@/lib/schemas";
+import { n } from "@/lib/schemas";
+import { SkeletonLoader } from "@/components/ui/skeleton-loader";
+import { Crosshair, Maximize2 } from "lucide-react";
+
+// Leaflet must only run on the client
+const MapView = dynamic(() => import("./map-view"), { ssr: false });
+
+export type TrackMode = "flat" | "heatmap";
+
+export interface RaceMapProps {
+  positions: Position[] | null;
+  race: RaceDetail | null;
+  legs?: { latitude: number; longitude: number; markName: string }[];
+  startLine?: { pin?: { lat: number; lon: number }; boat?: { lat: number; lon: number } };
+  playbackPosition?: { lat: number; lon: number; cog: number } | null;
+  preRacePositions?: Position[] | null;
+  trackMode?: TrackMode;
+}
+
+export function RaceMap(props: RaceMapProps) {
+  const [trackMode, setTrackMode] = useState<TrackMode>(props.trackMode ?? "flat");
+  const [openSeaMap, setOpenSeaMap] = useState(false);
+  const [recenterTick, setRecenterTick] = useState(0);
+  const [fitTick, setFitTick] = useState(0);
+
+  if (!props.positions) return <SkeletonLoader className="h-96" />;
+
+  return (
+    <div className="relative h-[28rem] overflow-hidden rounded-lg ring-1 ring-border-default">
+      <MapView
+        {...props}
+        trackMode={trackMode}
+        openSeaMap={openSeaMap}
+        recenterTick={recenterTick}
+        fitTick={fitTick}
+      />
+      <div className="pointer-events-none absolute right-3 top-3 z-[1000] flex flex-col gap-2">
+        <div className="pointer-events-auto rounded-md bg-bg-elevated/95 p-1 shadow-lg ring-1 ring-border-default">
+          <select
+            value={trackMode}
+            onChange={(e) => setTrackMode(e.target.value as TrackMode)}
+            className="rounded bg-transparent text-xs text-text-primary focus:outline-none"
+          >
+            <option value="flat">Flat track</option>
+            <option value="heatmap">Speed heatmap</option>
+          </select>
+        </div>
+        <label className="pointer-events-auto flex items-center gap-1 rounded-md bg-bg-elevated/95 px-2 py-1 text-xs ring-1 ring-border-default">
+          <input type="checkbox" checked={openSeaMap} onChange={(e) => setOpenSeaMap(e.target.checked)} />
+          OpenSeaMap
+        </label>
+        <button
+          onClick={() => setRecenterTick((v) => v + 1)}
+          className="pointer-events-auto rounded-md bg-bg-elevated/95 p-2 text-text-primary ring-1 ring-border-default hover:bg-bg-base"
+          title="Re-center"
+        >
+          <Crosshair className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => setFitTick((v) => v + 1)}
+          className="pointer-events-auto rounded-md bg-bg-elevated/95 p-2 text-text-primary ring-1 ring-border-default hover:bg-bg-base"
+          title="Fit to track"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="pointer-events-none absolute left-3 top-3 z-[1000] rounded-full bg-bg-elevated/95 px-2 py-1 text-xs ring-1 ring-border-default">
+        N ↑
+      </div>
+    </div>
+  );
+}

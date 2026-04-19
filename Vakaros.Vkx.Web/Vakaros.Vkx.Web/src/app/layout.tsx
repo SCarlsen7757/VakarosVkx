@@ -1,0 +1,22 @@
+import type { Metadata } from "next";
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ToastContainer } from "@/components/ui/toast";
+
+export const metadata: Metadata = {
+  title: "Vakaros VKX",
+  description: "Vakaros VKX sailing telemetry platform",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          {children}
+          <ToastContainer />
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
