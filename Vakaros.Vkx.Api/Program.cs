@@ -24,8 +24,10 @@ builder.Services.AddScoped<VkxIngestionService>();
 var app = builder.Build();
 
 // Apply pending EF Core migrations and run the idempotent hypertables script at startup.
-using (var scope = app.Services.CreateScope())
+// Skip when the OpenAPI document generator runs the app (SKIP_DB_MIGRATION is set via MSBuild).
+if (Environment.GetEnvironmentVariable("SKIP_DB_MIGRATION") != "true")
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
 
