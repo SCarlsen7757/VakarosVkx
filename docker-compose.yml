@@ -30,7 +30,7 @@ services:
   web:
     image: ${DOCKER_REGISTRY-}vakarosvkxweb
     build:
-      context: Vakaros.Vkx.Web/Vakaros.Vkx.Web
+      context: Vakaros.Vkx.Web
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
