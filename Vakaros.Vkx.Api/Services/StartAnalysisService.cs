@@ -128,6 +128,6 @@ public class StartAnalysisService(AppDbContext db)
         var dyAB = by - ay;
         var denom = dxAB * dyCD - dyAB * dxCD;
         if (Math.Abs(denom) < 1e-15) return 0.5;
-        return ((ax - cx) * dyAB - (ay - cy) * dxAB) / denom;
+        return ((cx - ax) * dyAB - (cy - ay) * dxAB) / denom;
     }
 }
