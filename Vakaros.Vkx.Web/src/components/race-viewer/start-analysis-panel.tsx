@@ -21,7 +21,7 @@ export function StartAnalysisPanel({ data, sessionId, raceNumber }: Props) {
     if (!data) return;
     fetch(`/api/sessions/${sessionId}/races/${raceNumber}/start-line-length`)
       .then((r) => r.ok ? r.json() : null)
-      .then((v) => setLineLength(typeof v === "number" ? v : null))
+      .then((v) => setLineLength(v != null && typeof v.lengthMeters !== "undefined" ? parseFloat(v.lengthMeters) : null))
       .catch(() => null);
   }, [sessionId, raceNumber, data]);
 
@@ -32,7 +32,7 @@ export function StartAnalysisPanel({ data, sessionId, raceNumber }: Props) {
   return (
     <Card className="p-4">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text-secondary">Start analysis</h3>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-6">
         <div>
           <div className="text-xs text-text-secondary">Time bias</div>
           <div className={`font-mono text-2xl font-semibold ${biasColor}`}>{bias > 0 ? "+" : ""}{bias.toFixed(1)}s</div>
@@ -46,8 +46,12 @@ export function StartAnalysisPanel({ data, sessionId, raceNumber }: Props) {
           <div className="font-mono text-lg">{n(data.approachCourseDegrees).toFixed(0)}°</div>
         </div>
         <div>
-          <div className="text-xs text-text-secondary">Line fraction</div>
+          <div className="text-xs text-text-secondary">Position on line</div>
           <div className="font-mono text-lg">{fractionMeters ?? "—"}</div>
+        </div>
+        <div>
+          <div className="text-xs text-text-secondary">Line length</div>
+          <div className="font-mono text-lg">{lineLength != null ? lineLength.toFixed(1) + " m" : "—"}</div>
         </div>
         <div>
           <div className="text-xs text-text-secondary">Crossed at</div>
