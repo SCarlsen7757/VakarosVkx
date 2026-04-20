@@ -33,7 +33,7 @@ Vakaros devices record sailing telemetry — GPS position, speed, heading, heel,
 
 - A **parser** that decodes the VKX binary format into structured data
 - A **REST API** that ingests, stores, and serves the telemetry
-- A **Node.js UI** for interactive visualisation of sessions and races
+- A **Next.js UI** for interactive visualisation of sessions and races
 - A **console tool** for quick one-off conversion of `.vkx` files to JSON
 
 ---
@@ -50,7 +50,8 @@ Vakaros devices record sailing telemetry — GPS position, speed, heading, heel,
 | ⏯️ **Playback Modes** | *Historical* mode shows full-race charts with a synced cursor; *Current* mode shows live-style gauges you can scrub through |
 | ⛵ **Boats** | Register boats with name, sail number, and class; link them to sessions |
 | 📍 **Marks & Courses** | Define race-course marks and build ordered course legs; overlay them on any race map |
-| 🐳 **Self-hosted** | One `docker compose up` starts the database and API |
+| 🐳 **Self-hosted** | One `docker compose up` starts the database, API, and Web UI |
+| 🤖 **AI Race Summaries** | Optional AI-generated post-race analysis streamed via SSE; requires an OpenAI-compatible `RaceSummary:ApiKey` in config |
 
 ---
 
@@ -78,7 +79,8 @@ Vakaros devices record sailing telemetry — GPS position, speed, heading, heel,
 └──────────────────────────┘
 
 ┌──────────────────────────┐
-│  Vakaros.Vkx.Console     │  ← Standalone CLI: .vkx → .json
+│  Vakaros.Vkx.            │  ← Standalone CLI: .vkx → .json
+│  ConsoleApplication      │
 └──────────────────────────┘
 ```
 
@@ -125,11 +127,19 @@ This starts:
 docker compose up db
 ```
 
-2. Apply EF Core migrations:
+2. Add or update EF Core migrations when the schema changes:
 
 ```bash
-dotnet ef migrations add InitialCreate --project Vakaros.Vkx.Api --startup-project Vakaros.Vkx.Api --output-dir Data\Migrations
+dotnet ef migrations add <MigrationName> --project Vakaros.Vkx.Api --startup-project Vakaros.Vkx.Api --output-dir Data\Migrations
 ```
+
+Apply migrations to the database:
+
+```bash
+dotnet ef database update --project Vakaros.Vkx.Api --startup-project Vakaros.Vkx.Api
+```
+
+> **Note:** The API also applies pending migrations automatically on startup, so the `database update` command is mainly useful for verifying or pre-seeding the schema before running the API.
 
 3. Run the API:
 
@@ -169,10 +179,11 @@ Boats, marks, and courses can be managed via the REST API:
 
 | Resource | Endpoint |
 | --- | --- |
+| Boat Classes | `GET/POST /api/boatclasses`, `PUT/DELETE /api/boatclasses/{id}` |
 | Boats | `GET/POST /api/boats`, `PUT/DELETE /api/boats/{id}` |
 | Marks | `GET/POST /api/marks`, `PUT/DELETE /api/marks/{id}` |
 | Courses | `GET/POST /api/courses`, `PUT/DELETE /api/courses/{id}` |
-| Sessions | `GET /api/sessions`, `PATCH /api/sessions/{id}` (link boat/course) |
+| Sessions | `GET /api/sessions`, `PATCH/DELETE /api/sessions/{id}` (link boat/course) |
 
 ### Viewing a Race
 
@@ -214,9 +225,8 @@ The output JSON is written next to the source file.
 - [ ] **Performance benchmarks** — compare speed, VMG, and tacking angles across multiple sessions on the same course
 - [ ] **Polar diagram** — plot boat speed against true wind angle to build an empirical polar curve, if wind data is available
 - [ ] **Session comparison** — overlay two or more race tracks on the same map
-- [ ] **Enhanced telemetry** — surface wind, speed-through-water, depth, and load sensor data in the UI
+- [ ] **Enhanced telemetry UI** — the API already stores wind, speed-through-water, depth, temperature, and load sensor data; surface these data streams in the Web UI with dedicated charts and gauges
 - [ ] **Weather data** — fetch historic weather conditions (wind speed, wind direction, temperature, precipitation, cloud cover) from an external weather API and overlay them on race sessions
-- [ ] **AI-generated reports** — automated post-race analysis and coaching insights powered by a language model (e.g. OpenAI / Claude)
 
 ---
 
