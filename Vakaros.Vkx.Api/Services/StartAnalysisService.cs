@@ -19,6 +19,7 @@ public class StartAnalysisService(AppDbContext db)
     /// Returns null when no valid crossing is found (missing data or boat never crossed).
     /// A valid crossing requires the boat to cross with the committee boat (boat end)
     /// on starboard (right) and the pin end on port (left).
+    /// <c>LineFraction</c> is 0 at the committee boat (boat end) and 1 at the pin end.
     /// <para>
     /// All valid crossings in the window are collected and the <b>last</b> one is returned.
     /// This handles the case where a boat crosses early (OCS), returns behind the line,
@@ -128,6 +129,6 @@ public class StartAnalysisService(AppDbContext db)
         var dyAB = by - ay;
         var denom = dxAB * dyCD - dyAB * dxCD;
         if (Math.Abs(denom) < 1e-15) return 0.5;
-        return ((cx - ax) * dyAB - (cy - ay) * dxAB) / denom;
+        return 1.0 - ((cx - ax) * dyAB - (cy - ay) * dxAB) / denom;
     }
 }
