@@ -40,7 +40,7 @@ Vakaros devices record sailing telemetry — GPS position, speed, heading, heel,
 ## Features
 
 | Feature | Description |
-|---|---|
+| --- | --- |
 | 📤 **File Upload** | Upload `.vkx` files via the API; duplicate detection via SHA-256 hash |
 | 🏁 **Automatic Race Detection** | Races are extracted automatically from the timer events embedded in each session |
 | 🗺️ **Interactive Map** | GPS track rendered on a Leaflet map with course marks, start line (pin end / boat end) and leg overlays |
@@ -97,6 +97,7 @@ docker compose up --build
 ```
 
 This starts:
+
 - **TimescaleDB** on port `5432`
 - **API** on port `8080`
 
@@ -152,7 +153,7 @@ The API parses the file, detects races, and returns a `SessionDetailDto` with al
 Boats, marks, and courses can be managed via the REST API:
 
 | Resource | Endpoint |
-|---|---|
+| --- | --- |
 | Boats | `GET/POST /api/boats`, `PUT/DELETE /api/boats/{id}` |
 | Marks | `GET/POST /api/marks`, `PUT/DELETE /api/marks/{id}` |
 | Courses | `GET/POST /api/courses`, `PUT/DELETE /api/courses/{id}` |
@@ -183,7 +184,7 @@ The output JSON is written next to the source file.
 ## Projects
 
 | Project | Type | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `Vakaros.Vkx.Parser` | Class library | Decodes the VKX binary format (v1.4) into typed C# records |
 | `Vakaros.Vkx.Api` | ASP.NET Core Web API | Ingestion, storage, race detection, REST endpoints |
 | `Vakaros.Vkx.Web` | Blazor Server | Interactive web UI — map, charts, gauges, playback |

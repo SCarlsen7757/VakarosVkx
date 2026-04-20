@@ -13,6 +13,7 @@ import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import type { RaceDetail, Position, Course } from "@/lib/schemas";
 import { n } from "@/lib/schemas";
+import { interpolatePosition } from "@/lib/track-utils";
 import { useUnitPrefs } from "@/store/settings";
 import { convertSpeed, radiansToDegrees, speedUnitLabel } from "@/lib/units";
 import { useRaceViewerStore } from "@/store/race-viewer";
@@ -43,18 +44,22 @@ export default function RaceViewerPage({ params }: PageProps) {
   useEffect(() => {
     let alive = true;
     const base = `/api/sessions/${id}/races/${raceNum}`;
-    Promise.all([
-      fetch(base).then((r) => r.ok ? r.json() : Promise.reject(r.status)),
-      fetch(`${base}/positions`).then((r) => r.ok ? r.json() : Promise.reject(r.status)),
-    ])
-      .then(async ([raceData, posData]: [RaceDetail, Position[]]) => {
+    fetch(base)
+      .then((r) => r.ok ? r.json() as Promise<RaceDetail> : Promise.reject(r.status))
+      .then(async (raceData) => {
         if (!alive) return;
         setRace(raceData);
+        const countdown = raceData.countdownDurationSeconds != null ? n(raceData.countdownDurationSeconds) : 0;
+        const fromParam = countdown > 0 ? `?from=${-countdown}` : "";
+        const [posData, courseData] = await Promise.all([
+          fetch(`${base}/positions${fromParam}`).then((r) => r.ok ? r.json() as Promise<Position[]> : Promise.reject(r.status)),
+          raceData.courseId != null
+            ? fetch(`/api/Courses/${raceData.courseId}`).then((r) => r.ok ? r.json() : null)
+            : Promise.resolve(null),
+        ]);
+        if (!alive) return;
         setPositions(posData);
-        if (raceData.courseId != null) {
-          const c = await fetch(`/api/Courses/${raceData.courseId}`).then((r) => r.ok ? r.json() : null);
-          if (alive) setCourse(c);
-        }
+        setCourse(courseData);
       })
       .catch((e) => alive && setError(`Failed to load race (${e})`));
     return () => { alive = false; };
@@ -68,8 +73,7 @@ export default function RaceViewerPage({ params }: PageProps) {
   const racePositions = useMemo(() => positions?.filter((p) => new Date(p.time).getTime() >= startMs) ?? null, [positions, startMs]);
   const preRacePositions = useMemo(() => positions?.filter((p) => new Date(p.time).getTime() < startMs) ?? null, [positions, startMs]);
 
-  // Resolve current position from playback time
-  // position 0 = countdown start; position raceStartOffset = gun; total = totalDuration
+  // Resolve current position (snap to nearest) — used for gauges and heel/trim.
   const targetMs = startMs + (position - raceStartOffset) * 1000;
   const currentPos = useMemo(() => {
     if (!positions || !positions.length) return null;
@@ -84,7 +88,13 @@ export default function RaceViewerPage({ params }: PageProps) {
     return positions[best];
   }, [positions, targetMs]);
 
-  const playbackArrow = currentPos ? { lat: n(currentPos.latitude), lon: n(currentPos.longitude), cog: radiansToDegrees(n(currentPos.courseOverGround)) } : null;
+  // Interpolated position for the map boat arrow — smooth between GPS samples.
+  const playbackArrow = useMemo(() => {
+    if (!positions || !positions.length) return null;
+    const interp = interpolatePosition(positions, targetMs);
+    if (!interp) return null;
+    return { lat: interp.lat, lon: interp.lon, cog: radiansToDegrees(interp.cog) };
+  }, [positions, targetMs]);
 
   const heelTrim = currentPos ? quatToHeelTrim(n(currentPos.quaternionW), n(currentPos.quaternionX), n(currentPos.quaternionY), n(currentPos.quaternionZ)) : null;
 

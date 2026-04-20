@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { cn } from "@/lib/cn";
 
 export function NumericGauge({ label, value, unit, big = false }: { label: string; value: number | null; unit?: string; big?: boolean }) {
@@ -16,6 +17,13 @@ export function NumericGauge({ label, value, unit, big = false }: { label: strin
 
 export function CompassRose({ headingDeg }: { headingDeg: number | null }) {
   const h = headingDeg == null || !isFinite(headingDeg) ? 0 : headingDeg;
+  const accumulatedAngle = useRef(h);
+
+  // Compute the shortest angular delta and accumulate, so the CSS transition
+  // always takes the short path across the 0/360 boundary.
+  const delta = ((h - accumulatedAngle.current) % 360 + 540) % 360 - 180;
+  accumulatedAngle.current += delta;
+
   return (
     <div className="rounded-lg bg-bg-surface p-3 text-center ring-1 ring-border-default">
       <div className="text-xs uppercase tracking-wider text-text-secondary">Heading</div>
@@ -28,7 +36,7 @@ export function CompassRose({ headingDeg }: { headingDeg: number | null }) {
         </div>
         <div
           className="absolute left-1/2 top-1/2 h-10 w-1 origin-bottom -translate-x-1/2 -translate-y-full rounded-sm bg-action-primary"
-          style={{ transform: `translate(-50%, -100%) rotate(${h}deg)`, transition: "transform 0.3s ease" }}
+          style={{ transform: `translate(-50%, -100%) rotate(${accumulatedAngle.current}deg)`, transition: "transform 0.3s ease" }}
         />
       </div>
       <div className="font-mono text-lg text-text-primary">{headingDeg == null ? "—" : `${Math.round(h)}°`}</div>

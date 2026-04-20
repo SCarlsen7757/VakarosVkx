@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import { MapContainer, TileLayer, Polyline, CircleMarker, Marker, Tooltip, useMap } from "react-leaflet";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MapContainer, TileLayer, Polyline, CircleMarker, Marker, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTheme } from "next-themes";
 import { n } from "@/lib/schemas";
+import { simplifyTrack, simplifyPositions, smoothTrackPositions, zoomToTolerance } from "@/lib/track-utils";
 import type { RaceMapProps, TrackMode } from "./race-map";
 
 interface InternalProps extends RaceMapProps {
   openSeaMap: boolean;
   trackMode: TrackMode;
-  recenterTick: number;
+  followMode: boolean;
+  onExitFollow: () => void;
   fitTick: number;
 }
 
@@ -39,21 +41,34 @@ function speedColor(t: number): string {
   return "rgb(255,0,0)";
 }
 
-function FitBounds({ points, fitTick }: { points: L.LatLngExpression[]; fitTick: number }) {
-  const map = useMap();
-  useEffect(() => {
-    if (points.length === 0) return;
-    const b = L.latLngBounds(points);
-    map.fitBounds(b.pad(0.05));
-  }, [fitTick, points, map]);
+function ZoomTracker({ onZoom }: { onZoom: (zoom: number) => void }) {
+  useMapEvents({ zoomend: (e) => onZoom(e.target.getZoom()) });
   return null;
 }
 
-function Recenter({ point, tick }: { point: L.LatLngExpression | null; tick: number }) {
+function FitBounds({ points, fitTick }: { points: L.LatLngExpression[]; fitTick: number }) {
+  const map = useMap();
+  const pointsRef = useRef(points);
+  pointsRef.current = points;
+  useEffect(() => {
+    if (pointsRef.current.length === 0) return;
+    const b = L.latLngBounds(pointsRef.current);
+    map.fitBounds(b.pad(0.05));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitTick, map]);
+  return null;
+}
+
+function DragTracker({ onDrag }: { onDrag: () => void }) {
+  useMapEvents({ dragstart: () => onDrag() });
+  return null;
+}
+
+function FollowBoat({ point, followMode }: { point: L.LatLngExpression | null; followMode: boolean }) {
   const map = useMap();
   useEffect(() => {
-    if (point) map.panTo(point);
-  }, [tick, point, map]);
+    if (followMode && point) map.panTo(point);
+  }, [point, followMode, map]);
   return null;
 }
 
@@ -70,36 +85,60 @@ const arrowDivIcon = (heading: number) =>
 
 export default function MapView({
   positions, race, legs, startLine, playbackPosition, preRacePositions,
-  openSeaMap, trackMode, recenterTick, fitTick,
+  openSeaMap, trackMode, followMode, onExitFollow, fitTick,
 }: InternalProps) {
   const { resolvedTheme } = useTheme();
+  const [zoom, setZoom] = useState(14);
   const tileUrl = resolvedTheme === "dark"
     ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-  const points = useMemo(
-    () => (positions ?? []).map((p) => [n(p.latitude), n(p.longitude)] as [number, number]),
+
+  const tolerance = useMemo(() => zoomToTolerance(zoom), [zoom]);
+
+  const smoothedPositions = useMemo(
+    () => smoothTrackPositions(positions ?? []),
     [positions]
   );
-  const preRacePoints = useMemo(
-    () => (preRacePositions ?? []).map((p) => [n(p.latitude), n(p.longitude)] as [number, number]),
+  const smoothedPreRacePositions = useMemo(
+    () => smoothTrackPositions(preRacePositions ?? []),
     [preRacePositions]
   );
 
+  const points = useMemo(
+    () => simplifyTrack(smoothedPositions, tolerance),
+    [smoothedPositions, tolerance]
+  );
+  const preRacePoints = useMemo(
+    () => simplifyTrack(smoothedPreRacePositions, tolerance),
+    [smoothedPreRacePositions, tolerance]
+  );
+
+  // For heatmap mode we need per-point speed, so simplify the Position objects.
+  const heatmapPositions = useMemo(
+    () => simplifyPositions(smoothedPositions, tolerance),
+    [smoothedPositions, tolerance]
+  );
+  const heatmapPoints = useMemo(
+    () => heatmapPositions.map((p) => [n(p.latitude), n(p.longitude)] as [number, number]),
+    [heatmapPositions]
+  );
+
   const speedRange = useMemo(() => {
-    if (!positions || positions.length === 0) return { min: 0, max: 1 };
+    if (!heatmapPositions.length) return { min: 0, max: 1 };
     let min = Infinity, max = -Infinity;
-    for (const p of positions) {
+    for (const p of heatmapPositions) {
       const v = n(p.speedOverGround);
       if (v < min) min = v;
       if (v > max) max = v;
     }
     return { min, max: max > min ? max : min + 1 };
-  }, [positions]);
+  }, [heatmapPositions]);
 
   const center = points[0] ?? [0, 0];
 
   return (
     <MapContainer center={center as L.LatLngExpression} zoom={14} className="h-full w-full">
+      <ZoomTracker onZoom={setZoom} />
       <TileLayer
         key={tileUrl}
         url={tileUrl}
@@ -121,15 +160,15 @@ export default function MapView({
         <Polyline positions={points} pathOptions={{ color: "#00FFFF", weight: 3, opacity: 0.9 }} />
       )}
 
-      {trackMode === "heatmap" && positions && positions.length > 1 && (
+      {trackMode === "heatmap" && heatmapPositions.length > 1 && (
         <>
-          {points.slice(0, -1).map((p, i) => {
-            const v = n(positions[i].speedOverGround);
+          {heatmapPoints.slice(0, -1).map((p, i) => {
+            const v = n(heatmapPositions[i].speedOverGround);
             const t = (v - speedRange.min) / (speedRange.max - speedRange.min);
             return (
               <Polyline
                 key={i}
-                positions={[p, points[i + 1]]}
+                positions={[p, heatmapPoints[i + 1]]}
                 pathOptions={{ color: speedColor(Math.max(0, Math.min(1, t))), weight: 4, opacity: 0.9 }}
               />
             );
@@ -179,7 +218,8 @@ export default function MapView({
       )}
 
       <FitBounds points={points as L.LatLngExpression[]} fitTick={fitTick} />
-      <Recenter point={playbackPosition ? [playbackPosition.lat, playbackPosition.lon] : null} tick={recenterTick} />
+      <DragTracker onDrag={onExitFollow} />
+      <FollowBoat point={playbackPosition ? [playbackPosition.lat, playbackPosition.lon] : null} followMode={followMode} />
     </MapContainer>
   );
 }

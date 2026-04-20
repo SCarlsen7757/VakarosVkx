@@ -6,6 +6,7 @@ import type { Position, Wind, Depth, Temperature, Load, SpeedThroughWater, Shift
 import { n } from "@/lib/schemas";
 import { useUnitPrefs } from "@/store/settings";
 import { convertSpeed, convertWind, radiansToDegrees, speedUnitLabel, windUnitLabel } from "@/lib/units";
+import { sgSmooth, sgSmoothAngularRad, sgSmoothQuaternions } from "@/lib/downsampling";
 
 const COLORS = { primary: "#00FFFF", secondary: "#FF00FF", green: "#39FF14", yellow: "#FFFF00" };
 
@@ -54,15 +55,22 @@ export function TelemetryPanels({ sessionId, raceNumber }: Props) {
     fetchJson<ShiftAngle[]>(`${base}/shift-angles`).then((d) => setShifts({ data: d ?? [], error: false }));
   }, [sessionId, raceNumber]);
 
+  const posData = positions.data ?? [];
+
+  const sogRaw = posData.map((p) => convertSpeed(n(p.speedOverGround), prefs.boatSpeed));
+  const sogSmoothed = sgSmooth(sogRaw).map((v) => Math.max(0, v));
   const sogSeries: ChartSeries = {
     name: `SOG (${speedUnitLabel(prefs.boatSpeed)})`,
     color: COLORS.primary,
-    data: (positions.data ?? []).map((p) => ({ t: new Date(p.time).getTime(), v: convertSpeed(n(p.speedOverGround), prefs.boatSpeed) })),
+    data: posData.map((p, i) => ({ t: new Date(p.time).getTime(), v: sogSmoothed[i] })),
   };
+
+  const cogRaw = posData.map((p) => n(p.courseOverGround));
+  const cogSmoothed = sgSmoothAngularRad(cogRaw);
   const cogSeries: ChartSeries = {
     name: "COG (°)",
     color: COLORS.secondary,
-    data: (positions.data ?? []).map((p) => ({ t: new Date(p.time).getTime(), v: radiansToDegrees(n(p.courseOverGround)) })),
+    data: posData.map((p, i) => ({ t: new Date(p.time).getTime(), v: ((radiansToDegrees(cogSmoothed[i]) % 360) + 360) % 360 })),
   };
   const windSpeedSeries: ChartSeries = {
     name: `Wind speed (${windUnitLabel(prefs.wind)})`,
@@ -76,9 +84,13 @@ export function TelemetryPanels({ sessionId, raceNumber }: Props) {
     data: (wind.data ?? []).map((p) => ({ t: new Date(p.time).getTime(), v: radiansToDegrees(n(p.windDirection)) })),
   };
 
-  const heelTrim = (positions.data ?? []).map((p) => {
-    const { heelDeg, trimDeg } = quatToHeelTrim(n(p.quaternionW), n(p.quaternionX), n(p.quaternionY), n(p.quaternionZ));
-    return { t: new Date(p.time).getTime(), heelDeg, trimDeg };
+  const rawQuats = posData.map((p) => ({
+    w: n(p.quaternionW), x: n(p.quaternionX), y: n(p.quaternionY), z: n(p.quaternionZ),
+  }));
+  const smoothedQuats = sgSmoothQuaternions(rawQuats);
+  const heelTrim = smoothedQuats.map((q, i) => {
+    const { heelDeg, trimDeg } = quatToHeelTrim(q.w, q.x, q.y, q.z);
+    return { t: new Date(posData[i].time).getTime(), heelDeg, trimDeg };
   });
   const heelSeries: ChartSeries = { name: "Heel (°)", color: COLORS.primary, data: heelTrim.map((p) => ({ t: p.t, v: p.heelDeg })) };
   const trimSeries: ChartSeries = { name: "Trim (°)", color: COLORS.secondary, yAxisIndex: 1, data: heelTrim.map((p) => ({ t: p.t, v: p.trimDeg })) };

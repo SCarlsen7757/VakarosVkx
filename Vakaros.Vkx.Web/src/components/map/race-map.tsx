@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import type { Position, RaceDetail } from "@/lib/schemas";
-import { n } from "@/lib/schemas";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { Crosshair, Maximize2 } from "lucide-react";
 
@@ -25,7 +24,7 @@ export interface RaceMapProps {
 export function RaceMap(props: RaceMapProps) {
   const [trackMode, setTrackMode] = useState<TrackMode>(props.trackMode ?? "flat");
   const [openSeaMap, setOpenSeaMap] = useState(false);
-  const [recenterTick, setRecenterTick] = useState(0);
+  const [followMode, setFollowMode] = useState(true);
   const [fitTick, setFitTick] = useState(0);
 
   if (!props.positions) return <SkeletonLoader className="h-96" />;
@@ -36,7 +35,8 @@ export function RaceMap(props: RaceMapProps) {
         {...props}
         trackMode={trackMode}
         openSeaMap={openSeaMap}
-        recenterTick={recenterTick}
+        followMode={followMode}
+        onExitFollow={() => setFollowMode(false)}
         fitTick={fitTick}
       />
       <div className="pointer-events-none absolute right-3 top-3 z-[1000] flex flex-col items-end gap-2">
@@ -55,22 +55,26 @@ export function RaceMap(props: RaceMapProps) {
           OpenSeaMap
         </label>
         <button
-          onClick={() => setRecenterTick((v) => v + 1)}
-          className="pointer-events-auto rounded-md bg-bg-elevated/95 p-2 text-text-primary ring-1 ring-border-default hover:bg-bg-base"
-          title="Auto-pan with boat"
+          onClick={() => setFollowMode((v) => !v)}
+          className={`pointer-events-auto rounded-md p-2 ring-1 ring-border-default hover:bg-bg-base ${
+            followMode
+              ? "bg-accent text-white ring-accent"
+              : "bg-bg-elevated/95 text-text-primary"
+          }`}
+          title={followMode ? "Following boat (click to stop)" : "Follow boat"}
         >
           <Crosshair className="h-4 w-4" />
         </button>
         <button
-          onClick={() => setFitTick((v) => v + 1)}
+          onClick={() => { setFollowMode(false); setFitTick((v) => v + 1); }}
           className="pointer-events-auto rounded-md bg-bg-elevated/95 p-2 text-text-primary ring-1 ring-border-default hover:bg-bg-base"
           title="Fit track to map"
         >
           <Maximize2 className="h-4 w-4" />
         </button>
       </div>
-      <div className="pointer-events-none absolute left-3 top-3 z-[1000] rounded-full bg-bg-elevated/95 px-2 py-1 text-xs ring-1 ring-border-default">
-        N ↑
+      <div className="pointer-events-none absolute left-1/2 top-3 z-[1000] -translate-x-1/2 rounded-full bg-bg-elevated/95 px-2 py-1 text-xs ring-1 ring-border-default">
+        N <span className="text-red-500">↑</span>
       </div>
     </div>
   );
