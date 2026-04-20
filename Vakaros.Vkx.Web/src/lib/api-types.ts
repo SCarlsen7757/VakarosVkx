@@ -1776,6 +1776,8 @@ export interface components {
             approachCourseDegrees: number | string;
             /** Format: double */
             lineFraction: number | string;
+            isOcs: boolean;
+            isOcsCleared: boolean;
         };
         StartLineLengthDto: {
             /** Format: double */

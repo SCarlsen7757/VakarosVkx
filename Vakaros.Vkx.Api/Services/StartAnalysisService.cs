@@ -24,7 +24,17 @@ public class StartAnalysisService(AppDbContext db)
     /// All valid crossings in the window are collected and the <b>last</b> one is returned.
     /// This handles the case where a boat crosses early (OCS), returns behind the line,
     /// and crosses again — the final crossing is always the one that counts.
-    /// A negative <c>TimeBiasSeconds</c> indicates the boat was still early (OCS).
+    /// </para>
+    /// <para>
+    /// OCS detection uses a side-of-line check (not just segment intersection) so
+    /// a boat that returns via either end of the line — not just through the segment —
+    /// is correctly recognised as having cleared the OCS.
+    /// <list type="bullet">
+    ///   <item><see cref="StartAnalysisDto.IsOcs"/> is true if the boat crossed to the
+    ///   course side before the start gun (regardless of subsequent clearing).</item>
+    ///   <item><see cref="StartAnalysisDto.IsOcsCleared"/> is true when the boat was OCS
+    ///   but returned to the pre-start side before the gun.</item>
+    /// </list>
     /// </para>
     /// </summary>
     public async Task<StartAnalysisDto?> ComputeAsync(
@@ -49,6 +59,39 @@ public class StartAnalysisService(AppDbContext db)
         // Line endpoints (pin = C, boat = D).
         double cx = pinEnd.Latitude, cy = pinEnd.Longitude;
         double dx = boatEnd.Latitude, dy = boatEnd.Longitude;
+
+        // ── OCS detection ────────────────────────────────────────────────────
+        // For each position up to the start gun, determine which side of the
+        // infinite start line the boat is on:
+        //   sideSign > 0  → course side  (OCS territory before the gun)
+        //   sideSign ≤ 0  → pre-start side
+        //
+        // Using the infinite line (not just the segment) means that a boat
+        // returning around either end — not only through the line — is also
+        // correctly recognised as having returned to the pre-start side.
+        var everOnPreStartSide = false;
+        var isOcs = false;
+        var isOnCourseSide = false;
+
+        foreach (var pos in positions.Where(p => p.Time <= race.StartedAt))
+        {
+            var sideSign = (dx - cx) * (pos.Longitude - cy) - (dy - cy) * (pos.Latitude - cx);
+            if (sideSign <= 0)
+            {
+                everOnPreStartSide = true;
+                isOnCourseSide = false;
+            }
+            else if (everOnPreStartSide)
+            {
+                isOcs = true;
+                isOnCourseSide = true;
+            }
+        }
+
+        // isOcsCleared: the boat was OCS at some point but had returned to the
+        // pre-start side by the time the gun fired.
+        var isOcsCleared = isOcs && !isOnCourseSide;
+        // ─────────────────────────────────────────────────────────────────────
 
         // Collect all valid crossings — there may be more than one when the boat
         // crosses early, returns behind the line, and crosses again.
@@ -91,7 +134,7 @@ public class StartAnalysisService(AppDbContext db)
                 a.Latitude, a.Longitude, b.Latitude, b.Longitude,
                 cx, cy, dx, dy);
 
-            lastCrossing = new StartAnalysisDto(crossedAt, timeBias, speed, course, u);
+            lastCrossing = new StartAnalysisDto(crossedAt, timeBias, speed, course, u, isOcs, isOcsCleared);
         }
 
         return lastCrossing;
