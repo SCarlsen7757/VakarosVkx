@@ -6,20 +6,23 @@ A self-hosted sailing telemetry analysis tool for [Vakaros](https://vakaros.com/
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Running with Docker Compose](#running-with-docker-compose)
-  - [Running Locally (Development)](#running-locally-development)
-- [Usage](#usage)
-  - [Uploading a Session](#uploading-a-session)
-  - [Managing Boats and Courses](#managing-boats-and-courses)
-  - [Viewing a Race](#viewing-a-race)
-- [Projects](#projects)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
+- [Vakaros VKX Analyser](#vakaros-vkx-analyser)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Features](#features)
+  - [Architecture](#architecture)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Running with Docker Compose](#running-with-docker-compose)
+    - [Running Locally (Development)](#running-locally-development)
+  - [Usage](#usage)
+    - [Uploading a Session](#uploading-a-session)
+    - [Managing Boats and Courses](#managing-boats-and-courses)
+    - [Viewing a Race](#viewing-a-race)
+    - [Console Tool](#console-tool)
+  - [Projects](#projects)
+  - [Roadmap](#roadmap)
+  - [Contributing](#contributing)
 
 ---
 
@@ -191,8 +194,6 @@ The output JSON is written next to the source file.
 
 ## Roadmap
 
-- [x] **Web UI in Docker Compose** — add the Blazor frontend to the compose stack for a single-command self-hosted deployment
-- [ ] **Start timing** — when a start line is available, detect the exact moment the boat crosses it and calculate the elapsed time from the start signal to the crossing
 - [ ] **Mark-to-mark VMG** — calculate VMG towards the next course mark when a course is assigned to a session, replacing the current upwind/downwind approximation
 - [ ] **Performance benchmarks** — compare speed, VMG, and tacking angles across multiple sessions on the same course
 - [ ] **Polar diagram** — plot boat speed against true wind angle to build an empirical polar curve, if wind data is available
