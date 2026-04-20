@@ -8,8 +8,7 @@
     <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)</OpenApiDocumentsDirectory>
   </PropertyGroup>
 
-  <UsingTask TaskName="_SetSkipDbMigrationEnv" TaskFactory="RoslynCodeTaskFactory"
-             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+  <UsingTask TaskName="_SetSkipDbMigrationEnv" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <Task>
       <Code Type="Fragment" Language="cs">
         System.Environment.SetEnvironmentVariable("SKIP_DB_MIGRATION", "true");
@@ -36,6 +35,7 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="10.5.0" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.5.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.14.1" />
   </ItemGroup>
 
   <ItemGroup>

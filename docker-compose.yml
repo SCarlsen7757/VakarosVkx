@@ -24,8 +24,12 @@ services:
       db:
         condition: service_healthy
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Default: >-
         Host=db;Port=5432;Database=vakaros;Username=vakaros;Password=vakaros
+    ports:
+      - "8080:8080"
 
   web:
     image: ${DOCKER_REGISTRY-}vakarosvkxweb

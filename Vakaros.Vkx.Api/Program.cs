@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using OpenAI;
+using Scalar.AspNetCore;
 using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Api.Services;
 
@@ -63,6 +64,7 @@ if (Environment.GetEnvironmentVariable("SKIP_DB_MIGRATION") != "true")
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseAuthorization();

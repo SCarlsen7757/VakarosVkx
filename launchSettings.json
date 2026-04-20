@@ -4,12 +4,10 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "composeLaunchAction": "LaunchBrowser",
-      "composeLaunchServiceName": "web",
-      "composeLaunchUrl": "{Scheme}://localhost:{ServicePort}",
+      "composeLaunchServiceName": "api",
+      "composeLaunchUrl": "{Scheme}://localhost:{ServicePort}/scalar",
       "serviceActions": {
-        "api": "StartDebugging",
-        "db": "StartWithoutDebugging",
-        "web": "StartDebugging"
+        "api": "StartDebugging"
       }
     }
   }
