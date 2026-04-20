@@ -11,6 +11,7 @@ A self-hosted sailing telemetry analysis tool for [Vakaros](https://vakaros.com/
   - [Overview](#overview)
   - [Features](#features)
   - [Architecture](#architecture)
+    - [Frontend Tech Stack](#frontend-tech-stack)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
     - [Running with Docker Compose](#running-with-docker-compose)
@@ -32,7 +33,7 @@ Vakaros devices record sailing telemetry — GPS position, speed, heading, heel,
 
 - A **parser** that decodes the VKX binary format into structured data
 - A **REST API** that ingests, stores, and serves the telemetry
-- A **Blazor web UI** for interactive visualisation of sessions and races
+- A **Node.js UI** for interactive visualisation of sessions and races
 - A **console tool** for quick one-off conversion of `.vkx` files to JSON
 
 ---
@@ -44,7 +45,7 @@ Vakaros devices record sailing telemetry — GPS position, speed, heading, heel,
 | 📤 **File Upload** | Upload `.vkx` files via the API; duplicate detection via SHA-256 hash |
 | 🏁 **Automatic Race Detection** | Races are extracted automatically from the timer events embedded in each session |
 | 🗺️ **Interactive Map** | GPS track rendered on a Leaflet map with course marks, start line (pin end / boat end) and leg overlays |
-| 📈 **Telemetry Charts** | Synced time-series charts for speed, VMG, and heel powered by amCharts |
+| 📈 **Telemetry Charts** | Synced time-series charts for speed, VMG, and heel powered by Apache ECharts |
 | 🎛️ **Live Gauges** | Heading, speed, VMG, and heel/angle gauges with scrubbing and playback |
 | ⏯️ **Playback Modes** | *Historical* mode shows full-race charts with a synced cursor; *Current* mode shows live-style gauges you can scrub through |
 | ⛵ **Boats** | Register boats with name, sail number, and class; link them to sessions |
@@ -58,7 +59,7 @@ Vakaros devices record sailing telemetry — GPS position, speed, heading, heel,
 ```
 ┌──────────────────────────┐      HTTP/JSON      ┌────────────────────────────┐
 │  Vakaros.Vkx.Web         │ ──────────────────► │  Vakaros.Vkx.Api           │
-│  Blazor Server (.NET 10) │                     │  ASP.NET Core (.NET 10)    │
+│  Next.js 15 / React 19   │                     │  ASP.NET Core (.NET 10)    │
 └──────────────────────────┘                     └─────────────┬──────────────┘
                                                                │ EF Core
                                                                ▼
@@ -81,6 +82,20 @@ Vakaros devices record sailing telemetry — GPS position, speed, heading, heel,
 └──────────────────────────┘
 ```
 
+### Frontend Tech Stack
+
+| Layer | Library / Tool |
+| --- | --- |
+| Framework | [Next.js](https://nextjs.org/) (App Router) |
+| UI library | [React](https://react.dev/) + [TypeScript 5](https://www.typescriptlang.org/) |
+| Styling | [Tailwind CSS](https://tailwindcss.com/) |
+| Components | [Radix UI](https://www.radix-ui.com/) primitives, [Lucide React](https://lucide.dev/) icons |
+| Maps | [Leaflet](https://leafletjs.com/) + [React Leaflet](https://react-leaflet.js.org/) |
+| Charts | [Apache ECharts](https://echarts.apache.org/) via [echarts-for-react](https://github.com/hustcc/echarts-for-react) |
+| State management | [Zustand](https://zustand-demo.pmnd.rs/) |
+| API client | [openapi-fetch](https://openapi-ts.dev/openapi-fetch/) with generated types from [openapi-typescript](https://openapi-ts.dev/) |
+| Theming | [next-themes](https://github.com/pacocoursey/next-themes) |
+
 ---
 
 ## Getting Started
@@ -88,7 +103,7 @@ Vakaros devices record sailing telemetry — GPS position, speed, heading, heel,
 ### Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for the compose stack)
-- **or** [.NET 10 SDK](https://dotnet.microsoft.com/download) (for local development)
+- **or** [.NET 10 SDK](https://dotnet.microsoft.com/download) + [Node.js](https://nodejs.org/) (for local development)
 
 ### Running with Docker Compose
 
@@ -100,8 +115,7 @@ This starts:
 
 - **TimescaleDB** on port `5432`
 - **API** on port `8080`
-
-The Blazor web UI is a separate project and is not yet included in the compose file. See [Running Locally](#running-locally-development) to run it alongside the API.
+- **Web UI** on port `8081`
 
 ### Running Locally (Development)
 
@@ -124,14 +138,15 @@ cd Vakaros.Vkx.Api
 dotnet run
 ```
 
-4. Run the web UI (in a separate terminal):
+4. Install web UI dependencies and run it (in a separate terminal):
 
 ```bash
 cd Vakaros.Vkx.Web
-dotnet run
+npm install
+npm run dev
 ```
 
-Open your browser at the URL printed by the web project (typically `https://localhost:5001`).
+Open your browser at `http://localhost:3000`.
 
 ---
 
@@ -187,7 +202,7 @@ The output JSON is written next to the source file.
 | --- | --- | --- |
 | `Vakaros.Vkx.Parser` | Class library | Decodes the VKX binary format (v1.4) into typed C# records |
 | `Vakaros.Vkx.Api` | ASP.NET Core Web API | Ingestion, storage, race detection, REST endpoints |
-| `Vakaros.Vkx.Web` | Blazor Server | Interactive web UI — map, charts, gauges, playback |
+| `Vakaros.Vkx.Web` | Next.js 15 / React 19 / TypeScript | Interactive web UI — map, charts, gauges, playback |
 | `Vakaros.Vkx.Shared` | Class library | DTOs shared between the API and web projects |
 | `Vakaros.Vkx.ConsoleApplication` | Console app | Standalone CLI converter: `.vkx` → `.json` |
 
