@@ -83,7 +83,10 @@ public class StartAnalysisService(AppDbContext db)
             var crossedAt = a.Time.AddSeconds(interval * tVal);
             var timeBias = (crossedAt - race.StartedAt).TotalSeconds;
             var speed = Lerp(a.SpeedOverGround, b.SpeedOverGround, tVal);
-            var course = LerpAngle(a.CourseOverGround, b.CourseOverGround, tVal);
+            var course = LerpAngle(
+                (float)(a.CourseOverGround * (180.0 / Math.PI)),
+                (float)(b.CourseOverGround * (180.0 / Math.PI)),
+                tVal);
             var u = ComputeLineFraction(
                 a.Latitude, a.Longitude, b.Latitude, b.Longitude,
                 cx, cy, dx, dy);
