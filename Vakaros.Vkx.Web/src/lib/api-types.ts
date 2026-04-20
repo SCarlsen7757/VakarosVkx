@@ -1769,7 +1769,7 @@ export interface components {
             /** Format: date-time */
             crossedAt: string;
             /** Format: double */
-            timeBiasSeconds: number | string;
+            timeBiasSeconds: null | number | string;
             /** Format: float */
             speedAtCrossingMs: number | string;
             /** Format: float */
@@ -1778,6 +1778,8 @@ export interface components {
             lineFraction: number | string;
             isOcs: boolean;
             isOcsCleared: boolean;
+            /** Format: double */
+            ocsTimeBiasSeconds: null | number | string;
         };
         StartLineLengthDto: {
             /** Format: double */

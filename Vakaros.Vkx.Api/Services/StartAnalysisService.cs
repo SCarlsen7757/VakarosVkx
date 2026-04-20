@@ -96,6 +96,7 @@ public class StartAnalysisService(AppDbContext db)
         // Collect all valid crossings — there may be more than one when the boat
         // crosses early, returns behind the line, and crosses again.
         StartAnalysisDto? lastCrossing = null;
+        double? lastPreGunTimeBias = null; // time bias of the last crossing before the gun
 
         for (var i = 0; i < positions.Count - 1; i++)
         {
@@ -134,10 +135,21 @@ public class StartAnalysisService(AppDbContext db)
                 a.Latitude, a.Longitude, b.Latitude, b.Longitude,
                 cx, cy, dx, dy);
 
-            lastCrossing = new StartAnalysisDto(crossedAt, timeBias, speed, course, u, isOcs, isOcsCleared);
+            lastCrossing = new StartAnalysisDto(crossedAt, timeBias, speed, course, u, isOcs, isOcsCleared, null);
+
+            if (crossedAt < race.StartedAt)
+                lastPreGunTimeBias = timeBias;
         }
 
-        return lastCrossing;
+        if (lastCrossing is null)
+            return null;
+
+        // TimeBiasSeconds: only set when the last crossing was at or after the gun.
+        // OcsTimeBiasSeconds: time of the last pre-gun crossing, only when IsOcs.
+        var correctTimeBias = lastCrossing.TimeBiasSeconds >= 0 ? lastCrossing.TimeBiasSeconds : null;
+        var ocsTimeBias = isOcs ? lastPreGunTimeBias : null;
+
+        return lastCrossing with { TimeBiasSeconds = correctTimeBias, OcsTimeBiasSeconds = ocsTimeBias };
     }
 
     /// <summary>

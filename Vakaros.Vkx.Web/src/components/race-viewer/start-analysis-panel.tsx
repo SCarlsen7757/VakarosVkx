@@ -26,16 +26,31 @@ export function StartAnalysisPanel({ data, sessionId, raceNumber }: Props) {
   }, [sessionId, raceNumber, data]);
 
   if (!data) return null;
-  const bias = n(data.timeBiasSeconds);
-  const biasColor = bias > 0 ? "text-warning" : "text-success";
+  const bias = data.timeBiasSeconds != null ? n(data.timeBiasSeconds) : null;
+  const ocsBias = data.ocsTimeBiasSeconds != null ? n(data.ocsTimeBiasSeconds) : null;
+  const biasColor = bias == null ? "" : bias > 0 ? "text-warning" : "text-success";
   const fractionMeters = lineLength != null ? (n(data.lineFraction) * lineLength).toFixed(1) + " m" : null;
   return (
     <Card className="p-4">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text-secondary">Start analysis</h3>
+      {data.isOcs && (
+        <div className="mb-3 flex items-center gap-2">
+          <span className="rounded bg-red-600 px-2 py-0.5 text-xs font-bold text-white">OCS</span>
+          {ocsBias != null && (
+            <span className="font-mono text-sm text-red-500">{Math.abs(ocsBias).toFixed(1)}s before gun</span>
+          )}
+          {data.isOcsCleared && (
+            <span className="rounded bg-green-600 px-2 py-0.5 text-xs font-bold text-white">Cleared</span>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-6">
         <div>
           <div className="text-xs text-text-secondary">Time bias</div>
-          <div className={`font-mono text-2xl font-semibold ${biasColor}`}>{bias > 0 ? "+" : ""}{bias.toFixed(1)}s</div>
+          {bias != null
+            ? <div className={`font-mono text-2xl font-semibold ${biasColor}`}>{bias > 0 ? "+" : ""}{bias.toFixed(1)}s</div>
+            : <div className="font-mono text-2xl font-semibold text-text-secondary">—</div>
+          }
         </div>
         <div>
           <div className="text-xs text-text-secondary">Crossing speed</div>

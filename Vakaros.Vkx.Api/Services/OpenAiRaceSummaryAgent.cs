@@ -52,7 +52,17 @@ public class OpenAiRaceSummaryAgent(IChatClient chatClient) : IRaceSummaryAgent
         if (ctx.StartAnalysis is { } sa)
         {
             lines.Add($"Start line crossed at: {sa.CrossedAt:u}");
-            lines.Add($"Time bias: {sa.TimeBiasSeconds:F2} s (negative = early/OCS, positive = late)");
+            if (sa.TimeBiasSeconds.HasValue)
+                lines.Add($"Time bias: {sa.TimeBiasSeconds.Value:F2} s (negative = early, positive = late)");
+            else
+                lines.Add("Time bias: no valid start crossing detected");
+            if (sa.IsOcs)
+            {
+                var ocsDesc = sa.OcsTimeBiasSeconds.HasValue
+                    ? $"{sa.OcsTimeBiasSeconds.Value:F2} s before the gun"
+                    : "unknown time";
+                lines.Add($"OCS: boat crossed start line early ({ocsDesc}){(sa.IsOcsCleared ? ", cleared before gun" : ", did not return before gun")}");
+            }
             lines.Add($"Speed at crossing: {sa.SpeedAtCrossingMs:F2} m/s");
             lines.Add($"Approach course: {sa.ApproachCourseDegrees:F0}°");
             lines.Add($"Line fraction: {sa.LineFraction:F2} (0 = pin end, 1 = boat end)");

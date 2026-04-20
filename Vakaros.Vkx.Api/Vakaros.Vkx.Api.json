@@ -3714,7 +3714,8 @@
           "approachCourseDegrees",
           "lineFraction",
           "isOcs",
-          "isOcsCleared"
+          "isOcsCleared",
+          "ocsTimeBiasSeconds"
         ],
         "type": "object",
         "properties": {
@@ -3725,6 +3726,7 @@
           "timeBiasSeconds": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
             "type": [
+              "null",
               "number",
               "string"
             ],
@@ -3759,6 +3761,15 @@
           },
           "isOcsCleared": {
             "type": "boolean"
+          },
+          "ocsTimeBiasSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
