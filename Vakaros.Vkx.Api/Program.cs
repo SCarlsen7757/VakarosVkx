@@ -65,6 +65,18 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
+
+    app.MapGet("/", context =>
+    {
+        context.Response.Redirect("/scalar/v1");
+        return Task.CompletedTask;
+    });
+
+    app.MapGet("/swagger", context =>
+    {
+        context.Response.Redirect("/scalar/v1");
+        return Task.CompletedTask;
+    });
 }
 
 app.UseAuthorization();
