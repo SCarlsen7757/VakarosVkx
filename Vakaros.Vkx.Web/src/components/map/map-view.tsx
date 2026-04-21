@@ -46,6 +46,17 @@ function ZoomTracker({ onZoom }: { onZoom: (zoom: number) => void }) {
   return null;
 }
 
+function AutoInvalidateSize() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
+
 function FitBounds({ points, fitTick }: { points: L.LatLngExpression[]; fitTick: number }) {
   const map = useMap();
   const pointsRef = useRef(points);
@@ -148,6 +159,7 @@ export default function MapView({
   return (
     <MapContainer center={center as L.LatLngExpression} zoom={14} className="h-full w-full">
       <ZoomTracker onZoom={setZoom} />
+      <AutoInvalidateSize />
       <TileLayer
         key={tileUrl}
         url={tileUrl}

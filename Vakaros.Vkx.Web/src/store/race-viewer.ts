@@ -2,22 +2,22 @@
 
 import { create } from "zustand";
 
-export type PlaybackMode = "historical" | "current";
-
 interface RaceViewerState {
-  mode: PlaybackMode;
+  showGauges: boolean;
+  showCharts: boolean;
   isPlaying: boolean;
   speed: 0.5 | 1 | 2 | 4;
-  // playback position in seconds, relative to race start (negative for pre-race)
+  // playback position in seconds, relative to data start (negative elapsed = pre-race)
   position: number;
-  // window slicer (seconds, relative to race start)
+  // window slicer (seconds, relative to data start)
   windowStart: number;
   windowEnd: number;
   // total race duration (s)
   duration: number;
   raceStartOffset: number; // seconds from race "first sample" to start signal
 
-  setMode: (m: PlaybackMode) => void;
+  setShowGauges: (v: boolean) => void;
+  setShowCharts: (v: boolean) => void;
   togglePlay: () => void;
   setSpeed: (s: 0.5 | 1 | 2 | 4) => void;
   setPosition: (p: number) => void;
@@ -27,7 +27,8 @@ interface RaceViewerState {
 }
 
 export const useRaceViewerStore = create<RaceViewerState>((set) => ({
-  mode: "historical",
+  showGauges: false,
+  showCharts: true,
   isPlaying: false,
   speed: 1,
   position: 0,
@@ -36,7 +37,8 @@ export const useRaceViewerStore = create<RaceViewerState>((set) => ({
   duration: 0,
   raceStartOffset: 0,
 
-  setMode: (m) => set({ mode: m }),
+  setShowGauges: (v) => set({ showGauges: v }),
+  setShowCharts: (v) => set({ showCharts: v }),
   togglePlay: () => set((s) => ({ isPlaying: !s.isPlaying })),
   setSpeed: (s) => set({ speed: s }),
   setPosition: (p) => set({ position: p }),

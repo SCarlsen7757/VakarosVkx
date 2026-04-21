@@ -31,7 +31,8 @@ export default function SessionViewerPage({ params }: PageProps) {
   const { id } = use(params);
   const { prefs } = useUnitPrefs();
   const position = useRaceViewerStore((s) => s.position);
-  const mode = useRaceViewerStore((s) => s.mode);
+  const showGauges = useRaceViewerStore((s) => s.showGauges);
+  const showCharts = useRaceViewerStore((s) => s.showCharts);
   const windowStart = useRaceViewerStore((s) => s.windowStart);
   const windowEnd = useRaceViewerStore((s) => s.windowEnd);
 
@@ -82,18 +83,20 @@ export default function SessionViewerPage({ params }: PageProps) {
   const windowEndMs = startMs + windowEnd * 1000;
   const isWindowNarrowed = windowStart > 0 || windowEnd < duration;
   const windowPositions = useMemo(
-    () => (mode === "historical" && isWindowNarrowed)
+    () => (showCharts && isWindowNarrowed)
       ? positions?.filter((p) => {
           const t = new Date(p.time).getTime();
           return t >= windowStartMs && t <= windowEndMs;
         }) ?? null
       : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [positions, windowStartMs, windowEndMs, mode, isWindowNarrowed]
+    [positions, windowStartMs, windowEndMs, showCharts, isWindowNarrowed]
   );
 
   if (error) return <ErrorBanner message={error} />;
   if (!session) return <SkeletonLoader className="h-96" />;
+
+  const hasRightContent = showGauges || showCharts;
 
   return (
     <div className="space-y-4">
@@ -105,23 +108,33 @@ export default function SessionViewerPage({ params }: PageProps) {
         <span className="text-text-secondary">· {session.fileName}</span>
       </div>
 
-      <PlaybackControls raceStartOffset={0} duration={Math.max(duration, 0)} />
+      <div className={`flex flex-col gap-4 ${hasRightContent ? "lg:flex-row lg:items-start" : ""}`}>
+        {/* Left column: playback controls + map */}
+        <div className={`flex flex-col gap-4 ${hasRightContent ? "lg:w-[42%] lg:shrink-0 lg:sticky lg:top-4 lg:self-start" : "w-full"}`}>
+          <PlaybackControls raceStartOffset={0} duration={Math.max(duration, 0)} />
+          <RaceMap race={null} positions={positions} playbackPosition={playbackArrow} windowPositions={windowPositions} square={hasRightContent} />
+        </div>
 
-      <RaceMap race={null} positions={positions} playbackPosition={playbackArrow} windowPositions={windowPositions} />
+        {hasRightContent && (
+          <div className="flex flex-col gap-4 flex-1 min-w-0 lg:overflow-y-auto lg:max-h-[calc(100vh-5rem)]">
+            {showGauges && (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <NumericGauge label="SOG" value={currentPos ? convertSpeed(n(currentPos.speedOverGround), prefs.boatSpeed) : null} unit={speedUnitLabel(prefs.boatSpeed)} big />
+                <CompassRose headingDeg={currentPos ? n(currentPos.courseOverGround) : null} />
+                <Inclinometer label="Heel (°)" value={heelTrim?.heel ?? null} range={45} />
+                <Inclinometer label="Trim (°)" value={heelTrim?.trim ?? null} range={10} />
+              </div>
+            )}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <NumericGauge label="SOG" value={currentPos ? convertSpeed(n(currentPos.speedOverGround), prefs.boatSpeed) : null} unit={speedUnitLabel(prefs.boatSpeed)} big />
-        <CompassRose headingDeg={currentPos ? n(currentPos.courseOverGround) : null} />
-        <Inclinometer label="Heel (°)" value={heelTrim?.heel ?? null} range={45} />
-        <Inclinometer label="Trim (°)" value={heelTrim?.trim ?? null} range={10} />
+            {showCharts && session.races.length > 0 && (
+              <>
+                <TimeWindowSlicer raceStartOffset={0} />
+                <TelemetryPanels sessionId={id} raceNumber={n(session.races[0].raceNumber)} raceStartMs={startMs} raceStartOffset={0} />
+              </>
+            )}
+          </div>
+        )}
       </div>
-
-      {session.races.length > 0 && (
-        <>
-          <TimeWindowSlicer raceStartOffset={0} />
-          <TelemetryPanels sessionId={id} raceNumber={n(session.races[0].raceNumber)} raceStartMs={startMs} raceStartOffset={0} />
-        </>
-      )}
     </div>
   );
 }

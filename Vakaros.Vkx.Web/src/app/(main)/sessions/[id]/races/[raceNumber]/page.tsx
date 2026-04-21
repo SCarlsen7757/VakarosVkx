@@ -34,8 +34,9 @@ export default function RaceViewerPage({ params }: PageProps) {
   const { id, raceNumber } = use(params);
   const raceNum = Number(raceNumber);
   const { prefs } = useUnitPrefs();
+  const showGauges = useRaceViewerStore((s) => s.showGauges);
+  const showCharts = useRaceViewerStore((s) => s.showCharts);
   const position = useRaceViewerStore((s) => s.position);
-  const mode = useRaceViewerStore((s) => s.mode);
   const windowStart = useRaceViewerStore((s) => s.windowStart);
   const windowEnd = useRaceViewerStore((s) => s.windowEnd);
 
@@ -82,14 +83,14 @@ export default function RaceViewerPage({ params }: PageProps) {
   const windowEndMs = startMs + (windowEnd - raceStartOffset) * 1000;
   const isWindowNarrowed = windowStart > 0 || windowEnd < totalDuration;
   const windowPositions = useMemo(
-    () => (mode === "historical" && isWindowNarrowed)
+    () => (showCharts && isWindowNarrowed)
       ? positions?.filter((p) => {
           const t = new Date(p.time).getTime();
           return t >= windowStartMs && t <= windowEndMs;
         }) ?? null
       : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [positions, windowStartMs, windowEndMs, mode, isWindowNarrowed]
+    [positions, windowStartMs, windowEndMs, showCharts, isWindowNarrowed]
   );
 
   // Resolve current position (snap to nearest) — used for gauges and heel/trim.
@@ -127,6 +128,8 @@ export default function RaceViewerPage({ params }: PageProps) {
   if (error) return <ErrorBanner message={error} />;
   if (!race || !positions) return <SkeletonLoader className="h-96" />;
 
+  const hasRightContent = showGauges || showCharts;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
@@ -137,36 +140,54 @@ export default function RaceViewerPage({ params }: PageProps) {
         {course && <span className="text-text-secondary">· {course.name}</span>}
       </div>
 
-      <PlaybackControls raceStartOffset={raceStartOffset} duration={totalDuration} />
+      <div className={`flex flex-col gap-4 ${hasRightContent ? "lg:flex-row lg:items-start" : ""}`}>
+        {/* Left column: playback controls + map */}
+        <div className={`flex flex-col gap-4 ${hasRightContent ? "lg:w-[42%] lg:shrink-0 lg:sticky lg:top-4 lg:self-start" : "w-full"}`}>
+          <PlaybackControls raceStartOffset={raceStartOffset} duration={totalDuration} />
+          <RaceMap
+            race={race}
+            positions={racePositions}
+            preRacePositions={preRacePositions}
+            legs={legs}
+            startLine={startLine}
+            playbackPosition={playbackArrow}
+            windowPositions={windowPositions}
+            square={hasRightContent}
+          />
+        </div>
 
-      <RaceMap
-        race={race}
-        positions={racePositions}
-        preRacePositions={preRacePositions}
-        legs={legs}
-        startLine={startLine}
-        playbackPosition={playbackArrow}
-        windowPositions={windowPositions}
-      />
+        {/* Right column: only rendered when at least one view is enabled */}
+        {hasRightContent && (
+          <div className="flex flex-col gap-4 flex-1 min-w-0 lg:overflow-y-auto lg:max-h-[calc(100vh-5rem)]">
+            {showGauges && (
+              <div className="grid grid-cols-3 gap-3">
+                <NumericGauge label="SOG" value={currentPos ? convertSpeed(n(currentPos.speedOverGround), prefs.boatSpeed) : null} unit={speedUnitLabel(prefs.boatSpeed)} big />
+                <CompassRose headingDeg={currentPos ? radiansToDegrees(n(currentPos.courseOverGround)) : null} />
+                <HeelTrimCard heel={heelTrim?.heel ?? null} trim={heelTrim?.trim ?? null} />
+              </div>
+            )}
 
-      {mode === "current" && (
-      <div className="grid grid-cols-3 gap-3">
-        <NumericGauge label="SOG" value={currentPos ? convertSpeed(n(currentPos.speedOverGround), prefs.boatSpeed) : null} unit={speedUnitLabel(prefs.boatSpeed)} big />
-        <CompassRose headingDeg={currentPos ? radiansToDegrees(n(currentPos.courseOverGround)) : null} />
-        <HeelTrimCard heel={heelTrim?.heel ?? null} trim={heelTrim?.trim ?? null} />
+            <StartAnalysisPanel data={race.startAnalysis} sessionId={id} raceNumber={raceNum} />
+
+            {showCharts && (
+              <>
+                <TimeWindowSlicer raceStartOffset={raceStartOffset} />
+                <TelemetryPanels sessionId={id} raceNumber={raceNum} raceStartMs={startMs} raceStartOffset={raceStartOffset} />
+              </>
+            )}
+
+            <AiSummary sessionId={id} raceNumber={raceNum} />
+          </div>
+        )}
       </div>
+
+      {/* When both views are off, still show start analysis and AI summary below the map */}
+      {!hasRightContent && (
+        <div className="flex flex-col gap-4">
+          <StartAnalysisPanel data={race.startAnalysis} sessionId={id} raceNumber={raceNum} />
+          <AiSummary sessionId={id} raceNumber={raceNum} />
+        </div>
       )}
-
-      <StartAnalysisPanel data={race.startAnalysis} sessionId={id} raceNumber={raceNum} />
-
-      {mode === "historical" && (
-        <>
-          <TimeWindowSlicer raceStartOffset={raceStartOffset} />
-          <TelemetryPanels sessionId={id} raceNumber={raceNum} raceStartMs={startMs} raceStartOffset={raceStartOffset} />
-        </>
-      )}
-
-      <AiSummary sessionId={id} raceNumber={raceNum} />
     </div>
   );
 }

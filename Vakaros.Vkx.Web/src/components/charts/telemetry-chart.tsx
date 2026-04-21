@@ -41,7 +41,19 @@ export function TelemetryChart({
       axisLabel: { color: dark ? "#9CA3AF" : "#6B7280", fontSize: 10 },
       splitLine: { lineStyle: { color: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" } },
     }));
+
+    const positionMarkLine = positionMs != null
+      ? {
+          silent: true,
+          symbol: "none",
+          data: [{ xAxis: positionMs }],
+          lineStyle: { color: dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.45)", width: 1.5, type: "dashed" as const },
+          label: { show: false },
+        }
+      : undefined;
+
     return {
+      animation: false,
       title: { text: title, left: 0, top: 0, textStyle: { fontSize: 12, color: dark ? "#F9FAFB" : "#111827", fontWeight: 600 } },
       grid,
       tooltip: { trigger: "axis", axisPointer: { type: "cross" } },
@@ -64,9 +76,10 @@ export function TelemetryChart({
         lineStyle: { width: 1.5, color: s.color },
         itemStyle: { color: s.color },
         data: s.data.map((p) => [p.t, p.v]),
+        ...(positionMarkLine ? { markLine: positionMarkLine } : {}),
       })),
     } as EChartsOption;
-  }, [series, title, yAxes, dark, windowStartMs, windowEndMs]);
+  }, [series, title, yAxes, dark, windowStartMs, windowEndMs, positionMs]);
 
   return <ReactECharts option={option} style={{ height }} notMerge lazyUpdate />;
 }

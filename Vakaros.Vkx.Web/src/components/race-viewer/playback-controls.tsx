@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Gauge, LineChart } from "lucide-react";
 import { useRaceViewerStore } from "@/store/race-viewer";
 import { formatSignedClock } from "@/lib/units";
 
@@ -9,8 +9,8 @@ export function PlaybackControls({ raceStartOffset, duration }: { raceStartOffse
   const {
     isPlaying, togglePlay, speed, setSpeed,
     position, setPosition,
-    windowEnd,
-    mode, setMode, setDuration: setDur, setRaceStartOffset, setWindow,
+    showGauges, setShowGauges, showCharts, setShowCharts,
+    setDuration: setDur, setRaceStartOffset, setWindow,
   } = useRaceViewerStore();
 
   useEffect(() => {
@@ -74,15 +74,25 @@ export function PlaybackControls({ raceStartOffset, duration }: { raceStartOffse
             <option value={4}>4×</option>
           </select>
         </div>
-        <div className="ml-auto inline-flex rounded-md ring-1 ring-border-default">
+        <div className="ml-auto flex items-center gap-1">
           <button
-            onClick={() => setMode("historical")}
-            className={`px-3 py-1 text-xs ${mode === "historical" ? "bg-action-primary text-white" : "text-text-secondary"}`}
-          >Historical</button>
+            onClick={() => setShowGauges(!showGauges)}
+            title={showGauges ? "Hide gauges" : "Show gauges"}
+            className={`rounded-md p-2 ring-1 ring-border-default transition-colors ${
+              showGauges ? "bg-action-primary text-white ring-action-primary" : "bg-bg-base text-text-secondary hover:bg-bg-elevated"
+            }`}
+          >
+            <Gauge className="h-4 w-4" />
+          </button>
           <button
-            onClick={() => setMode("current")}
-            className={`px-3 py-1 text-xs ${mode === "current" ? "bg-action-primary text-white" : "text-text-secondary"}`}
-          >Current</button>
+            onClick={() => setShowCharts(!showCharts)}
+            title={showCharts ? "Hide charts" : "Show charts"}
+            className={`rounded-md p-2 ring-1 ring-border-default transition-colors ${
+              showCharts ? "bg-action-primary text-white ring-action-primary" : "bg-bg-base text-text-secondary hover:bg-bg-elevated"
+            }`}
+          >
+            <LineChart className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
