@@ -21,12 +21,12 @@ export interface RaceMapProps {
   trackMode?: TrackMode;
   /** Positions within the selected time window — rendered as a highlighted overlay on the track. */
   windowPositions?: Position[] | null;
-  /** When true (two-column layout), the map is rendered as a square. Default false = fixed height. */
-  square?: boolean;
+  /** When true, the map container fills the full height of its flex parent. */
+  fill?: boolean;
 }
 
 export function RaceMap(props: RaceMapProps) {
-  const { square = false } = props;
+  const { fill = false } = props;
   const [trackMode, setTrackMode] = useState<TrackMode>(props.trackMode ?? "flat");
   const [openSeaMap, setOpenSeaMap] = useState(false);
   const [followMode, setFollowMode] = useState(true);
@@ -34,8 +34,10 @@ export function RaceMap(props: RaceMapProps) {
 
   if (!props.positions) return <SkeletonLoader className="h-96" />;
 
+  const sizeClass = fill ? "h-full w-full" : "h-[28rem]";
+
   return (
-    <div className={`relative overflow-hidden rounded-lg ring-1 ring-border-default ${square ? "aspect-square w-full" : "h-[28rem]"}`}>
+    <div className={`relative overflow-hidden rounded-lg ring-1 ring-border-default ${sizeClass}`}>
       <MapView
         {...props}
         trackMode={trackMode}

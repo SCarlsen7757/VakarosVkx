@@ -2,13 +2,12 @@
 
 import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Gauge as GaugeIcon, LineChart as LineChartIcon } from "lucide-react";
 import { RaceMap } from "@/components/map/race-map";
 import { TelemetryPanels } from "@/components/charts/telemetry-panels";
 import { TimeWindowSlicer } from "@/components/charts/time-window-slicer";
 import { PlaybackControls } from "@/components/race-viewer/playback-controls";
 import { StartAnalysisPanel } from "@/components/race-viewer/start-analysis-panel";
-import { AiSummary } from "@/components/race-viewer/ai-summary";
 import { CompassRose, HeelTrimCard, NumericGauge } from "@/components/gauges/gauges";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { ErrorBanner } from "@/components/ui/error-banner";
@@ -128,21 +127,42 @@ export default function RaceViewerPage({ params }: PageProps) {
   if (error) return <ErrorBanner message={error} />;
   if (!race || !positions) return <SkeletonLoader className="h-96" />;
 
-  const hasRightContent = showGauges || showCharts;
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-3 lg:h-[calc(100vh-3rem)]">
+      {/* Compact header bar */}
+      <div className="flex items-center gap-2 py-1">
         <Link href={`/sessions/${id}`} className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary">
-          <ArrowLeft className="h-4 w-4" /> Back to session
+          <ArrowLeft className="h-4 w-4" /> Back
         </Link>
-        <h1 className="text-2xl font-semibold">Race {race.raceNumber}</h1>
-        {course && <span className="text-text-secondary">· {course.name}</span>}
+        <span className="text-text-secondary">·</span>
+        <h1 className="text-base font-semibold">Race {race.raceNumber}</h1>
+        {course && <span className="text-sm text-text-secondary">· {course.name}</span>}
+        <div className="ml-auto flex items-center gap-1">
+          <button
+            onClick={() => useRaceViewerStore.getState().setShowGauges(!showGauges)}
+            title={showGauges ? "Hide gauges" : "Show gauges"}
+            className={`rounded-md p-1.5 ring-1 ring-border-default transition-colors ${
+              showGauges ? "bg-action-primary text-white ring-action-primary" : "bg-bg-base text-text-secondary hover:bg-bg-elevated"
+            }`}
+          >
+            <GaugeIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => useRaceViewerStore.getState().setShowCharts(!showCharts)}
+            title={showCharts ? "Hide charts" : "Show charts"}
+            className={`rounded-md p-1.5 ring-1 ring-border-default transition-colors ${
+              showCharts ? "bg-action-primary text-white ring-action-primary" : "bg-bg-base text-text-secondary hover:bg-bg-elevated"
+            }`}
+          >
+            <LineChartIcon className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
-      <div className={`flex flex-col gap-4 ${hasRightContent ? "lg:flex-row lg:items-start" : ""}`}>
+      {/* Two-column body — fills remaining height on desktop */}
+      <div className="flex flex-col gap-4 flex-1 min-h-0 lg:flex-row">
         {/* Left column: playback controls + map */}
-        <div className={`flex flex-col gap-4 ${hasRightContent ? "lg:w-[42%] lg:shrink-0 lg:sticky lg:top-4 lg:self-start" : "w-full"}`}>
+        <div className="flex flex-col gap-3 lg:w-[42%] lg:shrink-0 min-h-0">
           <PlaybackControls raceStartOffset={raceStartOffset} duration={totalDuration} />
           <RaceMap
             race={race}
@@ -152,42 +172,30 @@ export default function RaceViewerPage({ params }: PageProps) {
             startLine={startLine}
             playbackPosition={playbackArrow}
             windowPositions={windowPositions}
-            square={hasRightContent}
+            fill
           />
         </div>
 
-        {/* Right column: only rendered when at least one view is enabled */}
-        {hasRightContent && (
-          <div className="flex flex-col gap-4 flex-1 min-w-0 lg:overflow-y-auto lg:max-h-[calc(100vh-5rem)]">
-            {showGauges && (
-              <div className="grid grid-cols-3 gap-3">
-                <NumericGauge label="SOG" value={currentPos ? convertSpeed(n(currentPos.speedOverGround), prefs.boatSpeed) : null} unit={speedUnitLabel(prefs.boatSpeed)} big />
-                <CompassRose headingDeg={currentPos ? radiansToDegrees(n(currentPos.courseOverGround)) : null} />
-                <HeelTrimCard heel={heelTrim?.heel ?? null} trim={heelTrim?.trim ?? null} />
-              </div>
-            )}
+        {/* Right column: scrollable detail panel */}
+        <div className="flex flex-col gap-4 flex-1 min-h-0 lg:overflow-y-auto">
+          {showGauges && (
+            <div className="grid grid-cols-3 gap-3">
+              <NumericGauge label="SOG" value={currentPos ? convertSpeed(n(currentPos.speedOverGround), prefs.boatSpeed) : null} unit={speedUnitLabel(prefs.boatSpeed)} big />
+              <CompassRose headingDeg={currentPos ? radiansToDegrees(n(currentPos.courseOverGround)) : null} />
+              <HeelTrimCard heel={heelTrim?.heel ?? null} trim={heelTrim?.trim ?? null} />
+            </div>
+          )}
 
-            <StartAnalysisPanel data={race.startAnalysis} sessionId={id} raceNumber={raceNum} />
-
-            {showCharts && (
-              <>
-                <TimeWindowSlicer raceStartOffset={raceStartOffset} />
-                <TelemetryPanels sessionId={id} raceNumber={raceNum} raceStartMs={startMs} raceStartOffset={raceStartOffset} />
-              </>
-            )}
-
-            <AiSummary sessionId={id} raceNumber={raceNum} />
-          </div>
-        )}
-      </div>
-
-      {/* When both views are off, still show start analysis and AI summary below the map */}
-      {!hasRightContent && (
-        <div className="flex flex-col gap-4">
           <StartAnalysisPanel data={race.startAnalysis} sessionId={id} raceNumber={raceNum} />
-          <AiSummary sessionId={id} raceNumber={raceNum} />
+
+          {showCharts && (
+            <>
+              <TimeWindowSlicer raceStartOffset={raceStartOffset} />
+              <TelemetryPanels sessionId={id} raceNumber={raceNum} raceStartMs={startMs} raceStartOffset={raceStartOffset} />
+            </>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

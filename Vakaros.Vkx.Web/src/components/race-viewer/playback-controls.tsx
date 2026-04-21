@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Play, Pause, Gauge, LineChart } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 import { useRaceViewerStore } from "@/store/race-viewer";
 import { formatSignedClock } from "@/lib/units";
 
@@ -9,7 +9,6 @@ export function PlaybackControls({ raceStartOffset, duration }: { raceStartOffse
   const {
     isPlaying, togglePlay, speed, setSpeed,
     position, setPosition,
-    showGauges, setShowGauges, showCharts, setShowCharts,
     setDuration: setDur, setRaceStartOffset, setWindow,
   } = useRaceViewerStore();
 
@@ -50,9 +49,9 @@ export function PlaybackControls({ raceStartOffset, duration }: { raceStartOffse
   const timerColor = elapsed < 0 ? "text-warning" : "text-success";
 
   return (
-    <div className="space-y-3 rounded-lg bg-bg-surface p-4 ring-1 ring-border-default">
-      <div className="flex flex-wrap items-center gap-4">
-        <div className={`font-mono text-3xl font-semibold ${timerColor}`}>
+    <div className="space-y-2 rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className={`font-mono text-2xl font-semibold ${timerColor}`}>
           {formatSignedClock(elapsed)}
         </div>
         <div className="flex items-center gap-2">
@@ -61,7 +60,7 @@ export function PlaybackControls({ raceStartOffset, duration }: { raceStartOffse
             className="rounded-full bg-action-primary p-2 text-white hover:bg-action-hover"
             aria-label={isPlaying ? "Pause" : "Play"}
           >
-            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </button>
           <select
             value={speed}
@@ -74,43 +73,19 @@ export function PlaybackControls({ raceStartOffset, duration }: { raceStartOffse
             <option value={4}>4×</option>
           </select>
         </div>
-        <div className="ml-auto flex items-center gap-1">
-          <button
-            onClick={() => setShowGauges(!showGauges)}
-            title={showGauges ? "Hide gauges" : "Show gauges"}
-            className={`rounded-md p-2 ring-1 ring-border-default transition-colors ${
-              showGauges ? "bg-action-primary text-white ring-action-primary" : "bg-bg-base text-text-secondary hover:bg-bg-elevated"
-            }`}
-          >
-            <Gauge className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setShowCharts(!showCharts)}
-            title={showCharts ? "Hide charts" : "Show charts"}
-            className={`rounded-md p-2 ring-1 ring-border-default transition-colors ${
-              showCharts ? "bg-action-primary text-white ring-action-primary" : "bg-bg-base text-text-secondary hover:bg-bg-elevated"
-            }`}
-          >
-            <LineChart className="h-4 w-4" />
-          </button>
-        </div>
+        <span className="ml-auto font-mono text-xs text-text-secondary">
+          {position.toFixed(1)}s / {duration.toFixed(0)}s
+        </span>
       </div>
-
-      <div>
-        <div className="mb-1 flex justify-between text-xs text-text-secondary">
-          <span>Position</span>
-          <span className="font-mono">{position.toFixed(1)}s / {duration.toFixed(0)}s</span>
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={duration}
-          step={0.1}
-          value={position}
-          onChange={(e) => setPosition(Number(e.target.value))}
-          className="w-full accent-[color:var(--action-primary)]"
-        />
-      </div>
+      <input
+        type="range"
+        min={0}
+        max={duration}
+        step={0.1}
+        value={position}
+        onChange={(e) => setPosition(Number(e.target.value))}
+        className="w-full accent-[color:var(--action-primary)]"
+      />
     </div>
   );
 }
