@@ -16,12 +16,16 @@ export function TelemetryChart({
   height = 160,
   yAxes,
   positionMs,
+  windowStartMs,
+  windowEndMs,
 }: {
   title: string;
   series: ChartSeries[];
   height?: number;
   yAxes?: { name?: string; min?: number; max?: number }[];
   positionMs?: number | null;
+  windowStartMs?: number | null;
+  windowEndMs?: number | null;
 }) {
   const { resolvedTheme } = useTheme();
   const dark = resolvedTheme === "dark";
@@ -43,6 +47,8 @@ export function TelemetryChart({
       tooltip: { trigger: "axis", axisPointer: { type: "cross" } },
       xAxis: {
         type: "time",
+        min: windowStartMs ?? undefined,
+        max: windowEndMs ?? undefined,
         axisLine: { lineStyle: { color: dark ? "#374151" : "#E5E7EB" } },
         axisLabel: { color: dark ? "#9CA3AF" : "#6B7280", fontSize: 10 },
       },
@@ -60,7 +66,7 @@ export function TelemetryChart({
         data: s.data.map((p) => [p.t, p.v]),
       })),
     } as EChartsOption;
-  }, [series, title, yAxes, dark]);
+  }, [series, title, yAxes, dark, windowStartMs, windowEndMs]);
 
   return <ReactECharts option={option} style={{ height }} notMerge lazyUpdate />;
 }

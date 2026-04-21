@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { RaceMap } from "@/components/map/race-map";
 import { TelemetryPanels } from "@/components/charts/telemetry-panels";
+import { TimeWindowSlicer } from "@/components/charts/time-window-slicer";
 import { PlaybackControls } from "@/components/race-viewer/playback-controls";
 import { StartAnalysisPanel } from "@/components/race-viewer/start-analysis-panel";
 import { AiSummary } from "@/components/race-viewer/ai-summary";
@@ -35,6 +36,8 @@ export default function RaceViewerPage({ params }: PageProps) {
   const { prefs } = useUnitPrefs();
   const position = useRaceViewerStore((s) => s.position);
   const mode = useRaceViewerStore((s) => s.mode);
+  const windowStart = useRaceViewerStore((s) => s.windowStart);
+  const windowEnd = useRaceViewerStore((s) => s.windowEnd);
 
   const [race, setRace] = useState<RaceDetail | null>(null);
   const [positions, setPositions] = useState<Position[] | null>(null);
@@ -72,6 +75,22 @@ export default function RaceViewerPage({ params }: PageProps) {
 
   const racePositions = useMemo(() => positions?.filter((p) => new Date(p.time).getTime() >= startMs) ?? null, [positions, startMs]);
   const preRacePositions = useMemo(() => positions?.filter((p) => new Date(p.time).getTime() < startMs) ?? null, [positions, startMs]);
+
+  // Positions within the selected time window — used for map highlight.
+  // Only shown in Historical mode when the window is narrowed (not covering full data range).
+  const windowStartMs = startMs + (windowStart - raceStartOffset) * 1000;
+  const windowEndMs = startMs + (windowEnd - raceStartOffset) * 1000;
+  const isWindowNarrowed = windowStart > 0 || windowEnd < totalDuration;
+  const windowPositions = useMemo(
+    () => (mode === "historical" && isWindowNarrowed)
+      ? positions?.filter((p) => {
+          const t = new Date(p.time).getTime();
+          return t >= windowStartMs && t <= windowEndMs;
+        }) ?? null
+      : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [positions, windowStartMs, windowEndMs, mode, isWindowNarrowed]
+  );
 
   // Resolve current position (snap to nearest) — used for gauges and heel/trim.
   const targetMs = startMs + (position - raceStartOffset) * 1000;
@@ -127,6 +146,7 @@ export default function RaceViewerPage({ params }: PageProps) {
         legs={legs}
         startLine={startLine}
         playbackPosition={playbackArrow}
+        windowPositions={windowPositions}
       />
 
       {mode === "current" && (
@@ -139,7 +159,12 @@ export default function RaceViewerPage({ params }: PageProps) {
 
       <StartAnalysisPanel data={race.startAnalysis} sessionId={id} raceNumber={raceNum} />
 
-      {mode === "historical" && <TelemetryPanels sessionId={id} raceNumber={raceNum} />}
+      {mode === "historical" && (
+        <>
+          <TimeWindowSlicer raceStartOffset={raceStartOffset} />
+          <TelemetryPanels sessionId={id} raceNumber={raceNum} raceStartMs={startMs} raceStartOffset={raceStartOffset} />
+        </>
+      )}
 
       <AiSummary sessionId={id} raceNumber={raceNum} />
     </div>

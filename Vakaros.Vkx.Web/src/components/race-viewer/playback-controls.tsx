@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import * as Slider from "@radix-ui/react-slider";
 import { Play, Pause } from "lucide-react";
 import { useRaceViewerStore } from "@/store/race-viewer";
 import { formatSignedClock } from "@/lib/units";
@@ -10,8 +9,8 @@ export function PlaybackControls({ raceStartOffset, duration }: { raceStartOffse
   const {
     isPlaying, togglePlay, speed, setSpeed,
     position, setPosition,
-    windowStart, windowEnd, setWindow,
-    mode, setMode, setDuration: setDur, setRaceStartOffset,
+    windowEnd,
+    mode, setMode, setDuration: setDur, setRaceStartOffset, setWindow,
   } = useRaceViewerStore();
 
   useEffect(() => {
@@ -101,34 +100,6 @@ export function PlaybackControls({ raceStartOffset, duration }: { raceStartOffse
           onChange={(e) => setPosition(Number(e.target.value))}
           className="w-full accent-[color:var(--action-primary)]"
         />
-      </div>
-
-      <div>
-        <div className="mb-1 flex justify-between text-xs text-text-secondary">
-          <span>Time window</span>
-          <span className="font-mono">{windowStart.toFixed(0)}s – {windowEnd.toFixed(0)}s</span>
-        </div>
-        <Slider.Root
-          className="relative flex w-full touch-none select-none items-center"
-          min={0}
-          max={duration}
-          step={1}
-          value={[windowStart, windowEnd]}
-          onValueChange={([start, end]) => setWindow(start, end)}
-          minStepsBetweenThumbs={1}
-        >
-          <Slider.Track className="relative h-1.5 w-full grow rounded-full bg-bg-elevated">
-            <Slider.Range className="absolute h-full rounded-full bg-info" />
-          </Slider.Track>
-          <Slider.Thumb
-            className="block h-4 w-4 rounded-full border border-border-default bg-bg-surface shadow ring-info focus:outline-none focus:ring-2"
-            aria-label="Window start"
-          />
-          <Slider.Thumb
-            className="block h-4 w-4 rounded-full border border-border-default bg-bg-surface shadow ring-info focus:outline-none focus:ring-2"
-            aria-label="Window end"
-          />
-        </Slider.Root>
       </div>
     </div>
   );

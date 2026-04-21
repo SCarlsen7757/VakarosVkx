@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { RaceMap } from "@/components/map/race-map";
 import { TelemetryPanels } from "@/components/charts/telemetry-panels";
+import { TimeWindowSlicer } from "@/components/charts/time-window-slicer";
 import { PlaybackControls } from "@/components/race-viewer/playback-controls";
 import { CompassRose, Inclinometer, NumericGauge } from "@/components/gauges/gauges";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
@@ -30,6 +31,9 @@ export default function SessionViewerPage({ params }: PageProps) {
   const { id } = use(params);
   const { prefs } = useUnitPrefs();
   const position = useRaceViewerStore((s) => s.position);
+  const mode = useRaceViewerStore((s) => s.mode);
+  const windowStart = useRaceViewerStore((s) => s.windowStart);
+  const windowEnd = useRaceViewerStore((s) => s.windowEnd);
 
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [positions, setPositions] = useState<Position[] | null>(null);
@@ -72,6 +76,22 @@ export default function SessionViewerPage({ params }: PageProps) {
   const playbackArrow = currentPos ? { lat: n(currentPos.latitude), lon: n(currentPos.longitude), cog: n(currentPos.courseOverGround) } : null;
   const heelTrim = currentPos ? quatToHeelTrim(n(currentPos.quaternionW), n(currentPos.quaternionX), n(currentPos.quaternionY), n(currentPos.quaternionZ)) : null;
 
+  // Session viewer has no countdown — raceStartOffset is 0.
+  // Only show highlight in Historical mode when the window is narrowed (not covering full data range).
+  const windowStartMs = startMs + windowStart * 1000;
+  const windowEndMs = startMs + windowEnd * 1000;
+  const isWindowNarrowed = windowStart > 0 || windowEnd < duration;
+  const windowPositions = useMemo(
+    () => (mode === "historical" && isWindowNarrowed)
+      ? positions?.filter((p) => {
+          const t = new Date(p.time).getTime();
+          return t >= windowStartMs && t <= windowEndMs;
+        }) ?? null
+      : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [positions, windowStartMs, windowEndMs, mode, isWindowNarrowed]
+  );
+
   if (error) return <ErrorBanner message={error} />;
   if (!session) return <SkeletonLoader className="h-96" />;
 
@@ -87,7 +107,7 @@ export default function SessionViewerPage({ params }: PageProps) {
 
       <PlaybackControls raceStartOffset={0} duration={Math.max(duration, 0)} />
 
-      <RaceMap race={null} positions={positions} playbackPosition={playbackArrow} />
+      <RaceMap race={null} positions={positions} playbackPosition={playbackArrow} windowPositions={windowPositions} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <NumericGauge label="SOG" value={currentPos ? convertSpeed(n(currentPos.speedOverGround), prefs.boatSpeed) : null} unit={speedUnitLabel(prefs.boatSpeed)} big />
@@ -97,7 +117,10 @@ export default function SessionViewerPage({ params }: PageProps) {
       </div>
 
       {session.races.length > 0 && (
-        <TelemetryPanels sessionId={id} raceNumber={n(session.races[0].raceNumber)} />
+        <>
+          <TimeWindowSlicer raceStartOffset={0} />
+          <TelemetryPanels sessionId={id} raceNumber={n(session.races[0].raceNumber)} raceStartMs={startMs} raceStartOffset={0} />
+        </>
       )}
     </div>
   );

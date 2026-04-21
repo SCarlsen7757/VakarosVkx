@@ -7,6 +7,7 @@ import { n } from "@/lib/schemas";
 import { useUnitPrefs } from "@/store/settings";
 import { convertSpeed, convertWind, radiansToDegrees, speedUnitLabel, windUnitLabel } from "@/lib/units";
 import { sgSmooth, sgSmoothAngularRad, sgSmoothQuaternions } from "@/lib/downsampling";
+import { useRaceViewerStore } from "@/store/race-viewer";
 
 const COLORS = { primary: "#00FFFF", secondary: "#FF00FF", green: "#39FF14", yellow: "#FFFF00" };
 
@@ -23,6 +24,10 @@ function quatToHeelTrim(w: number, x: number, y: number, z: number) {
 interface Props {
   sessionId: string | number;
   raceNumber: number | null; // null for full session viewer
+  /** Absolute ms timestamp of the race start signal — used to convert window offsets to ms. */
+  raceStartMs: number;
+  /** Countdown duration in seconds (0 for session viewer). Used to fetch pre-race telemetry. */
+  raceStartOffset: number;
 }
 
 interface Channel<T> { data: T[] | null; error: boolean; }
@@ -33,8 +38,13 @@ async function fetchJson<T>(url: string): Promise<T | null> {
   return r.json() as Promise<T>;
 }
 
-export function TelemetryPanels({ sessionId, raceNumber }: Props) {
+export function TelemetryPanels({ sessionId, raceNumber, raceStartMs, raceStartOffset }: Props) {
   const { prefs } = useUnitPrefs();
+  const { windowStart, windowEnd } = useRaceViewerStore();
+
+  // Convert window offsets (seconds from data-start) to absolute ms timestamps.
+  const windowStartMs = raceStartMs + (windowStart - raceStartOffset) * 1000;
+  const windowEndMs = raceStartMs + (windowEnd - raceStartOffset) * 1000;
   const [positions, setPositions] = useState<Channel<Position>>({ data: null, error: false });
   const [wind, setWind] = useState<Channel<Wind>>({ data: null, error: false });
   const [stw, setStw] = useState<Channel<SpeedThroughWater>>({ data: null, error: false });
@@ -46,14 +56,15 @@ export function TelemetryPanels({ sessionId, raceNumber }: Props) {
   useEffect(() => {
     if (raceNumber == null) return;
     const base = `/api/sessions/${sessionId}/races/${raceNumber}`;
-    fetchJson<Position[]>(`${base}/positions`).then((d) => setPositions({ data: d ?? [], error: !d }));
-    fetchJson<Wind[]>(`${base}/wind`).then((d) => setWind({ data: d ?? [], error: false }));
-    fetchJson<SpeedThroughWater[]>(`${base}/speed-through-water`).then((d) => setStw({ data: d ?? [], error: false }));
-    fetchJson<Depth[]>(`${base}/depth`).then((d) => setDepth({ data: d ?? [], error: false }));
-    fetchJson<Temperature[]>(`${base}/temperature`).then((d) => setTemp({ data: d ?? [], error: false }));
-    fetchJson<Load[]>(`${base}/load`).then((d) => setLoad({ data: d ?? [], error: false }));
-    fetchJson<ShiftAngle[]>(`${base}/shift-angles`).then((d) => setShifts({ data: d ?? [], error: false }));
-  }, [sessionId, raceNumber]);
+    const from = raceStartOffset > 0 ? `?from=${-raceStartOffset}` : "";
+    fetchJson<Position[]>(`${base}/positions${from}`).then((d) => setPositions({ data: d ?? [], error: !d }));
+    fetchJson<Wind[]>(`${base}/wind${from}`).then((d) => setWind({ data: d ?? [], error: false }));
+    fetchJson<SpeedThroughWater[]>(`${base}/speed-through-water${from}`).then((d) => setStw({ data: d ?? [], error: false }));
+    fetchJson<Depth[]>(`${base}/depth${from}`).then((d) => setDepth({ data: d ?? [], error: false }));
+    fetchJson<Temperature[]>(`${base}/temperature${from}`).then((d) => setTemp({ data: d ?? [], error: false }));
+    fetchJson<Load[]>(`${base}/load${from}`).then((d) => setLoad({ data: d ?? [], error: false }));
+    fetchJson<ShiftAngle[]>(`${base}/shift-angles${from}`).then((d) => setShifts({ data: d ?? [], error: false }));
+  }, [sessionId, raceNumber, raceStartOffset]);
 
   const posData = positions.data ?? [];
 
@@ -98,18 +109,18 @@ export function TelemetryPanels({ sessionId, raceNumber }: Props) {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
-        <TelemetryChart title="Speed (SOG)" series={[sogSeries]} />
+        <TelemetryChart title="Speed (SOG)" series={[sogSeries]} windowStartMs={windowStartMs} windowEndMs={windowEndMs} />
       </div>
       <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
-        <TelemetryChart title="Heading (COG)" series={[cogSeries]} yAxes={[{ min: 0, max: 360 }]} />
+        <TelemetryChart title="Heading (COG)" series={[cogSeries]} yAxes={[{ min: 0, max: 360 }]} windowStartMs={windowStartMs} windowEndMs={windowEndMs} />
       </div>
       {wind.data && wind.data.length > 0 && (
       <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
-        <TelemetryChart title="Wind" series={[windSpeedSeries, windDirSeries]} yAxes={[{ name: "Speed" }, { name: "Dir", min: 0, max: 360 }]} />
+        <TelemetryChart title="Wind" series={[windSpeedSeries, windDirSeries]} yAxes={[{ name: "Speed" }, { name: "Dir", min: 0, max: 360 }]} windowStartMs={windowStartMs} windowEndMs={windowEndMs} />
       </div>
       )}
       <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
-        <TelemetryChart title="Heel & Trim" series={[heelSeries, trimSeries]} yAxes={[{ name: "Heel", min: -45, max: 45 }, { name: "Trim", min: -10, max: 10 }]} />
+        <TelemetryChart title="Heel & Trim" series={[heelSeries, trimSeries]} yAxes={[{ name: "Heel", min: -45, max: 45 }, { name: "Trim", min: -10, max: 10 }]} windowStartMs={windowStartMs} windowEndMs={windowEndMs} />
       </div>
 
       {stw.data && stw.data.length > 0 && (
@@ -121,27 +132,29 @@ export function TelemetryPanels({ sessionId, raceNumber }: Props) {
               color: COLORS.green,
               data: stw.data.map((p) => ({ t: new Date(p.time).getTime(), v: convertSpeed(n(p.forwardSpeed), prefs.boatSpeed) })),
             }]}
+            windowStartMs={windowStartMs}
+            windowEndMs={windowEndMs}
           />
         </div>
       )}
       {depth.data && depth.data.length > 0 && (
         <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
-          <TelemetryChart title="Depth (m)" series={[{ name: "Depth", color: COLORS.yellow, data: depth.data.map((p) => ({ t: new Date(p.time).getTime(), v: n(p.depth) })) }]} />
+          <TelemetryChart title="Depth (m)" series={[{ name: "Depth", color: COLORS.yellow, data: depth.data.map((p) => ({ t: new Date(p.time).getTime(), v: n(p.depth) })) }]} windowStartMs={windowStartMs} windowEndMs={windowEndMs} />
         </div>
       )}
       {temp.data && temp.data.length > 0 && (
         <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
-          <TelemetryChart title="Temperature (°C)" series={[{ name: "Temp", color: COLORS.primary, data: temp.data.map((p) => ({ t: new Date(p.time).getTime(), v: n(p.temperature) })) }]} />
+          <TelemetryChart title="Temperature (°C)" series={[{ name: "Temp", color: COLORS.primary, data: temp.data.map((p) => ({ t: new Date(p.time).getTime(), v: n(p.temperature) })) }]} windowStartMs={windowStartMs} windowEndMs={windowEndMs} />
         </div>
       )}
       {load.data && load.data.length > 0 && (
         <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
-          <TelemetryChart title="Load" series={[{ name: "Load", color: COLORS.secondary, data: load.data.map((p) => ({ t: new Date(p.time).getTime(), v: n(p.load) })) }]} />
+          <TelemetryChart title="Load" series={[{ name: "Load", color: COLORS.secondary, data: load.data.map((p) => ({ t: new Date(p.time).getTime(), v: n(p.load) })) }]} windowStartMs={windowStartMs} windowEndMs={windowEndMs} />
         </div>
       )}
       {shifts.data && shifts.data.length > 0 && (
         <div className="rounded-lg bg-bg-surface p-3 ring-1 ring-border-default">
-          <TelemetryChart title="Shift angles (heading °)" series={[{ name: "True heading", color: COLORS.green, data: shifts.data.map((p) => ({ t: new Date(p.time).getTime(), v: radiansToDegrees(n(p.trueHeading)) })) }]} yAxes={[{ min: 0, max: 360 }]} />
+          <TelemetryChart title="Shift angles (heading °)" series={[{ name: "True heading", color: COLORS.green, data: shifts.data.map((p) => ({ t: new Date(p.time).getTime(), v: radiansToDegrees(n(p.trueHeading)) })) }]} yAxes={[{ min: 0, max: 360 }]} windowStartMs={windowStartMs} windowEndMs={windowEndMs} />
         </div>
       )}
     </div>

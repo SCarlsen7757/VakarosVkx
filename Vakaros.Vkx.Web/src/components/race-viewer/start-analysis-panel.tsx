@@ -37,7 +37,7 @@ export function StartAnalysisPanel({ data, sessionId, raceNumber }: Props) {
         <div className="mb-3 flex items-center gap-2">
           <span className="rounded bg-red-600 px-2 py-0.5 text-xs font-bold text-white">OCS</span>
           {ocsBias != null && (
-            <span className="font-mono text-sm text-red-500">{Math.abs(ocsBias).toFixed(1)}s before gun</span>
+            <span className="font-mono text-sm text-red-500">{Math.abs(ocsBias).toFixed(1)}s before start signal</span>
           )}
           {data.isOcsCleared && (
             <span className="rounded bg-green-600 px-2 py-0.5 text-xs font-bold text-white">Cleared</span>

@@ -84,7 +84,7 @@ const arrowDivIcon = (heading: number) =>
   });
 
 export default function MapView({
-  positions, race, legs, startLine, playbackPosition, preRacePositions,
+  positions, race, legs, startLine, playbackPosition, preRacePositions, windowPositions,
   openSeaMap, trackMode, followMode, onExitFollow, fitTick,
 }: InternalProps) {
   const { resolvedTheme } = useTheme();
@@ -134,6 +134,15 @@ export default function MapView({
     return { min, max: max > min ? max : min + 1 };
   }, [heatmapPositions]);
 
+  const smoothedWindowPositions = useMemo(
+    () => smoothTrackPositions(windowPositions ?? []),
+    [windowPositions]
+  );
+  const windowPoints = useMemo(
+    () => simplifyTrack(smoothedWindowPositions, tolerance),
+    [smoothedWindowPositions, tolerance]
+  );
+
   const center = points[0] ?? [0, 0];
 
   return (
@@ -174,6 +183,10 @@ export default function MapView({
             );
           })}
         </>
+      )}
+
+      {windowPoints.length > 1 && (
+        <Polyline positions={windowPoints} pathOptions={{ color: "#FF8C00", weight: 9, opacity: 0.35 }} />
       )}
 
       {legs?.map((m, i) => (

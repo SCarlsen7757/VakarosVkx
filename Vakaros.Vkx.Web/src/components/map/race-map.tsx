@@ -19,6 +19,8 @@ export interface RaceMapProps {
   playbackPosition?: { lat: number; lon: number; cog: number } | null;
   preRacePositions?: Position[] | null;
   trackMode?: TrackMode;
+  /** Positions within the selected time window — rendered as a highlighted overlay on the track. */
+  windowPositions?: Position[] | null;
 }
 
 export function RaceMap(props: RaceMapProps) {
