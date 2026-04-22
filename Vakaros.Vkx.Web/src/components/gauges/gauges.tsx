@@ -52,7 +52,7 @@ export function Inclinometer({ label, value, range }: { label: string; value: nu
     <div>
       <div className="mb-1 flex justify-between text-xs text-text-secondary">
         <span>{label}</span>
-        <span className="font-mono">{value == null ? "—" : `${v.toFixed(1)}°`}</span>
+        <span className="font-mono inline-block min-w-[6ch] text-right">{value == null ? "—" : `${v.toFixed(1)}°`}</span>
       </div>
       <div className="relative h-2 w-full rounded-full bg-bg-elevated">
         <div className="absolute left-1/2 top-0 h-full w-px bg-border-default" />

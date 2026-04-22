@@ -34,7 +34,7 @@ export function RaceMap(props: RaceMapProps) {
 
   if (!props.positions) return <SkeletonLoader className="h-96" />;
 
-  const sizeClass = fill ? "h-full w-full" : "h-[28rem]";
+  const sizeClass = fill ? "h-[28rem] lg:h-full w-full" : "h-[28rem]";
 
   return (
     <div className={`relative overflow-hidden rounded-lg ring-1 ring-border-default ${sizeClass}`}>

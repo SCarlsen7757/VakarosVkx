@@ -8,7 +8,8 @@ import { TelemetryPanels } from "@/components/charts/telemetry-panels";
 import { TimeWindowSlicer } from "@/components/charts/time-window-slicer";
 import { PlaybackControls } from "@/components/race-viewer/playback-controls";
 import { StartAnalysisPanel } from "@/components/race-viewer/start-analysis-panel";
-import { CompassRose, HeelTrimCard, NumericGauge } from "@/components/gauges/gauges";
+import { CompassRose, HeelTrimCard, NumericGauge, Inclinometer } from "@/components/gauges/gauges";
+import { Card } from "@/components/ui/controls";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import type { RaceDetail, Position, Course } from "@/lib/schemas";
@@ -117,6 +118,8 @@ export default function RaceViewerPage({ params }: PageProps) {
 
   const heelTrim = currentPos ? quatToHeelTrim(n(currentPos.quaternionW), n(currentPos.quaternionX), n(currentPos.quaternionY), n(currentPos.quaternionZ)) : null;
 
+  const compactMode = !showCharts;
+
   const startLine = race && race.pinEnd && race.boatEnd ? {
     pin: { lat: n(race.pinEnd.latitude), lon: n(race.pinEnd.longitude) },
     boat: { lat: n(race.boatEnd.latitude), lon: n(race.boatEnd.longitude) },
@@ -160,9 +163,9 @@ export default function RaceViewerPage({ params }: PageProps) {
       </div>
 
       {/* Two-column body — fills remaining height on desktop */}
-      <div className="flex flex-col gap-4 flex-1 min-h-0 lg:flex-row">
-        {/* Left column: playback controls + map */}
-        <div className="flex flex-col gap-3 lg:w-[42%] lg:shrink-0 min-h-0">
+      <div className={`flex flex-col gap-4 flex-1 min-h-0 lg:flex-row`}>
+        {/* Left column: playback controls + map — expands in compact mode */}
+        <div className={`flex flex-col gap-3 min-h-0 lg:shrink-0 ${compactMode ? "lg:flex-1" : "lg:w-[42%]"}`}>
           <PlaybackControls raceStartOffset={raceStartOffset} duration={totalDuration} />
           <RaceMap
             race={race}
@@ -176,9 +179,9 @@ export default function RaceViewerPage({ params }: PageProps) {
           />
         </div>
 
-        {/* Right column: scrollable detail panel */}
-        <div className="flex flex-col gap-4 flex-1 min-h-0 lg:overflow-y-auto">
-          {showGauges && (
+        {/* Right column: scrollable detail panel — auto-width strip in compact mode */}
+        <div className={`flex flex-col gap-4 min-h-0 ${compactMode ? "lg:w-auto lg:shrink-0" : "flex-1 lg:overflow-y-auto"}`}>
+          {showGauges && !compactMode && (
             <div className="grid grid-cols-3 gap-3">
               <NumericGauge label="SOG" value={currentPos ? convertSpeed(n(currentPos.speedOverGround), prefs.boatSpeed) : null} unit={speedUnitLabel(prefs.boatSpeed)} big />
               <CompassRose headingDeg={currentPos ? radiansToDegrees(n(currentPos.courseOverGround)) : null} />
@@ -186,7 +189,35 @@ export default function RaceViewerPage({ params }: PageProps) {
             </div>
           )}
 
-          <StartAnalysisPanel data={race.startAnalysis} sessionId={id} raceNumber={raceNum} />
+          {showGauges && compactMode && (
+            <Card className="p-3 lg:p-2 flex-shrink-0">
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary lg:mb-3">Gauges</h3>
+              {/* Mobile: 2-col/4-col grid  |  Desktop: vertical stack */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 lg:grid-cols-1 lg:gap-y-3">
+                <div>
+                  <div className="text-xs text-text-secondary">SOG</div>
+                  <div className="font-mono text-lg font-semibold">
+                    {currentPos ? convertSpeed(n(currentPos.speedOverGround), prefs.boatSpeed).toFixed(1) : "—"}
+                    <span className="ml-1 text-sm text-text-secondary">{speedUnitLabel(prefs.boatSpeed)}</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-text-secondary">Heading</div>
+                  <div className="font-mono text-lg">
+                    {currentPos ? `${Math.round(radiansToDegrees(n(currentPos.courseOverGround)))}°` : "—"}
+                  </div>
+                </div>
+                <div className="sm:col-span-2 lg:col-span-1">
+                  <Inclinometer label="Heel (°)" value={heelTrim?.heel ?? null} range={45} />
+                </div>
+                <div className="sm:col-span-2 lg:col-span-1">
+                  <Inclinometer label="Trim (°)" value={heelTrim?.trim ?? null} range={10} />
+                </div>
+              </div>
+            </Card>
+          )}
+
+          <StartAnalysisPanel data={race.startAnalysis} sessionId={id} raceNumber={raceNum} compact={compactMode} />
 
           {showCharts && (
             <>
