@@ -4,7 +4,543 @@
  */
 
 export interface paths {
-    "/api/BoatClasses": {
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AdminUserDto"][];
+                        "application/json": components["schemas"]["AdminUserDto"][];
+                        "text/json": components["schemas"]["AdminUserDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateUserRequest"];
+                    "text/json": components["schemas"]["CreateUserRequest"];
+                    "application/*+json": components["schemas"]["CreateUserRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CreateUserResponse"];
+                        "application/json": components["schemas"]["CreateUserResponse"];
+                        "text/json": components["schemas"]["CreateUserResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/setup-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RegenerateSetupLinkResponse"];
+                        "application/json": components["schemas"]["RegenerateSetupLinkResponse"];
+                        "text/json": components["schemas"]["RegenerateSetupLinkResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateUserRequest"];
+                    "text/json": components["schemas"]["UpdateUserRequest"];
+                    "application/*+json": components["schemas"]["UpdateUserRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/admin/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InvitationDto"][];
+                        "application/json": components["schemas"]["InvitationDto"][];
+                        "text/json": components["schemas"]["InvitationDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateInvitationRequest"];
+                    "text/json": components["schemas"]["CreateInvitationRequest"];
+                    "application/*+json": components["schemas"]["CreateInvitationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InvitationWithUrlDto"];
+                        "application/json": components["schemas"]["InvitationWithUrlDto"];
+                        "text/json": components["schemas"]["InvitationWithUrlDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/invitations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AuthProvidersDto"];
+                        "application/json": components["schemas"]["AuthProvidersDto"];
+                        "text/json": components["schemas"]["AuthProvidersDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["LoginRequest"];
+                    "text/json": components["schemas"]["LoginRequest"];
+                    "application/*+json": components["schemas"]["LoginRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AuthResultDto"];
+                        "application/json": components["schemas"]["AuthResultDto"];
+                        "text/json": components["schemas"]["AuthResultDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/setup/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    userId?: string;
+                    token?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SetupValidateResponse"];
+                        "application/json": components["schemas"]["SetupValidateResponse"];
+                        "text/json": components["schemas"]["SetupValidateResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/setup/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CompleteSetupRequest"];
+                    "text/json": components["schemas"]["CompleteSetupRequest"];
+                    "application/*+json": components["schemas"]["CompleteSetupRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/invitation/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    token?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InvitationValidateResponse"];
+                        "application/json": components["schemas"]["InvitationValidateResponse"];
+                        "text/json": components["schemas"]["InvitationValidateResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/invitation/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RedeemInvitationRequest"];
+                    "text/json": components["schemas"]["RedeemInvitationRequest"];
+                    "application/*+json": components["schemas"]["RedeemInvitationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["AuthResultDto"];
+                        "application/json": components["schemas"]["AuthResultDto"];
+                        "text/json": components["schemas"]["AuthResultDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/BoatClasses": {
         parameters: {
             query?: never;
             header?: never;
@@ -68,7 +604,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/BoatClasses/{id}": {
+    "/api/v1/BoatClasses/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -80,7 +616,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -104,7 +640,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -135,7 +671,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -155,7 +691,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Boats": {
+    "/api/v1/Boats": {
         parameters: {
             query?: never;
             header?: never;
@@ -219,7 +755,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Boats/{id}": {
+    "/api/v1/Boats/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -231,7 +767,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -255,7 +791,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -286,7 +822,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -306,7 +842,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Boats/{id}/stats": {
+    "/api/v1/Boats/{id}/stats": {
         parameters: {
             query?: never;
             header?: never;
@@ -319,7 +855,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -346,7 +882,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Courses": {
+    "/api/v1/Courses": {
         parameters: {
             query?: never;
             header?: never;
@@ -412,7 +948,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Courses/{id}": {
+    "/api/v1/Courses/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -424,7 +960,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -448,7 +984,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -479,7 +1015,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -499,7 +1035,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Marks": {
+    "/api/v1/Marks": {
         parameters: {
             query?: never;
             header?: never;
@@ -566,7 +1102,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Marks/{id}": {
+    "/api/v1/Marks/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -578,7 +1114,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -602,7 +1138,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -633,7 +1169,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -653,7 +1189,242 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sessions/{sessionId}/races": {
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserProfileDto"];
+                        "application/json": components["schemas"]["UserProfileDto"];
+                        "text/json": components["schemas"]["UserProfileDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProfileRequest"];
+                    "text/json": components["schemas"]["UpdateProfileRequest"];
+                    "application/*+json": components["schemas"]["UpdateProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ChangePasswordRequest"];
+                    "text/json": components["schemas"]["ChangePasswordRequest"];
+                    "application/*+json": components["schemas"]["ChangePasswordRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GlobalStatsDto"];
+                        "application/json": components["schemas"]["GlobalStatsDto"];
+                        "text/json": components["schemas"]["GlobalStatsDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PersonalAccessTokenDto"][];
+                        "application/json": components["schemas"]["PersonalAccessTokenDto"][];
+                        "text/json": components["schemas"]["PersonalAccessTokenDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreatePatRequest"];
+                    "text/json": components["schemas"]["CreatePatRequest"];
+                    "application/*+json": components["schemas"]["CreatePatRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CreatePatResponse"];
+                        "application/json": components["schemas"]["CreatePatResponse"];
+                        "text/json": components["schemas"]["CreatePatResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/tokens/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{sessionId}/races": {
         parameters: {
             query?: never;
             header?: never;
@@ -665,7 +1436,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                 };
                 cookie?: never;
             };
@@ -692,7 +1463,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sessions/{sessionId}/races/{raceNumber}": {
+    "/api/v1/sessions/{sessionId}/races/{raceNumber}": {
         parameters: {
             query?: never;
             header?: never;
@@ -704,7 +1475,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -734,7 +1505,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -762,7 +1533,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/api/sessions/{sessionId}/races/{raceNumber}/positions": {
+    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/positions": {
         parameters: {
             query?: never;
             header?: never;
@@ -777,7 +1548,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -805,7 +1576,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sessions/{sessionId}/races/{raceNumber}/wind": {
+    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/wind": {
         parameters: {
             query?: never;
             header?: never;
@@ -820,7 +1591,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -848,7 +1619,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sessions/{sessionId}/races/{raceNumber}/speed-through-water": {
+    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/speed-through-water": {
         parameters: {
             query?: never;
             header?: never;
@@ -863,7 +1634,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -891,7 +1662,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sessions/{sessionId}/races/{raceNumber}/depth": {
+    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/depth": {
         parameters: {
             query?: never;
             header?: never;
@@ -906,7 +1677,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -934,7 +1705,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sessions/{sessionId}/races/{raceNumber}/temperature": {
+    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/temperature": {
         parameters: {
             query?: never;
             header?: never;
@@ -949,7 +1720,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -977,7 +1748,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sessions/{sessionId}/races/{raceNumber}/load": {
+    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/load": {
         parameters: {
             query?: never;
             header?: never;
@@ -992,7 +1763,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -1020,7 +1791,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sessions/{sessionId}/races/{raceNumber}/shift-angles": {
+    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/shift-angles": {
         parameters: {
             query?: never;
             header?: never;
@@ -1035,7 +1806,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -1063,7 +1834,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sessions/{sessionId}/races/{raceNumber}/start-line-length": {
+    "/api/v1/sessions/{sessionId}/races/{raceNumber}/analysis/start-line-length": {
         parameters: {
             query?: never;
             header?: never;
@@ -1075,7 +1846,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -1103,7 +1874,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sessions/{sessionId}/races/{raceNumber}/summary": {
+    "/api/v1/sessions/{sessionId}/races/{raceNumber}/summary": {
         parameters: {
             query?: never;
             header?: never;
@@ -1115,7 +1886,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -1141,7 +1912,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -1162,7 +1933,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: number;
+                    sessionId: string;
                     raceNumber: number;
                 };
                 cookie?: never;
@@ -1183,14 +1954,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Sessions/upload": {
+    "/api/v1/sessions": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: {
+                    boatId?: string;
+                    courseId?: string;
+                    year?: number | string;
+                    from?: string;
+                    to?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SessionSummaryDto"][];
+                        "application/json": components["schemas"]["SessionSummaryDto"][];
+                        "text/json": components["schemas"]["SessionSummaryDto"][];
+                    };
+                };
+            };
+        };
         put?: never;
         post: {
             parameters: {
@@ -1226,50 +2024,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    boatId?: number | string;
-                    courseId?: number | string;
-                    year?: number | string;
-                    from?: string;
-                    to?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["SessionSummaryDto"][];
-                        "application/json": components["schemas"]["SessionSummaryDto"][];
-                        "text/json": components["schemas"]["SessionSummaryDto"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/Sessions/{id}": {
+    "/api/v1/sessions/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1281,7 +2036,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -1307,7 +2062,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -1329,7 +2084,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    id: number;
+                    id: string;
                 };
                 cookie?: never;
             };
@@ -1356,17 +2111,117 @@ export interface paths {
         };
         trace?: never;
     };
-    "/api/Stats/summary": {
+    "/api/v1/sessions/{sessionId}/shares": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Global statistics across all boats, sessions, and races.
-         * @description Returns aggregate totals for the entire dataset: session and race counts, total sailed distance, top speed, and the date range of recorded sessions. Intended as a high-level overview for dashboards and AI-generated insight reports.
-         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SessionShareDto"][];
+                        "application/json": components["schemas"]["SessionShareDto"][];
+                        "text/json": components["schemas"]["SessionShareDto"][];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateOrUpdateShareRequest"];
+                    "text/json": components["schemas"]["CreateOrUpdateShareRequest"];
+                    "application/*+json": components["schemas"]["CreateOrUpdateShareRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SessionShareDto"];
+                        "application/json": components["schemas"]["SessionShareDto"];
+                        "text/json": components["schemas"]["SessionShareDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{sessionId}/shares/{teamId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sessionId: string;
+                    teamId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         get: {
             parameters: {
                 query?: never;
@@ -1382,9 +2237,158 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["GlobalStatsDto"];
-                        "application/json": components["schemas"]["GlobalStatsDto"];
-                        "text/json": components["schemas"]["GlobalStatsDto"];
+                        "text/plain": components["schemas"]["TeamDto"][];
+                        "application/json": components["schemas"]["TeamDto"][];
+                        "text/json": components["schemas"]["TeamDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateTeamRequest"];
+                    "text/json": components["schemas"]["CreateTeamRequest"];
+                    "application/*+json": components["schemas"]["CreateTeamRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TeamDto"];
+                        "application/json": components["schemas"]["TeamDto"];
+                        "text/json": components["schemas"]["TeamDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/{teamId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    teamId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TeamDetailDto"];
+                        "application/json": components["schemas"]["TeamDetailDto"];
+                        "text/json": components["schemas"]["TeamDetailDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    teamId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    teamId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateTeamRequest"];
+                    "text/json": components["schemas"]["UpdateTeamRequest"];
+                    "application/*+json": components["schemas"]["UpdateTeamRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/teams/{teamId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    teamId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TeamMemberDto"][];
+                        "application/json": components["schemas"]["TeamMemberDto"][];
+                        "text/json": components["schemas"]["TeamMemberDto"][];
                     };
                 };
             };
@@ -1397,42 +2401,197 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teams/{teamId}/members/{memberId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    teamId: string;
+                    memberId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    teamId: string;
+                    memberId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateMemberRoleRequest"];
+                    "text/json": components["schemas"]["UpdateMemberRoleRequest"];
+                    "application/*+json": components["schemas"]["UpdateMemberRoleRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/teams/{teamId}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    teamId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["InviteMemberRequest"];
+                    "text/json": components["schemas"]["InviteMemberRequest"];
+                    "application/*+json": components["schemas"]["InviteMemberRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TeamInviteDto"];
+                        "application/json": components["schemas"]["TeamInviteDto"];
+                        "text/json": components["schemas"]["TeamInviteDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invites/{token}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        BoatClassDto: {
-            /** Format: int32 */
-            id: number | string;
-            name: string;
-            /** Format: double */
-            lengthOverAll: null | number | string;
-            /** Format: double */
-            beam: null | number | string;
-            /** Format: double */
-            weight: null | number | string;
-            /** Format: double */
-            bowspritLength: null | number | string;
+        AdminUserDto: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            displayName: string;
+            roles: string[];
+            hasPassword: boolean;
             /** Format: date-time */
             createdAt: string;
-            sails: components["schemas"]["SailDto"][];
         };
-        BoatClassSummaryDto: {
-            /** Format: int32 */
-            id: number | string;
+        AuthProvidersDto: {
+            local: boolean;
+            mode: string;
+        };
+        AuthResultDto: {
+            /** Format: uuid */
+            userId: string;
+            email: string;
+            displayName: string;
+        };
+        BoatClassDto: {
+            /** Format: uuid */
+            id: string;
             name: string;
             /** Format: double */
-            lengthOverAll: null | number | string;
+            length: null | number | string;
             /** Format: double */
-            beam: null | number | string;
+            width: null | number | string;
             /** Format: double */
             weight: null | number | string;
+        };
+        BoatClassSummaryDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
             /** Format: double */
-            bowspritLength: null | number | string;
+            length: null | number | string;
+            /** Format: double */
+            width: null | number | string;
+            /** Format: double */
+            weight: null | number | string;
         };
         BoatDto: {
-            /** Format: int32 */
-            id: number | string;
+            /** Format: uuid */
+            id: string;
             name: string;
             sailNumber: null | string;
             boatClass: components["schemas"]["BoatClassSummaryDto"];
@@ -1441,8 +2600,8 @@ export interface components {
             createdAt: string;
         };
         BoatStatsDto: {
-            /** Format: int32 */
-            boatId: number | string;
+            /** Format: uuid */
+            boatId: string;
             boatName: string;
             sailNumber: null | string;
             boatClass: components["schemas"]["BoatClassSummaryDto"];
@@ -1459,9 +2618,19 @@ export interface components {
             /** Format: float */
             topSpeedOverGround: number | string;
         };
+        ChangePasswordRequest: {
+            currentPassword: string;
+            newPassword: string;
+        };
+        CompleteSetupRequest: {
+            /** Format: uuid */
+            userId: string;
+            token: string;
+            password: string;
+        };
         CourseDto: {
-            /** Format: int32 */
-            id: number | string;
+            /** Format: uuid */
+            id: string;
             name: string;
             /** Format: int32 */
             year: number | string;
@@ -1473,10 +2642,10 @@ export interface components {
             legs: components["schemas"]["CourseLegDto"][];
         };
         CourseLegDto: {
-            /** Format: int32 */
-            id: number | string;
-            /** Format: int32 */
-            markId: number | string;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            markId: string;
             markName: string;
             /** Format: int32 */
             sortOrder: number | string;
@@ -1487,13 +2656,13 @@ export interface components {
             longitude: number | string;
         };
         CourseLegRequest: {
-            /** Format: int32 */
-            markId: number | string;
+            /** Format: uuid */
+            markId: string;
             legName: null | string;
         };
         CourseSummaryDto: {
-            /** Format: int32 */
-            id: number | string;
+            /** Format: uuid */
+            id: string;
             name: string;
             /** Format: int32 */
             year: number | string;
@@ -1506,20 +2675,17 @@ export interface components {
         CreateBoatClassRequest: {
             name: string;
             /** Format: double */
-            lengthOverAll: null | number | string;
+            length: null | number | string;
             /** Format: double */
-            beam: null | number | string;
+            width: null | number | string;
             /** Format: double */
             weight: null | number | string;
-            /** Format: double */
-            bowspritLength: null | number | string;
-            sails: components["schemas"]["SailRequest"][];
         };
         CreateBoatRequest: {
             name: string;
             sailNumber: null | string;
-            /** Format: int32 */
-            boatClassId: number | string;
+            /** Format: uuid */
+            boatClassId: string;
             description: null | string;
         };
         CreateCourseRequest: {
@@ -1528,6 +2694,14 @@ export interface components {
             year: number | string;
             description: null | string;
             legs: components["schemas"]["CourseLegRequest"][];
+        };
+        CreateInvitationRequest: {
+            role: null | string;
+            /** Format: int32 */
+            maxUses: null | number | string;
+            /** Format: int32 */
+            expiresInDays: null | number | string;
+            note: null | string;
         };
         CreateMarkRequest: {
             name: string;
@@ -1540,6 +2714,32 @@ export interface components {
             /** Format: double */
             longitude: number | string;
             description: null | string;
+        };
+        CreateOrUpdateShareRequest: {
+            /** Format: uuid */
+            teamId: string;
+            permission: string;
+        };
+        CreatePatRequest: {
+            name: string;
+            /** Format: int32 */
+            expiresInDays: null | number | string;
+        };
+        CreatePatResponse: {
+            token: components["schemas"]["PersonalAccessTokenDto"];
+            plaintextToken: string;
+        };
+        CreateTeamRequest: {
+            name: string;
+        };
+        CreateUserRequest: {
+            email: string;
+            displayName: string;
+            role: null | string;
+        };
+        CreateUserResponse: {
+            user: components["schemas"]["AdminUserDto"];
+            setupUrl: string;
         };
         DepthDto: {
             /** Format: date-time */
@@ -1569,6 +2769,40 @@ export interface components {
         };
         /** Format: binary */
         IFormFile: string;
+        InvitationDto: {
+            /** Format: uuid */
+            id: string;
+            role: string;
+            /** Format: int32 */
+            maxUses: null | number | string;
+            /** Format: int32 */
+            usedCount: number | string;
+            /** Format: date-time */
+            expiresAt: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            revokedAt: null | string;
+            note: null | string;
+            isActive: boolean;
+            /** Format: int32 */
+            remainingUses: null | number | string;
+        };
+        InvitationValidateResponse: {
+            role: string;
+            /** Format: int32 */
+            remainingUses: null | number | string;
+            /** Format: date-time */
+            expiresAt: null | string;
+        };
+        InvitationWithUrlDto: {
+            invitation: components["schemas"]["InvitationDto"];
+            url: string;
+        };
+        InviteMemberRequest: {
+            email: string;
+            role: string;
+        };
         LinePositionDto: {
             /** Format: date-time */
             time: string;
@@ -1584,9 +2818,13 @@ export interface components {
             /** Format: float */
             load: number | string;
         };
+        LoginRequest: {
+            email: string;
+            password: string;
+        };
         MarkDto: {
-            /** Format: int32 */
-            id: number | string;
+            /** Format: uuid */
+            id: string;
             name: string;
             /** Format: date */
             activeFrom: string;
@@ -1599,16 +2837,30 @@ export interface components {
             description: null | string;
         };
         PatchRaceRequest: {
-            /** Format: int32 */
-            courseId: null | number | string;
+            /** Format: uuid */
+            courseId: null | string;
             notes: null | string;
         };
         PatchSessionRequest: {
-            /** Format: int32 */
-            boatId: null | number | string;
-            /** Format: int32 */
-            courseId: null | number | string;
+            /** Format: uuid */
+            boatId: null | string;
+            /** Format: uuid */
+            courseId: null | string;
             notes: null | string;
+        };
+        PersonalAccessTokenDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            tokenPrefix: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt: null | string;
+            /** Format: date-time */
+            lastUsedAt: null | string;
+            /** Format: date-time */
+            revokedAt: null | string;
         };
         PositionDto: {
             /** Format: date-time */
@@ -1635,8 +2887,8 @@ export interface components {
         RaceDetailDto: {
             /** Format: int32 */
             raceNumber: number | string;
-            /** Format: int32 */
-            courseId: null | number | string;
+            /** Format: uuid */
+            courseId: null | string;
             /** Format: date-time */
             countdownStartedAt: null | string;
             /** Format: int32 */
@@ -1659,8 +2911,8 @@ export interface components {
         RaceDto: {
             /** Format: int32 */
             raceNumber: number | string;
-            /** Format: int32 */
-            courseId: null | number | string;
+            /** Format: uuid */
+            courseId: null | string;
             courseName: null | string;
             /** Format: date-time */
             countdownStartedAt: null | string;
@@ -1685,26 +2937,23 @@ export interface components {
             generatedAt: string;
             isStale: boolean;
         };
-        SailDto: {
-            /** Format: int32 */
-            id: number | string;
-            name: string;
-            /** Format: double */
-            area: number | string;
+        RedeemInvitationRequest: {
+            token: string;
+            email: string;
+            displayName: string;
+            password: string;
         };
-        SailRequest: {
-            name: string;
-            /** Format: double */
-            area: number | string;
+        RegenerateSetupLinkResponse: {
+            setupUrl: string;
         };
         SessionDetailDto: {
-            /** Format: int32 */
-            id: number | string;
-            /** Format: int32 */
-            boatId: null | number | string;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            boatId: null | string;
             boatName: null | string;
-            /** Format: int32 */
-            courseId: null | number | string;
+            /** Format: uuid */
+            courseId: null | string;
             courseName: null | string;
             fileName: string;
             contentHash: string;
@@ -1722,14 +2971,24 @@ export interface components {
             notes: null | string;
             races: components["schemas"]["RaceDto"][];
         };
+        SessionShareDto: {
+            /** Format: uuid */
+            sessionId: string;
+            /** Format: uuid */
+            teamId: string;
+            teamName: string;
+            permission: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
         SessionSummaryDto: {
-            /** Format: int32 */
-            id: number | string;
-            /** Format: int32 */
-            boatId: null | number | string;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            boatId: null | string;
             boatName: null | string;
-            /** Format: int32 */
-            courseId: null | number | string;
+            /** Format: uuid */
+            courseId: null | string;
             courseName: null | string;
             fileName: string;
             /** Format: int16 */
@@ -1746,6 +3005,12 @@ export interface components {
             notes: null | string;
             /** Format: int32 */
             raceCount: number | string;
+        };
+        SetupValidateResponse: {
+            /** Format: uuid */
+            userId: string;
+            email: string;
+            displayName: string;
         };
         ShiftAngleDto: {
             /** Format: date-time */
@@ -1785,6 +3050,43 @@ export interface components {
             /** Format: double */
             lengthMeters: number | string;
         };
+        TeamDetailDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: date-time */
+            createdAt: string;
+            members: components["schemas"]["TeamMemberDto"][];
+        };
+        TeamDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int32 */
+            memberCount: number | string;
+            role: string;
+        };
+        TeamInviteDto: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            role: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        TeamMemberDto: {
+            /** Format: uuid */
+            userId: string;
+            email: string;
+            displayName: string;
+            role: string;
+            /** Format: date-time */
+            joinedAt: string;
+        };
         TemperatureDto: {
             /** Format: date-time */
             time: string;
@@ -1794,20 +3096,17 @@ export interface components {
         UpdateBoatClassRequest: {
             name: string;
             /** Format: double */
-            lengthOverAll: null | number | string;
+            length: null | number | string;
             /** Format: double */
-            beam: null | number | string;
+            width: null | number | string;
             /** Format: double */
             weight: null | number | string;
-            /** Format: double */
-            bowspritLength: null | number | string;
-            sails: components["schemas"]["SailRequest"][];
         };
         UpdateBoatRequest: {
             name: string;
             sailNumber: null | string;
-            /** Format: int32 */
-            boatClassId: number | string;
+            /** Format: uuid */
+            boatClassId: string;
             description: null | string;
         };
         UpdateCourseRequest: {
@@ -1828,6 +3127,28 @@ export interface components {
             /** Format: double */
             longitude: number | string;
             description: null | string;
+        };
+        UpdateMemberRoleRequest: {
+            role: string;
+        };
+        UpdateProfileRequest: {
+            displayName: string;
+        };
+        UpdateTeamRequest: {
+            name: string;
+        };
+        UpdateUserRequest: {
+            displayName: null | string;
+            role: null | string;
+        };
+        UserProfileDto: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            displayName: string;
+            roles: string[];
+            /** Format: date-time */
+            createdAt: string;
         };
         WindDto: {
             /** Format: date-time */

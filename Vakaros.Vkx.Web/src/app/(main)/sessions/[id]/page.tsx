@@ -27,7 +27,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
   const [confirm, setConfirm] = useState(false);
 
   const load = () => {
-    api.GET(`/api/Sessions/{id}` as any, { params: { path: { id: Number(id) } } } as any).then(({ data, error }: any) => {
+    api.GET(`/api/v1/sessions/{id}` as any, { params: { path: { id } } } as any).then(({ data, error }: any) => {
       if (error) setError("Failed to load session");
       else {
         const s = data as SessionDetail;
@@ -42,12 +42,12 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
 
   useEffect(() => {
     load();
-    api.GET("/api/Boats" as any, {} as any).then(({ data }: any) => setBoats((data as Boat[]) ?? []));
-    api.GET("/api/Courses" as any, {} as any).then(({ data }: any) => setCourses((data as Course[]) ?? []));
+    api.GET("/api/v1/boats" as any, {} as any).then(({ data }: any) => setBoats((data as Boat[]) ?? []));
+    api.GET("/api/v1/courses" as any, {} as any).then(({ data }: any) => setCourses((data as Course[]) ?? []));
   }, [id]);
 
   const saveBoat = async () => {
-    const res = await fetch(`/api/Sessions/${id}`, {
+    const res = await fetch(`/api/v1/sessions/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ boatId: boatId ? Number(boatId) : null }),
@@ -58,7 +58,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
 
   const saveRaceCourse = async (race: Race) => {
     const courseId = raceCourses[String(race.raceNumber)];
-    const res = await fetch(`/api/sessions/${id}/races/${race.raceNumber}`, {
+    const res = await fetch(`/api/v1/sessions/${id}/races/${race.raceNumber}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ courseId: courseId ? Number(courseId) : null }),
@@ -68,7 +68,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
   };
 
   const doDelete = async () => {
-    const res = await fetch(`/api/Sessions/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/v1/sessions/${id}`, { method: "DELETE" });
     setConfirm(false);
     if (res.ok || res.status === 204) {
       toast.push({ kind: "success", message: "Session deleted." });

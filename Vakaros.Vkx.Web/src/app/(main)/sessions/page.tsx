@@ -35,7 +35,7 @@ export default function SessionsPage() {
   const [confirmDelete, setConfirmDelete] = useState<SessionSummary | null>(null);
 
   const refresh = () => {
-    api.GET("/api/Sessions" as any, {} as any).then(({ data, error }: any) => {
+    api.GET("/api/v1/sessions" as any, {} as any).then(({ data, error }: any) => {
       if (error) setError("Failed to load sessions");
       else setSessions(data as SessionSummary[]);
     });
@@ -43,7 +43,7 @@ export default function SessionsPage() {
 
   useEffect(() => {
     refresh();
-    api.GET("/api/Boats" as any, {} as any).then(({ data }: any) => setBoats((data as Boat[]) ?? []));
+    api.GET("/api/v1/boats" as any, {} as any).then(({ data }: any) => setBoats((data as Boat[]) ?? []));
   }, []);
 
   const filtered = useMemo(() => {
@@ -78,7 +78,7 @@ export default function SessionsPage() {
   };
 
   const doDelete = async (s: SessionSummary) => {
-    const res = await fetch(`/api/Sessions/${s.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/v1/sessions/${s.id}`, { method: "DELETE" });
     setConfirmDelete(null);
     if (res.ok || res.status === 204) {
       toast.push({ kind: "success", message: `Deleted ${s.fileName}` });

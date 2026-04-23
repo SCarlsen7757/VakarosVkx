@@ -24,17 +24,17 @@ public class VkxIngestionService(AppDbContext db, RaceDetectionService raceDetec
     }
 
     /// <summary>
-    /// Checks whether a session with the given content hash already exists.
+    /// Checks whether a session with the given content hash already exists for the given owner.
     /// </summary>
-    public async Task<bool> IsDuplicateAsync(string contentHash, CancellationToken ct = default)
+    public async Task<bool> IsDuplicateAsync(Guid ownerUserId, string contentHash, CancellationToken ct = default)
     {
-        return await db.Sessions.AnyAsync(s => s.ContentHash == contentHash, ct);
+        return await db.Sessions.AnyAsync(s => s.OwnerUserId == ownerUserId && s.ContentHash == contentHash, ct);
     }
 
     /// <summary>
     /// Parses the VKX data and persists all records, returning the created session entity.
     /// </summary>
-    public async Task<Session> IngestAsync(byte[] fileBytes, string fileName, string contentHash, CancellationToken ct = default)
+    public async Task<Session> IngestAsync(Guid ownerUserId, byte[] fileBytes, string fileName, string contentHash, CancellationToken ct = default)
     {
         var vkxSession = VkxParser.Parse(fileBytes);
 
@@ -47,6 +47,7 @@ public class VkxIngestionService(AppDbContext db, RaceDetectionService raceDetec
 
         var session = new Session
         {
+            OwnerUserId = ownerUserId,
             FileName = fileName,
             ContentHash = contentHash,
             FormatVersion = vkxSession.FormatVersion,
@@ -106,7 +107,7 @@ public class VkxIngestionService(AppDbContext db, RaceDetectionService raceDetec
         }
     }
 
-    private async Task InsertTimeSeriesDataAsync(VkxSession vkxSession, int sessionId, CancellationToken ct)
+    private async Task InsertTimeSeriesDataAsync(VkxSession vkxSession, Guid sessionId, CancellationToken ct)
     {
         // Positions (highest frequency — bulk insert)
         var positions = vkxSession.PositionRecords.Select(p => new PositionReading

@@ -47,7 +47,7 @@ export default function RaceViewerPage({ params }: PageProps) {
 
   useEffect(() => {
     let alive = true;
-    const base = `/api/sessions/${id}/races/${raceNum}`;
+    const base = `/api/v1/sessions/${id}/races/${raceNum}`;
     fetch(base)
       .then((r) => r.ok ? r.json() as Promise<RaceDetail> : Promise.reject(r.status))
       .then(async (raceData) => {
@@ -56,9 +56,9 @@ export default function RaceViewerPage({ params }: PageProps) {
         const countdown = raceData.countdownDurationSeconds != null ? n(raceData.countdownDurationSeconds) : 0;
         const fromParam = countdown > 0 ? `?from=${-countdown}` : "";
         const [posData, courseData] = await Promise.all([
-          fetch(`${base}/positions${fromParam}`).then((r) => r.ok ? r.json() as Promise<Position[]> : Promise.reject(r.status)),
+          fetch(`${base}/telemetry/positions${fromParam}`).then((r) => r.ok ? r.json() as Promise<Position[]> : Promise.reject(r.status)),
           raceData.courseId != null
-            ? fetch(`/api/Courses/${raceData.courseId}`).then((r) => r.ok ? r.json() : null)
+            ? fetch(`/api/v1/courses/${raceData.courseId}`).then((r) => r.ok ? r.json() : null)
             : Promise.resolve(null),
         ]);
         if (!alive) return;

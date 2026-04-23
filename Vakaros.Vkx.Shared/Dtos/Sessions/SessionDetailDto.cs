@@ -3,10 +3,10 @@ using Vakaros.Vkx.Shared.Dtos.Races;
 namespace Vakaros.Vkx.Shared.Dtos.Sessions;
 
 public record SessionDetailDto(
-    int Id,
-    int? BoatId,
+    Guid Id,
+    Guid? BoatId,
     string? BoatName,
-    int? CourseId,
+    Guid? CourseId,
     string? CourseName,
     string FileName,
     string ContentHash,

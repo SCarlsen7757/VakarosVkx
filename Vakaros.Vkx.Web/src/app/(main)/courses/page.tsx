@@ -33,12 +33,12 @@ export default function CoursesPage() {
   const [search, setSearch] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<Course | null>(null);
 
-  const load = () => api.GET("/api/Courses" as any, {} as any).then(({ data, error }: any) => {
+  const load = () => api.GET("/api/v1/courses" as any, {} as any).then(({ data, error }: any) => {
     if (error) setError("Failed to load"); else setList(data as Course[]);
   });
   useEffect(() => {
     load();
-    api.GET("/api/Marks" as any, {} as any).then(({ data }: any) => setMarks((data as Mark[]) ?? []));
+    api.GET("/api/v1/marks" as any, {} as any).then(({ data }: any) => setMarks((data as Mark[]) ?? []));
   }, []);
 
   const years = useMemo(() => {
@@ -89,14 +89,14 @@ export default function CoursesPage() {
       legs: draft.legs.filter((l) => l.markId).map((l) => ({ markId: Number(l.markId), legName: l.legName || null })),
     };
     const isNew = editingId === "new";
-    const url = isNew ? "/api/Courses" : `/api/Courses/${editingId}`;
+    const url = isNew ? "/api/v1/courses" : `/api/v1/courses/${editingId}`;
     const res = await fetch(url, { method: isNew ? "POST" : "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (res.ok) { toast.push({ kind: "success", message: isNew ? "Created." : "Saved." }); setEditingId(null); load(); }
     else toast.push({ kind: "error", message: "Save failed." });
   };
 
   const doDelete = async (c: Course) => {
-    const res = await fetch(`/api/Courses/${c.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/v1/courses/${c.id}`, { method: "DELETE" });
     setConfirmDelete(null);
     if (res.ok || res.status === 204) { toast.push({ kind: "success", message: "Deleted." }); load(); }
     else if (res.status === 409) toast.push({ kind: "error", message: "Course assigned to a race." });

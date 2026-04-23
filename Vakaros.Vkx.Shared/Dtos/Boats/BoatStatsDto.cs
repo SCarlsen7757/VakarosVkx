@@ -7,7 +7,7 @@ namespace Vakaros.Vkx.Shared.Dtos.Boats;
 /// Distances are in metres; speeds are in metres per second; durations are in seconds.
 /// </summary>
 public record BoatStatsDto(
-    int BoatId,
+    Guid BoatId,
     string BoatName,
     string? SailNumber,
     BoatClassSummaryDto BoatClass,

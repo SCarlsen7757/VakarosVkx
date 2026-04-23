@@ -2,7 +2,7 @@ namespace Vakaros.Vkx.Shared.Dtos.Races;
 
 public record RaceDto(
     int RaceNumber,
-    int? CourseId,
+    Guid? CourseId,
     string? CourseName,
     DateTimeOffset? CountdownStartedAt,
     int? CountdownDurationSeconds,

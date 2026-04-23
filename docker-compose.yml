@@ -3,9 +3,9 @@ services:
     image: timescale/timescaledb-ha:pg16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: vakaros
-      POSTGRES_PASSWORD: vakaros
-      POSTGRES_DB: vakaros
+      POSTGRES_USER: ${POSTGRES_USER:-vakaros}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vakaros}
+      POSTGRES_DB: ${POSTGRES_DB:-vakaros}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -27,7 +27,14 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Default: >-
-        Host=db;Port=5432;Database=vakaros;Username=vakaros;Password=vakaros
+        Host=db;Port=5432;Database=${POSTGRES_DB:-vakaros};Username=${POSTGRES_USER:-vakaros};Password=${POSTGRES_PASSWORD:-vakaros}
+      Auth__Mode: MultiUser
+      # Bootstrap admin on first start. Change these before deploying!
+      # If Password is empty, a one-time setup URL is logged on startup.
+      Auth__Admin__Email: ${AUTH_ADMIN_EMAIL:-test@mail.local}
+      Auth__Admin__Password: ${AUTH_ADMIN_PASSWORD:-password1234!}
+      Cors__AllowedOrigins__0: http://localhost:8081
+      Web__PublicBaseUrl: http://localhost:8081
     ports:
       - "8080:8080"
 

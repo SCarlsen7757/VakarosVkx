@@ -1,10 +1,10 @@
 namespace Vakaros.Vkx.Shared.Dtos.Sessions;
 
 public record SessionSummaryDto(
-    int Id,
-    int? BoatId,
+    Guid Id,
+    Guid? BoatId,
     string? BoatName,
-    int? CourseId,
+    Guid? CourseId,
     string? CourseName,
     string FileName,
     short FormatVersion,

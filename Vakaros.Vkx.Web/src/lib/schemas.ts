@@ -23,7 +23,6 @@ export type SpeedThroughWater = Schemas["SpeedThroughWaterDto"];
 export type ShiftAngle = Schemas["ShiftAngleDto"];
 export type StartAnalysis = Schemas["StartAnalysisDto"];
 export type RaceSummary = Schemas["RaceSummaryDto"];
-export type Sail = Schemas["SailDto"];
 export type StartLineLength = Schemas["StartLineLengthDto"];
 
 export function n(v: number | string | null | undefined): number {

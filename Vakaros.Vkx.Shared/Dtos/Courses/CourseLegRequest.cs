@@ -1,3 +1,3 @@
 namespace Vakaros.Vkx.Shared.Dtos.Courses;
 
-public record CourseLegRequest(int MarkId, string? LegName);
+public record CourseLegRequest(Guid MarkId, string? LegName);

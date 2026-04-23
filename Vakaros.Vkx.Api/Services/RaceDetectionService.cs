@@ -16,7 +16,7 @@ public class RaceDetectionService
     /// <param name="session">The parsed VKX session.</param>
     /// <param name="sessionId">The database session ID to associate races with.</param>
     /// <returns>A list of detected <see cref="Race"/> entities numbered chronologically.</returns>
-    public List<Race> DetectRaces(VkxSession session, int sessionId)
+    public List<Race> DetectRaces(VkxSession session, Guid sessionId)
     {
         var races = new List<Race>();
         var events = session.RaceTimerEventRecords

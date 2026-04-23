@@ -38,7 +38,7 @@ public class StartAnalysisService(AppDbContext db)
     /// </para>
     /// </summary>
     public async Task<StartAnalysisDto?> ComputeAsync(
-        Race race, int sessionId,
+        Race race, Guid sessionId,
         LinePositionDto? pinEnd, LinePositionDto? boatEnd,
         CancellationToken ct)
     {

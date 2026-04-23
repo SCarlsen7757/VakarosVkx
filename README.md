@@ -1,6 +1,23 @@
 # Vakaros VKX Analyser
 
-A self-hosted sailing telemetry analysis tool for [Vakaros](https://vakaros.com/) devices. Upload your `.vkx` log files, explore GPS tracks on an interactive map, and review race telemetry through live playback and historical charts — all from your own machine.
+A self-hosted sailing telemetry analysis tool for [Vakaros](https://vakaros.com/) devices. Upload your `.vkx` log files, explore GPS tracks on an interactive map, and review race telemetry through live playback and historical charts — with multi-user accounts and team sharing.
+
+> **⚠ Breaking change (multi-user upgrade)**
+>
+> This release introduces multi-user accounts, teams, sharing, and a versioned REST API under `/api/v1`. **All existing data must be wiped** — drop the `pgdata` volume and re-upload your sessions. See [docs/UPGRADE_PLAN.md](docs/UPGRADE_PLAN.md) for the full design.
+>
+> **User management is admin-managed.** There is no public sign-up, password reset, email verification, or social login. The first admin is bootstrapped from environment variables; the admin then creates users and shares a one-time setup URL with each new user out-of-band (Slack/SMS/in-person).
+>
+> **Quickstart for self-hosters:**
+> 1. Edit `docker-compose.yml` and set `Auth__Admin__Email` and `Auth__Admin__Password` (min 12 chars) on the `api` service.
+> 2. `docker compose up -d` — starts Postgres, the API, and the web app.
+> 3. Open `http://localhost:8081` and sign in as the bootstrap admin.
+> 4. Go to **Admin → Users** to create new users. Two flows are available:
+>    - **Per-user setup link** — for known emails. Copy the one-time URL and share it; the user sets their own password from it.
+>    - **Shareable invitation link** — for bulk onboarding. Set an optional expiry (days) and/or max-use count. Share the single URL; each redeemer creates their own account (email + display name + password) and is assigned the role you picked when creating the link. Revoke at any time.
+> 5. To skip auth entirely (single-user mode), set `Auth__Mode=SingleUser` in `docker-compose.yml`. The admin bootstrap is skipped in this mode.
+>
+> If you leave `Auth__Admin__Password` empty, the bootstrap admin is created without a password and a one-time setup URL is logged to the API container logs (`docker compose logs api`) — useful for ephemeral deployments.
 
 ---
 

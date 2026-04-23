@@ -27,7 +27,7 @@ export default function MarksPage() {
   const [adding, setAdding] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<Mark | null>(null);
 
-  const load = () => api.GET("/api/Marks" as any, {} as any).then(({ data, error }: any) => {
+  const load = () => api.GET("/api/v1/marks" as any, {} as any).then(({ data, error }: any) => {
     if (error) setError("Failed to load"); else setList(data as Mark[]);
   });
   useEffect(() => { load(); }, []);
@@ -71,14 +71,14 @@ export default function MarksPage() {
       longitude: Number(draft.longitude),
       description: draft.description || null,
     };
-    const url = id ? `/api/Marks/${id}` : "/api/Marks";
+    const url = id ? `/api/v1/marks/${id}` : "/api/v1/marks";
     const res = await fetch(url, { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (res.ok) { toast.push({ kind: "success", message: id ? "Mark saved." : "Mark created." }); setEditingId(null); setAdding(false); load(); }
     else toast.push({ kind: "error", message: "Save failed." });
   };
 
   const doDelete = async (m: Mark) => {
-    const res = await fetch(`/api/Marks/${m.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/v1/marks/${m.id}`, { method: "DELETE" });
     setConfirmDelete(null);
     if (res.ok || res.status === 204) { toast.push({ kind: "success", message: "Mark deleted." }); load(); }
     else if (res.status === 409) toast.push({ kind: "error", message: "Mark is used in a course." });

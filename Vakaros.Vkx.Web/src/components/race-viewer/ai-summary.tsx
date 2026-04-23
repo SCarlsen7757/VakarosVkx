@@ -17,7 +17,7 @@ export function AiSummary({ sessionId, raceNumber }: { sessionId: string | numbe
   const [confirmDel, setConfirmDel] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
-  const url = `/api/sessions/${sessionId}/races/${raceNumber}/summary`;
+  const url = `/api/v1/sessions/${sessionId}/races/${raceNumber}/summary`;
 
   const load = async () => {
     setLoading(true);

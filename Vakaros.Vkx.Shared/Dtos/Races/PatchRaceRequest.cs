@@ -1,3 +1,3 @@
 namespace Vakaros.Vkx.Shared.Dtos.Races;
 
-public record PatchRaceRequest(int? CourseId, string? Notes);
+public record PatchRaceRequest(Guid? CourseId, string? Notes);

@@ -2,7 +2,8 @@ namespace Vakaros.Vkx.Api.Models.Entities;
 
 public class Course
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public Guid OwnerUserId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int Year { get; set; }
     public string? Description { get; set; }

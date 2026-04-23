@@ -2,9 +2,9 @@ namespace Vakaros.Vkx.Api.Models.Entities;
 
 public class Race
 {
-    public int Id { get; set; }
-    public int SessionId { get; set; }
-    public int? CourseId { get; set; }
+    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public Guid SessionId { get; set; }
+    public Guid? CourseId { get; set; }
     public int RaceNumber { get; set; }
     public DateTimeOffset? CountdownStartedAt { get; set; }
     public int? CountdownDurationSeconds { get; set; }

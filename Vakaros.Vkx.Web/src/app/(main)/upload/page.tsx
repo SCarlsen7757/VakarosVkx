@@ -31,7 +31,7 @@ export default function UploadPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/Sessions/upload", { method: "POST", body: fd });
+      const res = await fetch("/api/v1/sessions", { method: "POST", body: fd });
       if (res.status === 201 || res.ok) {
         const data = await res.json().catch(() => null);
         const id = data?.id ?? data?.Id;

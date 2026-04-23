@@ -57,15 +57,15 @@ export function TelemetryPanels({ sessionId, raceNumber, raceStartMs, raceStartO
 
   useEffect(() => {
     if (raceNumber == null) return;
-    const base = `/api/sessions/${sessionId}/races/${raceNumber}`;
+    const base = `/api/v1/sessions/${sessionId}/races/${raceNumber}`;
     const from = raceStartOffset > 0 ? `?from=${-raceStartOffset}` : "";
-    fetchJson<Position[]>(`${base}/positions${from}`).then((d) => setPositions({ data: d ?? [], error: !d }));
-    fetchJson<Wind[]>(`${base}/wind${from}`).then((d) => setWind({ data: d ?? [], error: false }));
-    fetchJson<SpeedThroughWater[]>(`${base}/speed-through-water${from}`).then((d) => setStw({ data: d ?? [], error: false }));
-    fetchJson<Depth[]>(`${base}/depth${from}`).then((d) => setDepth({ data: d ?? [], error: false }));
-    fetchJson<Temperature[]>(`${base}/temperature${from}`).then((d) => setTemp({ data: d ?? [], error: false }));
-    fetchJson<Load[]>(`${base}/load${from}`).then((d) => setLoad({ data: d ?? [], error: false }));
-    fetchJson<ShiftAngle[]>(`${base}/shift-angles${from}`).then((d) => setShifts({ data: d ?? [], error: false }));
+    fetchJson<Position[]>(`${base}/telemetry/positions${from}`).then((d) => setPositions({ data: d ?? [], error: !d }));
+    fetchJson<Wind[]>(`${base}/telemetry/wind${from}`).then((d) => setWind({ data: d ?? [], error: false }));
+    fetchJson<SpeedThroughWater[]>(`${base}/telemetry/speed-through-water${from}`).then((d) => setStw({ data: d ?? [], error: false }));
+    fetchJson<Depth[]>(`${base}/telemetry/depth${from}`).then((d) => setDepth({ data: d ?? [], error: false }));
+    fetchJson<Temperature[]>(`${base}/telemetry/temperature${from}`).then((d) => setTemp({ data: d ?? [], error: false }));
+    fetchJson<Load[]>(`${base}/telemetry/load${from}`).then((d) => setLoad({ data: d ?? [], error: false }));
+    fetchJson<ShiftAngle[]>(`${base}/telemetry/shift-angles${from}`).then((d) => setShifts({ data: d ?? [], error: false }));
   }, [sessionId, raceNumber, raceStartOffset]);
 
   const posData = positions.data ?? [];

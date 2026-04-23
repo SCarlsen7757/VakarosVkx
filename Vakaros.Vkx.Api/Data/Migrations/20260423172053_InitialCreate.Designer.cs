@@ -12,7 +12,7 @@ using Vakaros.Vkx.Api.Data;
 namespace Vakaros.Vkx.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260419102820_InitialCreate")]
+    [Migration("20260423172053_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,22 +20,286 @@ namespace Vakaros.Vkx.Api.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.6")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Boat", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
+                        .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BoatClassId")
-                        .HasColumnType("integer")
+                    b.Property<string>("FriendlyName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Xml")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DataProtectionKeys");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("roles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("role_claims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("user_claims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("user_logins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("user_roles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("user_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.AppUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("display_name");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.AuditEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("action");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("at");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("text")
+                        .HasColumnName("details");
+
+                    b.Property<string>("EntityId")
+                        .HasColumnType("text")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("EntityType")
+                        .HasColumnType("text")
+                        .HasColumnName("entity_type");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text")
+                        .HasColumnName("ip_address");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("At");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("audit_events", (string)null);
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Boat", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BoatClassId")
+                        .HasColumnType("uuid")
                         .HasColumnName("boat_class_id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -51,6 +315,10 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_user_id");
+
                     b.Property<string>("SailNumber")
                         .HasColumnType("text")
                         .HasColumnName("sail_number");
@@ -59,56 +327,50 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
                     b.HasIndex("BoatClassId");
 
+                    b.HasIndex("OwnerUserId");
+
                     b.ToTable("boats", (string)null);
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.BoatClass", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<double?>("Beam")
+                    b.Property<double?>("Length")
                         .HasColumnType("double precision")
-                        .HasColumnName("beam");
-
-                    b.Property<double?>("BowspritLength")
-                        .HasColumnType("double precision")
-                        .HasColumnName("bowsprit_length");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<double?>("LengthOverAll")
-                        .HasColumnType("double precision")
-                        .HasColumnName("length_over_all");
+                        .HasColumnName("length");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_user_id");
+
                     b.Property<double?>("Weight")
                         .HasColumnType("double precision")
                         .HasColumnName("weight");
 
+                    b.Property<double?>("Width")
+                        .HasColumnType("double precision")
+                        .HasColumnName("width");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId");
 
                     b.ToTable("boat_classes", (string)null);
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Course", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -123,34 +385,37 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_user_id");
+
                     b.Property<int>("Year")
                         .HasColumnType("integer")
                         .HasColumnName("year");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OwnerUserId");
+
                     b.ToTable("courses", (string)null);
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.CourseLeg", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CourseId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uuid")
                         .HasColumnName("course_id");
 
                     b.Property<string>("LegName")
                         .HasColumnType("text")
                         .HasColumnName("leg_name");
 
-                    b.Property<int>("MarkId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("MarkId")
+                        .HasColumnType("uuid")
                         .HasColumnName("mark_id");
 
                     b.Property<int>("SortOrder")
@@ -172,8 +437,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("time");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.Property<float>("DeclinationOffset")
@@ -201,8 +466,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("time");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.Property<float>("Depth")
@@ -216,14 +481,66 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.ToTable("depth_readings", (string)null);
                 });
 
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Invitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<int?>("MaxUses")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_uses");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("role");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("used_count");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("invitations", (string)null);
+                });
+
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.LinePositionReading", b =>
                 {
                     b.Property<DateTimeOffset>("Time")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("time");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.Property<double>("Latitude")
@@ -251,8 +568,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("time");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.Property<float>("Load")
@@ -273,12 +590,9 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Mark", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateOnly>("ActiveFrom")
                         .HasColumnType("date")
@@ -305,12 +619,67 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_user_id");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("Name", "ActiveFrom")
+                    b.HasIndex("OwnerUserId", "Name", "ActiveFrom")
                         .IsUnique();
 
                     b.ToTable("marks", (string)null);
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.PersonalAccessToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTimeOffset?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_used_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token_hash");
+
+                    b.Property<string>("TokenPrefix")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token_prefix");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("personal_access_tokens", (string)null);
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.PositionReading", b =>
@@ -319,8 +688,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("time");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.Property<float>("Altitude")
@@ -368,12 +737,9 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Race", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("CountdownDurationSeconds")
                         .HasColumnType("integer")
@@ -383,8 +749,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("countdown_started_at");
 
-                    b.Property<int?>("CourseId")
-                        .HasColumnType("integer")
+                    b.Property<Guid?>("CourseId")
+                        .HasColumnType("uuid")
                         .HasColumnName("course_id");
 
                     b.Property<DateTimeOffset?>("EndedAt")
@@ -407,8 +773,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("sailed_distance_meters");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.Property<DateTimeOffset>("StartedAt")
@@ -427,12 +793,9 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.RaceSummaryReport", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -457,8 +820,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("race_number");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.HasKey("Id");
@@ -475,8 +838,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("time");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.Property<short>("EventType")
@@ -494,46 +857,14 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.ToTable("race_timer_events", (string)null);
                 });
 
-            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Sail", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<double>("Area")
-                        .HasColumnType("double precision")
-                        .HasColumnName("area");
-
-                    b.Property<int>("BoatClassId")
-                        .HasColumnType("integer")
-                        .HasColumnName("boat_class_id");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BoatClassId");
-
-                    b.ToTable("sails", (string)null);
-                });
-
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Session", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("BoatId")
-                        .HasColumnType("integer")
+                    b.Property<Guid?>("BoatId")
+                        .HasColumnType("uuid")
                         .HasColumnName("boat_id");
 
                     b.Property<string>("ContentHash")
@@ -541,8 +872,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("content_hash");
 
-                    b.Property<int?>("CourseId")
-                        .HasColumnType("integer")
+                    b.Property<Guid?>("CourseId")
+                        .HasColumnType("uuid")
                         .HasColumnName("course_id");
 
                     b.Property<DateTimeOffset>("EndedAt")
@@ -566,6 +897,10 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("notes");
 
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_user_id");
+
                     b.Property<DateTimeOffset>("StartedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("started_at");
@@ -582,12 +917,39 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
                     b.HasIndex("BoatId");
 
-                    b.HasIndex("ContentHash")
-                        .IsUnique();
-
                     b.HasIndex("CourseId");
 
+                    b.HasIndex("OwnerUserId");
+
+                    b.HasIndex("OwnerUserId", "ContentHash")
+                        .IsUnique();
+
                     b.ToTable("sessions", (string)null);
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.SessionShare", b =>
+                {
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_id");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Permission")
+                        .HasColumnType("integer")
+                        .HasColumnName("permission");
+
+                    b.HasKey("SessionId", "TeamId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("session_shares", (string)null);
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.ShiftAngleReading", b =>
@@ -596,8 +958,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("time");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.Property<bool>("IsManual")
@@ -629,8 +991,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("time");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.Property<float>("ForwardSpeed")
@@ -648,14 +1010,107 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.ToTable("speed_through_water", (string)null);
                 });
 
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Team", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.ToTable("teams", (string)null);
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.TeamInvite", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("accepted_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("TeamId", "Email");
+
+                    b.ToTable("team_invites", (string)null);
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.TeamMember", b =>
+                {
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer")
+                        .HasColumnName("role");
+
+                    b.HasKey("TeamId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("team_members", (string)null);
+                });
+
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.TemperatureReading", b =>
                 {
                     b.Property<DateTimeOffset>("Time")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("time");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.Property<float>("Temperature")
@@ -675,8 +1130,8 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("time");
 
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
                         .HasColumnName("session_id");
 
                     b.Property<float>("WindDirection")
@@ -692,6 +1147,57 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.HasIndex("SessionId");
 
                     b.ToTable("wind_readings", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Boat", b =>
@@ -819,17 +1325,6 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.Navigation("Session");
                 });
 
-            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Sail", b =>
-                {
-                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.BoatClass", "BoatClass")
-                        .WithMany("Sails")
-                        .HasForeignKey("BoatClassId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BoatClass");
-                });
-
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Session", b =>
                 {
                     b.HasOne("Vakaros.Vkx.Api.Models.Entities.Boat", "Boat")
@@ -845,6 +1340,25 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.Navigation("Boat");
 
                     b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.SessionShare", b =>
+                {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Session", "Session")
+                        .WithMany("Shares")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+
+                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.ShiftAngleReading", b =>
@@ -867,6 +1381,36 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.TeamInvite", b =>
+                {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Team", "Team")
+                        .WithMany("Invites")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.TeamMember", b =>
+                {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Team", "Team")
+                        .WithMany("Members")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Team");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.TemperatureReading", b =>
@@ -896,11 +1440,6 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.Navigation("Sessions");
                 });
 
-            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.BoatClass", b =>
-                {
-                    b.Navigation("Sails");
-                });
-
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Course", b =>
                 {
                     b.Navigation("Legs");
@@ -918,6 +1457,15 @@ namespace Vakaros.Vkx.Api.Data.Migrations
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Session", b =>
                 {
                     b.Navigation("Races");
+
+                    b.Navigation("Shares");
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Team", b =>
+                {
+                    b.Navigation("Invites");
+
+                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }

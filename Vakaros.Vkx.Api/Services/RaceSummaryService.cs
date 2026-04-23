@@ -17,7 +17,7 @@ public class RaceSummaryService(
     /// Returns null when the race or session cannot be found.
     /// </summary>
     public async Task<(RaceSummaryContext Context, string Hash)?> BuildContextAsync(
-        int sessionId, int raceNumber, CancellationToken ct)
+        Guid sessionId, int raceNumber, CancellationToken ct)
     {
         var race = await db.Races
             .FirstOrDefaultAsync(r => r.SessionId == sessionId && r.RaceNumber == raceNumber, ct);
@@ -91,7 +91,7 @@ public class RaceSummaryService(
     /// <summary>
     /// Upserts the completed report into the database.
     /// </summary>
-    public async Task SaveAsync(int sessionId, int raceNumber, string content, string model, string contextHash, CancellationToken ct)
+    public async Task SaveAsync(Guid sessionId, int raceNumber, string content, string model, string contextHash, CancellationToken ct)
     {
         var existing = await db.RaceSummaryReports
             .FirstOrDefaultAsync(r => r.SessionId == sessionId && r.RaceNumber == raceNumber, ct);
@@ -122,7 +122,7 @@ public class RaceSummaryService(
     /// <summary>
     /// Computes the current context hash for staleness detection.
     /// </summary>
-    public async Task<string?> ComputeCurrentHashAsync(int sessionId, int raceNumber, CancellationToken ct)
+    public async Task<string?> ComputeCurrentHashAsync(Guid sessionId, int raceNumber, CancellationToken ct)
     {
         var result = await BuildContextAsync(sessionId, raceNumber, ct);
         return result?.Hash;

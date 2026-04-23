@@ -28,7 +28,7 @@ export default function BoatDetailPage({ params }: { params: Promise<{ id: strin
   const [confirm, setConfirm] = useState(false);
 
   useEffect(() => {
-    api.GET(`/api/Boats/{id}` as any, { params: { path: { id: Number(id) } } } as any).then(({ data, error }: any) => {
+    api.GET(`/api/v1/boats/{id}` as any, { params: { path: { id } } } as any).then(({ data, error }: any) => {
       if (error) setError("Failed to load boat");
       else {
         const b = data as Boat;
@@ -36,18 +36,18 @@ export default function BoatDetailPage({ params }: { params: Promise<{ id: strin
         setDraft({ name: b.name, sailNumber: b.sailNumber ?? "", boatClassId: String(b.boatClass.id), description: b.description ?? "" });
       }
     });
-    api.GET(`/api/Boats/{id}/stats` as any, { params: { path: { id: Number(id) } } } as any).then(({ data }: any) => setStats(data as BoatStats));
-    api.GET("/api/BoatClasses" as any, {} as any).then(({ data }: any) => setClasses((data as BoatClass[]) ?? []));
+    api.GET(`/api/v1/boats/{id}/stats` as any, { params: { path: { id } } } as any).then(({ data }: any) => setStats(data as BoatStats));
+    api.GET("/api/v1/boat-classes" as any, {} as any).then(({ data }: any) => setClasses((data as BoatClass[]) ?? []));
   }, [id]);
 
   const save = async () => {
-    const res = await fetch(`/api/Boats/${id}`, {
+    const res = await fetch(`/api/v1/boats/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: draft.name,
         sailNumber: draft.sailNumber || null,
-        boatClassId: Number(draft.boatClassId),
+        boatClassId: draft.boatClassId,
         description: draft.description || null,
       }),
     });
@@ -56,7 +56,7 @@ export default function BoatDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const doDelete = async () => {
-    const res = await fetch(`/api/Boats/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/v1/boats/${id}`, { method: "DELETE" });
     setConfirm(false);
     if (res.ok || res.status === 204) { toast.push({ kind: "success", message: "Deleted." }); router.push("/boats"); }
     else if (res.status === 409) toast.push({ kind: "error", message: "Boat is referenced by sessions." });

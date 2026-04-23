@@ -2,9 +2,10 @@ namespace Vakaros.Vkx.Api.Models.Entities;
 
 public class Session
 {
-    public int Id { get; set; }
-    public int? BoatId { get; set; }
-    public int? CourseId { get; set; }
+    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public Guid OwnerUserId { get; set; }
+    public Guid? BoatId { get; set; }
+    public Guid? CourseId { get; set; }
     public string FileName { get; set; } = string.Empty;
     public string ContentHash { get; set; } = string.Empty;
     public short FormatVersion { get; set; }
@@ -18,4 +19,5 @@ public class Session
     public Boat? Boat { get; set; }
     public Course? Course { get; set; }
     public ICollection<Race> Races { get; set; } = [];
+    public ICollection<SessionShare> Shares { get; set; } = [];
 }

@@ -24,7 +24,7 @@ export default function DashboardPage() {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    api.GET("/api/Stats/summary" as any, {}).then(({ data, error }: any) => {
+    api.GET("/api/v1/me/stats" as any, {}).then(({ data, error }: any) => {
       if (!mounted) return;
       if (error) setError("Failed to load summary");
       else setStats(data as StatsSummary);

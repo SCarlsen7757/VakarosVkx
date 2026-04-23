@@ -1,20 +1,34 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Vakaros.Vkx.Api.Models.Entities;
 
 namespace Vakaros.Vkx.Api.Data;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options)
+    : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>(options), IDataProtectionKeyContext
 {
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     // Relational tables
     public DbSet<Boat> Boats => Set<Boat>();
     public DbSet<BoatClass> BoatClasses => Set<BoatClass>();
-    public DbSet<Sail> Sails => Set<Sail>();
     public DbSet<Mark> Marks => Set<Mark>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<CourseLeg> CourseLegs => Set<CourseLeg>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<Race> Races => Set<Race>();
     public DbSet<RaceSummaryReport> RaceSummaryReports => Set<RaceSummaryReport>();
+
+    // Multi-user / teams
+    public DbSet<Team> Teams => Set<Team>();
+    public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
+    public DbSet<TeamInvite> TeamInvites => Set<TeamInvite>();
+    public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<SessionShare> SessionShares => Set<SessionShare>();
+    public DbSet<PersonalAccessToken> PersonalAccessTokens => Set<PersonalAccessToken>();
+    public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
     // Hypertables
     public DbSet<PositionReading> Positions => Set<PositionReading>();
@@ -30,30 +44,34 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
+        // ── Identity tables: rename to snake_case for house style ───────────
+        modelBuilder.Entity<AppUser>(e =>
+        {
+            e.ToTable("users");
+            e.Property(u => u.DisplayName).HasColumnName("display_name");
+            e.Property(u => u.CreatedAt).HasColumnName("created_at");
+        });
+        modelBuilder.Entity<IdentityRole<Guid>>(e => e.ToTable("roles"));
+        modelBuilder.Entity<IdentityUserRole<Guid>>(e => e.ToTable("user_roles"));
+        modelBuilder.Entity<IdentityUserClaim<Guid>>(e => e.ToTable("user_claims"));
+        modelBuilder.Entity<IdentityUserLogin<Guid>>(e => e.ToTable("user_logins"));
+        modelBuilder.Entity<IdentityUserToken<Guid>>(e => e.ToTable("user_tokens"));
+        modelBuilder.Entity<IdentityRoleClaim<Guid>>(e => e.ToTable("role_claims"));
+
         // ── Boat Classes ─────────────────────────────────────────────────────
         modelBuilder.Entity<BoatClass>(e =>
         {
             e.ToTable("boat_classes");
             e.HasKey(bc => bc.Id);
-            e.Property(bc => bc.Id).HasColumnName("id");
+            e.Property(bc => bc.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(bc => bc.OwnerUserId).HasColumnName("owner_user_id");
             e.Property(bc => bc.Name).HasColumnName("name").IsRequired();
-            e.Property(bc => bc.LengthOverAll).HasColumnName("length_over_all");
-            e.Property(bc => bc.Beam).HasColumnName("beam");
+            e.Property(bc => bc.Length).HasColumnName("length");
+            e.Property(bc => bc.Width).HasColumnName("width");
             e.Property(bc => bc.Weight).HasColumnName("weight");
-            e.Property(bc => bc.BowspritLength).HasColumnName("bowsprit_length");
-            e.Property(bc => bc.CreatedAt).HasColumnName("created_at");
-        });
-
-        // ── Sails ────────────────────────────────────────────────────────────
-        modelBuilder.Entity<Sail>(e =>
-        {
-            e.ToTable("sails");
-            e.HasKey(s => s.Id);
-            e.Property(s => s.Id).HasColumnName("id");
-            e.Property(s => s.BoatClassId).HasColumnName("boat_class_id");
-            e.Property(s => s.Name).HasColumnName("name").IsRequired();
-            e.Property(s => s.Area).HasColumnName("area");
-            e.HasOne(s => s.BoatClass).WithMany(bc => bc.Sails).HasForeignKey(s => s.BoatClassId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(bc => bc.OwnerUserId);
         });
 
         // ── Boats ───────────────────────────────────────────────────────────
@@ -61,13 +79,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.ToTable("boats");
             e.HasKey(b => b.Id);
-            e.Property(b => b.Id).HasColumnName("id");
+            e.Property(b => b.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(b => b.OwnerUserId).HasColumnName("owner_user_id");
             e.Property(b => b.Name).HasColumnName("name").IsRequired();
             e.Property(b => b.SailNumber).HasColumnName("sail_number");
             e.Property(b => b.BoatClassId).HasColumnName("boat_class_id");
             e.Property(b => b.Description).HasColumnName("description");
             e.Property(b => b.CreatedAt).HasColumnName("created_at");
             e.HasOne(b => b.BoatClass).WithMany().HasForeignKey(b => b.BoatClassId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(b => b.OwnerUserId);
         });
 
         // ── Marks ───────────────────────────────────────────────────────────
@@ -75,14 +95,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.ToTable("marks");
             e.HasKey(m => m.Id);
-            e.Property(m => m.Id).HasColumnName("id");
+            e.Property(m => m.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(m => m.OwnerUserId).HasColumnName("owner_user_id");
             e.Property(m => m.Name).HasColumnName("name").IsRequired();
             e.Property(m => m.ActiveFrom).HasColumnName("active_from");
             e.Property(m => m.ActiveUntil).HasColumnName("active_until");
             e.Property(m => m.Latitude).HasColumnName("latitude");
             e.Property(m => m.Longitude).HasColumnName("longitude");
             e.Property(m => m.Description).HasColumnName("description");
-            e.HasIndex(m => new { m.Name, m.ActiveFrom }).IsUnique();
+            e.HasIndex(m => new { m.OwnerUserId, m.Name, m.ActiveFrom }).IsUnique();
         });
 
         // ── Courses ─────────────────────────────────────────────────────────
@@ -90,18 +111,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.ToTable("courses");
             e.HasKey(c => c.Id);
-            e.Property(c => c.Id).HasColumnName("id");
+            e.Property(c => c.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(c => c.OwnerUserId).HasColumnName("owner_user_id");
             e.Property(c => c.Name).HasColumnName("name").IsRequired();
             e.Property(c => c.Year).HasColumnName("year");
             e.Property(c => c.Description).HasColumnName("description");
             e.Property(c => c.CreatedAt).HasColumnName("created_at");
+            e.HasIndex(c => c.OwnerUserId);
         });
 
         modelBuilder.Entity<CourseLeg>(e =>
         {
             e.ToTable("course_legs");
             e.HasKey(cl => cl.Id);
-            e.Property(cl => cl.Id).HasColumnName("id");
+            e.Property(cl => cl.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(cl => cl.CourseId).HasColumnName("course_id");
             e.Property(cl => cl.MarkId).HasColumnName("mark_id");
             e.Property(cl => cl.SortOrder).HasColumnName("sort_order");
@@ -115,12 +138,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.ToTable("sessions");
             e.HasKey(s => s.Id);
-            e.Property(s => s.Id).HasColumnName("id");
+            e.Property(s => s.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(s => s.OwnerUserId).HasColumnName("owner_user_id");
             e.Property(s => s.BoatId).HasColumnName("boat_id");
             e.Property(s => s.CourseId).HasColumnName("course_id");
             e.Property(s => s.FileName).HasColumnName("file_name").IsRequired();
             e.Property(s => s.ContentHash).HasColumnName("content_hash").IsRequired();
-            e.HasIndex(s => s.ContentHash).IsUnique();
+            e.HasIndex(s => new { s.OwnerUserId, s.ContentHash }).IsUnique();
+            e.HasIndex(s => s.OwnerUserId);
             e.Property(s => s.FormatVersion).HasColumnName("format_version");
             e.Property(s => s.TelemetryRateHz).HasColumnName("telemetry_rate_hz");
             e.Property(s => s.IsFixedToBodyFrame).HasColumnName("is_fixed_to_body_frame");
@@ -137,7 +162,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.ToTable("races");
             e.HasKey(r => r.Id);
-            e.Property(r => r.Id).HasColumnName("id");
+            e.Property(r => r.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(r => r.SessionId).HasColumnName("session_id");
             e.Property(r => r.CourseId).HasColumnName("course_id");
             e.Property(r => r.RaceNumber).HasColumnName("race_number");
@@ -158,7 +183,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.ToTable("race_summary_reports");
             e.HasKey(r => r.Id);
-            e.Property(r => r.Id).HasColumnName("id");
+            e.Property(r => r.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(r => r.SessionId).HasColumnName("session_id");
             e.Property(r => r.RaceNumber).HasColumnName("race_number");
             e.Property(r => r.Content).HasColumnName("content").IsRequired();
@@ -168,6 +193,110 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(r => new { r.SessionId, r.RaceNumber }).IsUnique();
             e.HasOne(r => r.Session).WithMany()
                 .HasForeignKey(r => r.SessionId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── Teams ───────────────────────────────────────────────────────────
+        modelBuilder.Entity<Team>(e =>
+        {
+            e.ToTable("teams");
+            e.HasKey(t => t.Id);
+            e.Property(t => t.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(t => t.Name).HasColumnName("name").IsRequired();
+            e.Property(t => t.CreatedAt).HasColumnName("created_at");
+            e.Property(t => t.CreatedByUserId).HasColumnName("created_by_user_id");
+            e.HasIndex(t => t.CreatedByUserId);
+        });
+
+        modelBuilder.Entity<TeamMember>(e =>
+        {
+            e.ToTable("team_members");
+            e.HasKey(tm => new { tm.TeamId, tm.UserId });
+            e.Property(tm => tm.TeamId).HasColumnName("team_id");
+            e.Property(tm => tm.UserId).HasColumnName("user_id");
+            e.Property(tm => tm.Role).HasColumnName("role").HasConversion<int>();
+            e.Property(tm => tm.JoinedAt).HasColumnName("joined_at");
+            e.HasOne(tm => tm.Team).WithMany(t => t.Members).HasForeignKey(tm => tm.TeamId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(tm => tm.User).WithMany().HasForeignKey(tm => tm.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(tm => tm.UserId);
+        });
+
+        modelBuilder.Entity<TeamInvite>(e =>
+        {
+            e.ToTable("team_invites");
+            e.HasKey(i => i.Id);
+            e.Property(i => i.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(i => i.TeamId).HasColumnName("team_id");
+            e.Property(i => i.Email).HasColumnName("email").IsRequired();
+            e.Property(i => i.Token).HasColumnName("token").IsRequired();
+            e.Property(i => i.CreatedAt).HasColumnName("created_at");
+            e.Property(i => i.ExpiresAt).HasColumnName("expires_at");
+            e.Property(i => i.AcceptedAt).HasColumnName("accepted_at");
+            e.HasIndex(i => i.Token).IsUnique();
+            e.HasIndex(i => new { i.TeamId, i.Email });
+            e.HasOne(i => i.Team).WithMany(t => t.Invites).HasForeignKey(i => i.TeamId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Invitation>(e =>
+        {
+            e.ToTable("invitations");
+            e.HasKey(i => i.Id);
+            e.Property(i => i.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(i => i.Token).HasColumnName("token").IsRequired();
+            e.Property(i => i.Role).HasColumnName("role").IsRequired();
+            e.Property(i => i.MaxUses).HasColumnName("max_uses");
+            e.Property(i => i.UsedCount).HasColumnName("used_count");
+            e.Property(i => i.ExpiresAt).HasColumnName("expires_at");
+            e.Property(i => i.CreatedAt).HasColumnName("created_at");
+            e.Property(i => i.CreatedByUserId).HasColumnName("created_by_user_id");
+            e.Property(i => i.RevokedAt).HasColumnName("revoked_at");
+            e.Property(i => i.Note).HasColumnName("note");
+            e.HasIndex(i => i.Token).IsUnique();
+        });
+
+        modelBuilder.Entity<SessionShare>(e =>
+        {
+            e.ToTable("session_shares");
+            e.HasKey(s => new { s.SessionId, s.TeamId });
+            e.Property(s => s.SessionId).HasColumnName("session_id");
+            e.Property(s => s.TeamId).HasColumnName("team_id");
+            e.Property(s => s.Permission).HasColumnName("permission").HasConversion<int>();
+            e.Property(s => s.CreatedAt).HasColumnName("created_at");
+            e.HasOne(s => s.Session).WithMany(sess => sess.Shares).HasForeignKey(s => s.SessionId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(s => s.Team).WithMany().HasForeignKey(s => s.TeamId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(s => s.TeamId);
+        });
+
+        modelBuilder.Entity<PersonalAccessToken>(e =>
+        {
+            e.ToTable("personal_access_tokens");
+            e.HasKey(p => p.Id);
+            e.Property(p => p.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(p => p.UserId).HasColumnName("user_id");
+            e.Property(p => p.Name).HasColumnName("name").IsRequired();
+            e.Property(p => p.TokenHash).HasColumnName("token_hash").IsRequired();
+            e.Property(p => p.TokenPrefix).HasColumnName("token_prefix").IsRequired();
+            e.Property(p => p.CreatedAt).HasColumnName("created_at");
+            e.Property(p => p.ExpiresAt).HasColumnName("expires_at");
+            e.Property(p => p.LastUsedAt).HasColumnName("last_used_at");
+            e.Property(p => p.RevokedAt).HasColumnName("revoked_at");
+            e.HasIndex(p => p.UserId);
+            e.HasIndex(p => p.TokenHash).IsUnique();
+        });
+
+        modelBuilder.Entity<AuditEvent>(e =>
+        {
+            e.ToTable("audit_events");
+            e.HasKey(a => a.Id);
+            e.Property(a => a.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(a => a.UserId).HasColumnName("user_id");
+            e.Property(a => a.Action).HasColumnName("action").IsRequired();
+            e.Property(a => a.EntityType).HasColumnName("entity_type");
+            e.Property(a => a.EntityId).HasColumnName("entity_id");
+            e.Property(a => a.At).HasColumnName("at");
+            e.Property(a => a.IpAddress).HasColumnName("ip_address");
+            e.Property(a => a.Details).HasColumnName("details");
+            e.HasIndex(a => a.UserId);
+            e.HasIndex(a => a.At);
         });
 
         // ── Hypertables ─────────────────────────────────────────────────────

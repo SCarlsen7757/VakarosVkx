@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const API_BASE = process.env.API_BASE_URL ?? "http://localhost:5223";
 
-// Headers that must never be forwarded in either direction.
 const HOP_BY_HOP = new Set([
   "connection",
   "keep-alive",
@@ -14,20 +13,30 @@ const HOP_BY_HOP = new Set([
   "upgrade",
 ]);
 
+const STATE_CHANGING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
 async function proxy(req: NextRequest, path: string[]): Promise<NextResponse> {
   const target = `${API_BASE}/api/${path.join("/")}${req.nextUrl.search}`;
 
-  // Build forwarded request headers.
   const reqHeaders = new Headers();
   req.headers.forEach((value, key) => {
     const k = key.toLowerCase();
     if (k === "host") return;
     if (HOP_BY_HOP.has(k)) return;
-    // Tell the upstream NOT to compress. Node fetch auto-decompresses, so
-    // forwarding content-encoding back to the browser would be double-encoded.
+    // Strip any inbound Authorization header so the browser cannot inject
+    // bearer tokens through the BFF; the API authenticates via the cookie.
+    if (k === "authorization") return;
     if (k === "accept-encoding") return;
     reqHeaders.set(key, value);
   });
+
+  // Forward the CSRF cookie value as the X-CSRF-Token header for state-
+  // changing requests if the client did not already set one. The API uses
+  // a double-submit cookie pattern.
+  if (STATE_CHANGING.has(req.method) && !reqHeaders.has("x-csrf-token")) {
+    const csrf = req.cookies.get("vkx.csrf")?.value;
+    if (csrf) reqHeaders.set("x-csrf-token", csrf);
+  }
 
   const hasBody = req.method !== "GET" && req.method !== "HEAD";
 

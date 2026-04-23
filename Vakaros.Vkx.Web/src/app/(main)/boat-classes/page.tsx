@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import type { BoatClass, Sail } from "@/lib/schemas";
+import type { BoatClass } from "@/lib/schemas";
 import { Button, Card, Input } from "@/components/ui/controls";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -13,14 +13,12 @@ import { Plus, X } from "lucide-react";
 
 interface Draft {
   name: string;
-  lengthOverAll: string;
-  beam: string;
+  length: string;
+  width: string;
   weight: string;
-  bowspritLength: string;
-  sails: { name: string; area: string }[];
 }
 
-const emptyDraft: Draft = { name: "", lengthOverAll: "", beam: "", weight: "", bowspritLength: "", sails: [] };
+const emptyDraft: Draft = { name: "", length: "", width: "", weight: "" };
 
 export default function BoatClassesPage() {
   const toast = useToast();
@@ -31,7 +29,7 @@ export default function BoatClassesPage() {
   const [confirmDelete, setConfirmDelete] = useState<BoatClass | null>(null);
 
   const load = () => {
-    api.GET("/api/BoatClasses" as any, {} as any).then(({ data, error }: any) => {
+    api.GET("/api/v1/boat-classes" as any, {} as any).then(({ data, error }: any) => {
       if (error) setError("Failed to load");
       else setList(data as BoatClass[]);
     });
@@ -43,11 +41,9 @@ export default function BoatClassesPage() {
       setEditingId(String(c.id));
       setDraft({
         name: c.name,
-        lengthOverAll: c.lengthOverAll == null ? "" : String(c.lengthOverAll),
-        beam: c.beam == null ? "" : String(c.beam),
+        length: c.length == null ? "" : String(c.length),
+        width: c.width == null ? "" : String(c.width),
         weight: c.weight == null ? "" : String(c.weight),
-        bowspritLength: c.bowspritLength == null ? "" : String(c.bowspritLength),
-        sails: c.sails.map((s: Sail) => ({ name: s.name, area: String(s.area) })),
       });
     } else {
       setEditingId("new");
@@ -59,21 +55,19 @@ export default function BoatClassesPage() {
     if (!draft.name) { toast.push({ kind: "warning", message: "Name required." }); return; }
     const body = {
       name: draft.name,
-      lengthOverAll: draft.lengthOverAll ? Number(draft.lengthOverAll) : null,
-      beam: draft.beam ? Number(draft.beam) : null,
+      length: draft.length ? Number(draft.length) : null,
+      width: draft.width ? Number(draft.width) : null,
       weight: draft.weight ? Number(draft.weight) : null,
-      bowspritLength: draft.bowspritLength ? Number(draft.bowspritLength) : null,
-      sails: draft.sails.filter((s) => s.name).map((s) => ({ name: s.name, area: Number(s.area) || 0 })),
     };
     const isNew = editingId === "new";
-    const url = isNew ? "/api/BoatClasses" : `/api/BoatClasses/${editingId}`;
+    const url = isNew ? "/api/v1/boat-classes" : `/api/v1/boat-classes/${editingId}`;
     const res = await fetch(url, { method: isNew ? "POST" : "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (res.ok) { toast.push({ kind: "success", message: isNew ? "Created." : "Saved." }); setEditingId(null); load(); }
     else toast.push({ kind: "error", message: "Save failed." });
   };
 
   const doDelete = async (c: BoatClass) => {
-    const res = await fetch(`/api/BoatClasses/${c.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/v1/boat-classes/${c.id}`, { method: "DELETE" });
     setConfirmDelete(null);
     if (res.ok || res.status === 204) { toast.push({ kind: "success", message: "Deleted." }); load(); }
     else if (res.status === 409) toast.push({ kind: "error", message: "Class is referenced by boats." });
@@ -95,9 +89,9 @@ export default function BoatClassesPage() {
             <thead className="bg-bg-elevated text-xs uppercase tracking-wider text-text-secondary">
               <tr>
                 <th className="px-3 py-2 text-left">Name</th>
-                <th className="px-3 py-2 text-left">LOA (m)</th>
-                <th className="px-3 py-2 text-left">Beam (m)</th>
-                <th className="px-3 py-2 text-left">Sails</th>
+                <th className="px-3 py-2 text-left">Length (m)</th>
+                <th className="px-3 py-2 text-left">Width (m)</th>
+                <th className="px-3 py-2 text-left">Weight (kg)</th>
                 <th className="w-10"></th>
               </tr>
             </thead>
@@ -105,9 +99,9 @@ export default function BoatClassesPage() {
               {list.map((c) => (
                 <tr key={String(c.id)} className="cursor-pointer border-t border-border-default text-sm hover:bg-bg-elevated/40" onClick={() => startEdit(c)}>
                   <td className="px-3 py-2">{c.name}</td>
-                  <td className="px-3 py-2 text-text-secondary">{c.lengthOverAll ?? "—"}</td>
-                  <td className="px-3 py-2 text-text-secondary">{c.beam ?? "—"}</td>
-                  <td className="px-3 py-2 text-text-secondary">{c.sails.length}</td>
+                  <td className="px-3 py-2 text-text-secondary">{c.length ?? "—"}</td>
+                  <td className="px-3 py-2 text-text-secondary">{c.width ?? "—"}</td>
+                  <td className="px-3 py-2 text-text-secondary">{c.weight ?? "—"}</td>
                   <td className="px-3 py-2">
                     <ThreeDotMenu items={[
                       { label: "Edit", onClick: () => startEdit(c) },
@@ -131,24 +125,9 @@ export default function BoatClassesPage() {
           <div className="space-y-3">
             <label className="block"><span className="text-sm text-text-secondary">Name</span><Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></label>
             <div className="grid grid-cols-2 gap-3">
-              <label><span className="text-sm text-text-secondary">LOA (m)</span><Input type="number" step="0.01" value={draft.lengthOverAll} onChange={(e) => setDraft({ ...draft, lengthOverAll: e.target.value })} /></label>
-              <label><span className="text-sm text-text-secondary">Beam (m)</span><Input type="number" step="0.01" value={draft.beam} onChange={(e) => setDraft({ ...draft, beam: e.target.value })} /></label>
+              <label><span className="text-sm text-text-secondary">Length (m)</span><Input type="number" step="0.01" value={draft.length} onChange={(e) => setDraft({ ...draft, length: e.target.value })} /></label>
+              <label><span className="text-sm text-text-secondary">Width (m)</span><Input type="number" step="0.01" value={draft.width} onChange={(e) => setDraft({ ...draft, width: e.target.value })} /></label>
               <label><span className="text-sm text-text-secondary">Weight (kg)</span><Input type="number" value={draft.weight} onChange={(e) => setDraft({ ...draft, weight: e.target.value })} /></label>
-              <label><span className="text-sm text-text-secondary">Bowsprit (m)</span><Input type="number" step="0.01" value={draft.bowspritLength} onChange={(e) => setDraft({ ...draft, bowspritLength: e.target.value })} /></label>
-            </div>
-            <div>
-              <div className="mb-2 flex items-center justify-between"><span className="text-sm text-text-secondary">Sails</span>
-                <Button variant="ghost" onClick={() => setDraft({ ...draft, sails: [...draft.sails, { name: "", area: "" }] })}><Plus className="h-4 w-4" /> Add</Button>
-              </div>
-              <div className="space-y-2">
-                {draft.sails.map((s, i) => (
-                  <div key={i} className="flex gap-2">
-                    <Input placeholder="Name" value={s.name} onChange={(e) => { const sails = [...draft.sails]; sails[i] = { ...sails[i], name: e.target.value }; setDraft({ ...draft, sails }); }} />
-                    <Input type="number" step="0.01" placeholder="Area (m²)" value={s.area} onChange={(e) => { const sails = [...draft.sails]; sails[i] = { ...sails[i], area: e.target.value }; setDraft({ ...draft, sails }); }} />
-                    <Button variant="ghost" onClick={() => setDraft({ ...draft, sails: draft.sails.filter((_, j) => j !== i) })}><X className="h-4 w-4" /></Button>
-                  </div>
-                ))}
-              </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="secondary" onClick={() => setEditingId(null)}>Cancel</Button>

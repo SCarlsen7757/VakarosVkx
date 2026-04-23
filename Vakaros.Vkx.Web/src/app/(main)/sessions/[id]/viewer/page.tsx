@@ -43,8 +43,8 @@ export default function SessionViewerPage({ params }: PageProps) {
   useEffect(() => {
     let alive = true;
     Promise.all([
-      fetch(`/api/Sessions/${id}`).then((r) => r.ok ? r.json() : Promise.reject(r.status)),
-      fetch(`/api/sessions/${id}/races/1/positions`).then((r) => r.ok ? r.json() : []),
+      fetch(`/api/v1/sessions/${id}`).then((r) => r.ok ? r.json() : Promise.reject(r.status)),
+      fetch(`/api/v1/sessions/${id}/races/1/telemetry/positions`).then((r) => r.ok ? r.json() : []),
     ])
       .then(([s, p]: [SessionDetail, Position[]]) => {
         if (!alive) return;

@@ -20,7 +20,7 @@ export function StartAnalysisPanel({ data, sessionId, raceNumber, compact = fals
 
   useEffect(() => {
     if (!data) return;
-    fetch(`/api/sessions/${sessionId}/races/${raceNumber}/start-line-length`)
+    fetch(`/api/v1/sessions/${sessionId}/races/${raceNumber}/analysis/start-line-length`)
       .then((r) => r.ok ? r.json() : null)
       .then((v) => setLineLength(v != null && typeof v.lengthMeters !== "undefined" ? parseFloat(v.lengthMeters) : null))
       .catch(() => null);

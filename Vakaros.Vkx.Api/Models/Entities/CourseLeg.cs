@@ -2,9 +2,9 @@ namespace Vakaros.Vkx.Api.Models.Entities;
 
 public class CourseLeg
 {
-    public int Id { get; set; }
-    public int CourseId { get; set; }
-    public int MarkId { get; set; }
+    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public Guid CourseId { get; set; }
+    public Guid MarkId { get; set; }
     public int SortOrder { get; set; }
     public string? LegName { get; set; }
 

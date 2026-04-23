@@ -1,35 +1,42 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vakaros.Vkx.Api.Auth;
 using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Api.Models.Entities;
 using Vakaros.Vkx.Shared.Dtos.BoatClasses;
 
 namespace Vakaros.Vkx.Api.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/[controller]")]
-public class BoatClassesController(AppDbContext db) : ControllerBase
+[Authorize]
+[Route("api/v{version:apiVersion}/[controller]")]
+public class BoatClassesController(AppDbContext db, ICurrentUser currentUser) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<BoatClassDto>>> GetAll(CancellationToken ct)
     {
+        var userId = currentUser.UserId;
         var classes = await db.BoatClasses
-            .Include(bc => bc.Sails)
+            .Where(bc => bc.OwnerUserId == userId)
             .OrderBy(bc => bc.Name)
+            .Select(bc => new BoatClassDto(bc.Id, bc.Name, bc.Length, bc.Width, bc.Weight))
             .ToListAsync(ct);
-
-        return Ok(classes.Select(ToDto));
+        return Ok(classes);
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<BoatClassDto>> GetById(int id, CancellationToken ct)
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<BoatClassDto>> GetById(Guid id, CancellationToken ct)
     {
+        var userId = currentUser.UserId;
         var boatClass = await db.BoatClasses
-            .Include(bc => bc.Sails)
-            .FirstOrDefaultAsync(bc => bc.Id == id, ct);
-
+            .Where(bc => bc.Id == id && bc.OwnerUserId == userId)
+            .Select(bc => new BoatClassDto(bc.Id, bc.Name, bc.Length, bc.Width, bc.Weight))
+            .FirstOrDefaultAsync(ct);
         if (boatClass is null) return NotFound();
-        return Ok(ToDto(boatClass));
+        return Ok(boatClass);
     }
 
     [HttpPost]
@@ -37,66 +44,43 @@ public class BoatClassesController(AppDbContext db) : ControllerBase
     {
         var boatClass = new BoatClass
         {
+            OwnerUserId = currentUser.UserId,
             Name = request.Name,
-            LengthOverAll = request.LengthOverAll,
-            Beam = request.Beam,
+            Length = request.Length,
+            Width = request.Width,
             Weight = request.Weight,
-            BowspritLength = request.BowspritLength,
-            Sails = request.Sails
-                .Select(s => new Sail { Name = s.Name, Area = s.Area })
-                .ToList(),
         };
-
         db.BoatClasses.Add(boatClass);
         await db.SaveChangesAsync(ct);
-
-        return CreatedAtAction(nameof(GetById), new { id = boatClass.Id }, ToDto(boatClass));
+        var dto = new BoatClassDto(boatClass.Id, boatClass.Name, boatClass.Length, boatClass.Width, boatClass.Weight);
+        return CreatedAtAction(nameof(GetById), new { id = boatClass.Id }, dto);
     }
 
-    [HttpPut("{id:int}")]
-    public async Task<ActionResult<BoatClassDto>> Update(int id, UpdateBoatClassRequest request, CancellationToken ct)
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<BoatClassDto>> Update(Guid id, UpdateBoatClassRequest request, CancellationToken ct)
     {
-        var boatClass = await db.BoatClasses
-            .Include(bc => bc.Sails)
-            .FirstOrDefaultAsync(bc => bc.Id == id, ct);
-
+        var userId = currentUser.UserId;
+        var boatClass = await db.BoatClasses.FirstOrDefaultAsync(bc => bc.Id == id && bc.OwnerUserId == userId, ct);
         if (boatClass is null) return NotFound();
-
         boatClass.Name = request.Name;
-        boatClass.LengthOverAll = request.LengthOverAll;
-        boatClass.Beam = request.Beam;
+        boatClass.Length = request.Length;
+        boatClass.Width = request.Width;
         boatClass.Weight = request.Weight;
-        boatClass.BowspritLength = request.BowspritLength;
-
-        db.Sails.RemoveRange(boatClass.Sails);
-        boatClass.Sails = request.Sails
-            .Select(s => new Sail { Name = s.Name, Area = s.Area })
-            .ToList();
-
         await db.SaveChangesAsync(ct);
-
-        return Ok(ToDto(boatClass));
+        return Ok(new BoatClassDto(boatClass.Id, boatClass.Name, boatClass.Length, boatClass.Width, boatClass.Weight));
     }
 
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id, CancellationToken ct)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
-        var boatClass = await db.BoatClasses.FindAsync([id], ct);
+        var userId = currentUser.UserId;
+        var boatClass = await db.BoatClasses.FirstOrDefaultAsync(bc => bc.Id == id && bc.OwnerUserId == userId, ct);
         if (boatClass is null) return NotFound();
-
+        var isReferenced = await db.Boats.AnyAsync(b => b.BoatClassId == id, ct);
+        if (isReferenced)
+            return Conflict(new { message = "Cannot delete boat class; it is referenced by one or more boats." });
         db.BoatClasses.Remove(boatClass);
         await db.SaveChangesAsync(ct);
-
         return NoContent();
     }
-
-    private static BoatClassDto ToDto(BoatClass bc) => new(
-        bc.Id,
-        bc.Name,
-        bc.LengthOverAll,
-        bc.Beam,
-        bc.Weight,
-        bc.BowspritLength,
-        bc.CreatedAt,
-        bc.Sails.Select(s => new SailDto(s.Id, s.Name, s.Area)).ToList());
 }

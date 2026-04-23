@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Home, Upload, Layers, Ship, MapPin, Settings as SettingsIcon, type LucideIcon,
+  Home, Upload, Layers, Ship, MapPin, Users, UserCircle, Settings as SettingsIcon, ShieldCheck, type LucideIcon,
 } from "lucide-react";
 
 export interface NavItem {
@@ -9,6 +9,7 @@ export interface NavItem {
   label: string;
   icon: LucideIcon;
   matchPrefix?: string;
+  adminOnly?: boolean;
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -17,6 +18,9 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/sessions", label: "Sessions", icon: Layers, matchPrefix: "/sessions" },
   { href: "/boats", label: "Fleet", icon: Ship, matchPrefix: "/boat" },
   { href: "/courses", label: "Courses", icon: MapPin, matchPrefix: "/course" },
+  { href: "/teams", label: "Teams", icon: Users, matchPrefix: "/teams" },
+  { href: "/account", label: "Account", icon: UserCircle, matchPrefix: "/account" },
+  { href: "/admin/users", label: "Admin", icon: ShieldCheck, matchPrefix: "/admin", adminOnly: true },
   { href: "/settings", label: "Settings", icon: SettingsIcon, matchPrefix: "/settings" },
 ];
 

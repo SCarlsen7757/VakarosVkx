@@ -26,7 +26,7 @@ export default function BoatsPage() {
   const [confirmDelete, setConfirmDelete] = useState<Boat | null>(null);
 
   const load = () => {
-    api.GET("/api/Boats" as any, {} as any).then(({ data, error }: any) => {
+    api.GET("/api/v1/boats" as any, {} as any).then(({ data, error }: any) => {
       if (error) setError("Failed to load boats");
       else setBoats(data as Boat[]);
     });
@@ -34,7 +34,7 @@ export default function BoatsPage() {
 
   useEffect(() => {
     load();
-    api.GET("/api/BoatClasses" as any, {} as any).then(({ data }: any) => setClasses((data as BoatClass[]) ?? []));
+    api.GET("/api/v1/boat-classes" as any, {} as any).then(({ data }: any) => setClasses((data as BoatClass[]) ?? []));
   }, []);
 
   const filtered = useMemo(() => {
@@ -63,10 +63,10 @@ export default function BoatsPage() {
     const body = {
       name: draft.name,
       sailNumber: draft.sailNumber || null,
-      boatClassId: Number(draft.boatClassId),
+      boatClassId: draft.boatClassId,
       description: draft.description || null,
     };
-    const url = id ? `/api/Boats/${id}` : "/api/Boats";
+    const url = id ? `/api/v1/boats/${id}` : "/api/v1/boats";
     const method = id ? "PUT" : "POST";
     const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (res.ok) {
@@ -76,7 +76,7 @@ export default function BoatsPage() {
   };
 
   const doDelete = async (b: Boat) => {
-    const res = await fetch(`/api/Boats/${b.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/v1/boats/${b.id}`, { method: "DELETE" });
     setConfirmDelete(null);
     if (res.ok || res.status === 204) { toast.push({ kind: "success", message: "Boat deleted." }); load(); }
     else if (res.status === 409) toast.push({ kind: "error", message: "Cannot delete: boat is referenced by sessions." });

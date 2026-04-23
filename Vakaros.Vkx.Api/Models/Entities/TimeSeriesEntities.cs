@@ -3,7 +3,7 @@ namespace Vakaros.Vkx.Api.Models.Entities;
 public class PositionReading
 {
     public DateTimeOffset Time { get; set; }
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
     public double Latitude { get; set; }
     public double Longitude { get; set; }
     public float SpeedOverGround { get; set; }
@@ -20,7 +20,7 @@ public class PositionReading
 public class WindReading
 {
     public DateTimeOffset Time { get; set; }
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
     public float WindDirection { get; set; }
     public float WindSpeed { get; set; }
 
@@ -30,7 +30,7 @@ public class WindReading
 public class SpeedThroughWaterReading
 {
     public DateTimeOffset Time { get; set; }
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
     public float ForwardSpeed { get; set; }
     public float HorizontalSpeed { get; set; }
 
@@ -40,7 +40,7 @@ public class SpeedThroughWaterReading
 public class DepthReading
 {
     public DateTimeOffset Time { get; set; }
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
     public float Depth { get; set; }
 
     public Session Session { get; set; } = null!;
@@ -49,7 +49,7 @@ public class DepthReading
 public class TemperatureReading
 {
     public DateTimeOffset Time { get; set; }
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
     public float Temperature { get; set; }
 
     public Session Session { get; set; } = null!;
@@ -58,7 +58,7 @@ public class TemperatureReading
 public class LoadReading
 {
     public DateTimeOffset Time { get; set; }
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
     public required string SensorName { get; set; }
     public float Load { get; set; }
 
@@ -68,7 +68,7 @@ public class LoadReading
 public class DeclinationReading
 {
     public DateTimeOffset Time { get; set; }
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
     public float DeclinationOffset { get; set; }
     public double Latitude { get; set; }
     public double Longitude { get; set; }
@@ -79,7 +79,7 @@ public class DeclinationReading
 public class RaceTimerEvent
 {
     public DateTimeOffset Time { get; set; }
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
     public short EventType { get; set; }
     public int TimerValue { get; set; }
 
@@ -89,7 +89,7 @@ public class RaceTimerEvent
 public class LinePositionReading
 {
     public DateTimeOffset Time { get; set; }
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
     public short LineEnd { get; set; }
     public double Latitude { get; set; }
     public double Longitude { get; set; }
@@ -100,7 +100,7 @@ public class LinePositionReading
 public class ShiftAngleReading
 {
     public DateTimeOffset Time { get; set; }
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
     public bool IsPort { get; set; }
     public bool IsManual { get; set; }
     public float TrueHeading { get; set; }

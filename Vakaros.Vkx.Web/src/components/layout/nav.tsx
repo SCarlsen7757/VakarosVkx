@@ -3,14 +3,22 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { NAV_ITEMS, isActive } from "./nav-items";
+import { NAV_ITEMS, isActive, type NavItem } from "./nav-items";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { ThemeToggle } from "./theme-toggle";
+import { useAuth } from "@/lib/auth-context";
+
+function useVisibleNavItems(): NavItem[] {
+  const { me, providers } = useAuth();
+  const isAdmin = providers?.mode === "SingleUser" || !!me?.roles?.includes("Admin");
+  return NAV_ITEMS.filter((i) => !i.adminOnly || isAdmin);
+}
 
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const items = useVisibleNavItems();
 
   return (
     <aside
@@ -32,7 +40,7 @@ export function Sidebar() {
         </button>
       </div>
       <nav className="flex-1 space-y-1 px-2">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const active = isActive(pathname, item);
           return (
             <Link
@@ -62,11 +70,12 @@ export function Sidebar() {
 
 export function IconRail() {
   const pathname = usePathname();
+  const items = useVisibleNavItems();
   return (
     <aside className="hidden lg:flex xl:hidden w-16 flex-col items-center border-r border-border-default bg-bg-surface py-4">
       <span className="mb-4 text-xs font-bold text-action-primary">VKX</span>
       <nav className="flex-1 space-y-1">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const active = isActive(pathname, item);
           return (
             <Link
@@ -90,10 +99,11 @@ export function IconRail() {
 
 export function BottomTabBar() {
   const pathname = usePathname();
+  const items = useVisibleNavItems();
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border-default bg-bg-surface">
-      <ul className="grid grid-cols-6">
-        {NAV_ITEMS.map((item) => {
+      <ul className={cn("grid", items.length <= 8 ? "grid-cols-8" : "grid-cols-9")}>
+        {items.map((item) => {
           const active = isActive(pathname, item);
           return (
             <li key={item.href}>
