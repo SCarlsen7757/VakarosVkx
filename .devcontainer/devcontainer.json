@@ -7,19 +7,21 @@
   "service": "devcontainer",
   "runServices": ["devcontainer", "db"],
   "workspaceFolder": "/workspace",
+
   "forwardPorts": [8080, 3000, 5432],
   "portsAttributes": {
     "8080": { "label": "API", "onAutoForward": "notify" },
     "3000": { "label": "Web (Next.js)", "onAutoForward": "openBrowser" },
     "5432": { "label": "PostgreSQL", "onAutoForward": "silent" }
   },
-  "postCreateCommand": "cd /workspace && dotnet tool restore && dotnet restore Vakaros.Vkx.Api/Vakaros.Vkx.Api.csproj ; cd /workspace/Vakaros.Vkx.Web && npm ci",
+
+  "postCreateCommand": ".devcontainer/post-create.sh",
+
   "customizations": {
     "vscode": {
       "extensions": [
         "ms-dotnettools.csdevkit",
         "ms-dotnettools.csharp",
-        "ms-dotnettools.vscodeintellicode-csharp",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "bradlc.vscode-tailwindcss",
@@ -41,10 +43,16 @@
       }
     }
   },
+
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "24"
     }
   },
+
+  "containerEnv": {
+    "GIT_SAFE_DIRECTORY": "/workspace"
+  },
+
   "remoteUser": "vscode"
 }
