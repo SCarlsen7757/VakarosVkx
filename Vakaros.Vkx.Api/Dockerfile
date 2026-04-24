@@ -15,12 +15,12 @@ COPY ["Vakaros.Vkx.Api/Vakaros.Vkx.Api.csproj", "Vakaros.Vkx.Api/"]
 RUN dotnet restore "./Vakaros.Vkx.Api/Vakaros.Vkx.Api.csproj"
 COPY . .
 WORKDIR "/src/Vakaros.Vkx.Api"
-RUN dotnet build "./Vakaros.Vkx.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "./Vakaros.Vkx.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build /p:SkipTypeScriptGeneration=true
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Vakaros.Vkx.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./Vakaros.Vkx.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false /p:SkipTypeScriptGeneration=true
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final

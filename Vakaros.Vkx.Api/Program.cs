@@ -44,7 +44,7 @@ builder.Services
         opts.GroupNameFormat = "'v'VVV";
         opts.SubstituteApiVersionInUrl = true;
     });
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi("v1");
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddResponseCompression(opts =>

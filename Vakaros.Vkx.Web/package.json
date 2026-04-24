@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "gen:api": "openapi-typescript ../../Vakaros.Vkx.Api/Vakaros.Vkx.Api.json -o src/lib/api-types.ts"
+    "gen:api": "openapi-typescript ../../Vakaros.Vkx.Api/OpenApi/v1.json -o src/lib/api-types.ts"
   },
   "dependencies": {
     "@radix-ui/react-slider": "^1.3.6",
