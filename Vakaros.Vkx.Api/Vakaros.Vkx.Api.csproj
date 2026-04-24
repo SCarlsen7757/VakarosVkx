@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)\OpenApi</OpenApiDocumentsDirectory>
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/OpenApi</OpenApiDocumentsDirectory>
   </PropertyGroup>
 
   <UsingTask TaskName="_SetSkipDbMigrationEnv" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
@@ -43,26 +43,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Vakaros.Vkx.Parser\Vakaros.Vkx.Parser.csproj" />
-    <ProjectReference Include="..\Vakaros.Vkx.Shared\Vakaros.Vkx.Shared.csproj" />
+    <ProjectReference Include="../Vakaros.Vkx.Parser/Vakaros.Vkx.Parser.csproj" />
+    <ProjectReference Include="../Vakaros.Vkx.Shared/Vakaros.Vkx.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Data\Migrations\hypertables.sql" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Data/Migrations/hypertables.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
+    <Folder Include="Migrations/" />
   </ItemGroup>
 
   <Target Name="GenerateTypeScriptTypes"
           AfterTargets="GenerateOpenApiDocuments"
           Condition="'$(SkipTypeScriptGeneration)' != 'true'"
-          Inputs="$(MSBuildProjectDirectory)\OpenApi\v1.json"
-          Outputs="$(MSBuildProjectDirectory)\..\Vakaros.Vkx.Web\src\lib\api-types.ts">
+          Inputs="$(MSBuildProjectDirectory)/OpenApi/v1.json"
+          Outputs="$(MSBuildProjectDirectory)/../Vakaros.Vkx.Web/src/lib/api-types.ts">
     <Message Text="Generating TypeScript API types from OpenAPI spec..." Importance="high" />
     <Exec Command="npm run gen:api"
-          WorkingDirectory="$(MSBuildProjectDirectory)\..\Vakaros.Vkx.Web" />
+          WorkingDirectory="$(MSBuildProjectDirectory)/../Vakaros.Vkx.Web" />
   </Target>
 
 </Project>

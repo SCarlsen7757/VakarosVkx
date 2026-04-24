@@ -13,7 +13,7 @@
     "3000": { "label": "Web (Next.js)", "onAutoForward": "openBrowser" },
     "5432": { "label": "PostgreSQL", "onAutoForward": "silent" }
   },
-  "postCreateCommand": "cd /workspace && dotnet tool restore ; cd /workspace/Vakaros.Vkx.Web && npm ci",
+  "postCreateCommand": "cd /workspace && dotnet tool restore && dotnet restore Vakaros.Vkx.Api/Vakaros.Vkx.Api.csproj ; cd /workspace/Vakaros.Vkx.Web && npm ci",
   "customizations": {
     "vscode": {
       "extensions": [
