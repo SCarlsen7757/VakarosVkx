@@ -33,6 +33,7 @@ A self-hosted sailing telemetry analysis tool for [Vakaros](https://vakaros.com/
     - [Prerequisites](#prerequisites)
     - [Running with Docker Compose](#running-with-docker-compose)
     - [Running Locally (Development)](#running-locally-development)
+    - [Dev Container (VS Code / Codespaces)](#dev-container-vs-code--codespaces)
   - [Usage](#usage)
     - [Uploading a Session](#uploading-a-session)
     - [Managing Boats and Courses](#managing-boats-and-courses)
@@ -174,6 +175,50 @@ npm run dev
 ```
 
 Open your browser at `http://localhost:3000`.
+
+---
+
+### Dev Container (VS Code / Codespaces)
+
+The repository ships with a [Dev Container](https://containers.dev/) configuration that gives you a complete, zero-install development environment — .NET 10 SDK, Node.js 24 LTS, `dotnet-ef`, and TimescaleDB all included.
+
+**Prerequisites**
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [VS Code](https://code.visualstudio.com/) with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension  
+  *or* open directly in [GitHub Codespaces](https://codespaces.new/SCarlsen7757/VakarosVkx)
+
+**Open in VS Code**
+
+1. Clone the repository and open the folder in VS Code.
+2. When prompted *"Reopen in Container"*, click it — or run **Dev Containers: Reopen in Container** from the Command Palette.
+3. VS Code builds the image, starts the TimescaleDB container, installs all dependencies (`dotnet tool restore` + `npm ci`), and connects.
+
+**Run the API and web app inside the container**
+
+Open two terminals in VS Code (both run inside the container):
+
+```bash
+# Terminal 1 — API with hot reload (runs migrations automatically on startup)
+cd /workspace/Vakaros.Vkx.Api
+dotnet watch
+```
+
+```bash
+# Terminal 2 — Next.js dev server
+cd /workspace/Vakaros.Vkx.Web
+npm run dev
+```
+
+VS Code automatically forwards the ports:
+
+| Port | Service |
+|------|---------|
+| `8080` | API |
+| `3000` | Web UI (opens in browser automatically) |
+| `5432` | PostgreSQL (for direct DB access / migrations) |
+
+> **Visual Studio users** — the existing Docker Compose debug profile in `launchSettings.json` continues to work unchanged. The dev container is an opt-in workflow for VS Code and Codespaces.
 
 ---
 

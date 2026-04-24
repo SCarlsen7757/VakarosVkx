@@ -1,0 +1,26 @@
+services:
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace:cached
+      - vscode-extensions:/home/vscode/.vscode-server/extensions
+    command: sleep infinity
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Default: >-
+        Host=db;Port=5432;Database=${POSTGRES_DB:-vakaros};Username=${POSTGRES_USER:-vakaros};Password=${POSTGRES_PASSWORD:-vakaros}
+      Auth__Mode: MultiUser
+      Auth__Admin__Email: ${AUTH_ADMIN_EMAIL:-admin@test.local}
+      Auth__Admin__Password: ${AUTH_ADMIN_PASSWORD:-password1234!}
+      Cors__AllowedOrigins__0: http://localhost:3000
+      Web__PublicBaseUrl: http://localhost:3000
+      API_BASE_URL: http://localhost:8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  vscode-extensions:

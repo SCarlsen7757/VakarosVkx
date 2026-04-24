@@ -31,7 +31,7 @@ services:
       Auth__Mode: MultiUser
       # Bootstrap admin on first start. Change these before deploying!
       # If Password is empty, a one-time setup URL is logged on startup.
-      Auth__Admin__Email: ${AUTH_ADMIN_EMAIL:-test@mail.local}
+      Auth__Admin__Email: ${AUTH_ADMIN_EMAIL:-admin@test.local}
       Auth__Admin__Password: ${AUTH_ADMIN_PASSWORD:-password1234!}
       Cors__AllowedOrigins__0: http://localhost:8081
       Web__PublicBaseUrl: http://localhost:8081

@@ -1,0 +1,45 @@
+{
+  "name": "VakarosVkx",
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "docker-compose.devcontainer.yml"
+  ],
+  "service": "devcontainer",
+  "runServices": ["devcontainer", "db"],
+  "workspaceFolder": "/workspace",
+  "forwardPorts": [8080, 3000, 5432],
+  "portsAttributes": {
+    "8080": { "label": "API", "onAutoForward": "notify" },
+    "3000": { "label": "Web (Next.js)", "onAutoForward": "openBrowser" },
+    "5432": { "label": "PostgreSQL", "onAutoForward": "silent" }
+  },
+  "postCreateCommand": "cd /workspace && dotnet tool restore ; cd /workspace/Vakaros.Vkx.Web && npm ci",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.vscodeintellicode-csharp",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-azuretools.vscode-docker",
+        "ms-ossdata.vscode-postgresql"
+      ],
+      "settings": {
+        "dotnet.defaultSolution": "Vakaros.Vkx.slnx",
+        "editor.formatOnSave": true,
+        "[csharp]": {
+          "editor.defaultFormatter": "ms-dotnettools.csharp"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        }
+      }
+    }
+  },
+  "remoteUser": "vscode"
+}
