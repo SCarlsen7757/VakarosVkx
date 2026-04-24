@@ -41,5 +41,10 @@
       }
     }
   },
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24"
+    }
+  },
   "remoteUser": "vscode"
 }
