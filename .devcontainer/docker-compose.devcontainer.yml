@@ -10,7 +10,11 @@ services:
     command: sleep infinity
 
     environment:
-      DOTNET_ROLL_FORWARD_TO_PRERELEASE: 1
+      DOTNET_CLI_HOME: /workspace/.dotnet
+      NUGET_PACKAGES: /workspace/.nuget/packages
+      NUGET_HTTP_CACHE_PATH: /workspace/.nuget/http-cache
+
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
 
       Cors__AllowedOrigins__0: http://localhost:3000
       Web__PublicBaseUrl: http://localhost:3000

@@ -15,7 +15,7 @@
     "5432": { "label": "PostgreSQL", "onAutoForward": "silent" }
   },
 
-  "postCreateCommand": ".devcontainer/post-create.sh",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
 
   "customizations": {
     "vscode": {
@@ -24,23 +24,12 @@
         "ms-dotnettools.csharp",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "bradlc.vscode-tailwindcss",
-        "ms-azuretools.vscode-docker",
-        "ms-ossdata.vscode-postgresql"
+        "bradlc.vscode-tailwindcss"
       ],
       "settings": {
         "dotnet.defaultSolution": "Vakaros.Vkx.slnx",
-        "editor.formatOnSave": true,
-        "[csharp]": {
-          "editor.defaultFormatter": "ms-dotnettools.csharp"
-        },
-        "[typescript]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[typescriptreact]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.formatOnSave": true
         }
-      }
     }
   },
 
