@@ -1,7 +1,4 @@
 <Solution>
-  <Project Path="docker-compose.dcproj">
-    <Build />
-  </Project>
   <Project Path="Vakaros.Vkx.Api/Vakaros.Vkx.Api.csproj" />
   <Project Path="Vakaros.Vkx.ConsoleApplication/Vakaros.Vkx.ConsoleApplication.csproj" />
   <Project Path="Vakaros.Vkx.Parser/Vakaros.Vkx.Parser.csproj" />
