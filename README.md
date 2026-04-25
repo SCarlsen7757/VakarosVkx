@@ -2,10 +2,6 @@
 
 A self-hosted sailing telemetry analysis tool for [Vakaros](https://vakaros.com/) devices. Upload your `.vkx` log files, explore GPS tracks on an interactive map, and review race telemetry through live playback and historical charts — with multi-user accounts and team sharing.
 
-> **⚠ Breaking change (multi-user upgrade)**
->
-> This release introduces multi-user accounts, teams, sharing, and a versioned REST API under `/api/v1`. **All existing data must be wiped** — drop the `pgdata` volume and re-upload your sessions. See [docs/UPGRADE_PLAN.md](docs/UPGRADE_PLAN.md) for the full design.
->
 > **User management is admin-managed.** There is no public sign-up, password reset, email verification, or social login. The first admin is bootstrapped from environment variables; the admin then creates users and shares a one-time setup URL with each new user out-of-band (Slack/SMS/in-person).
 >
 > **Quickstart for self-hosters:**
@@ -30,11 +26,9 @@ A self-hosted sailing telemetry analysis tool for [Vakaros](https://vakaros.com/
   - [Architecture](#architecture)
     - [Frontend Tech Stack](#frontend-tech-stack)
     - [API Versioning and TypeScript Codegen](#api-versioning-and-typescript-codegen)
-  - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
     - [Running with Docker Compose](#running-with-docker-compose)
-    - [Running Locally (Development)](#running-locally-development)
-    - [Dev Container (VS Code / Codespaces)](#dev-container-vs-code--codespaces)
+    - [Development (Visual Studio 2022)](#development-visual-studio-2022)
   - [Usage](#usage)
     - [Uploading a Session](#uploading-a-session)
     - [Managing Boats and Courses](#managing-boats-and-courses)
@@ -157,12 +151,10 @@ The generated `api-types.ts` is consumed by [openapi-fetch](https://openapi-ts.d
 
 ---
 
-
-
 ### Prerequisites
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for the compose stack)
-- **or** [.NET 10 SDK](https://dotnet.microsoft.com/download) + [Node.js](https://nodejs.org/) (for local development)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Visual Studio 2022](https://visualstudio.microsoft.com/) with the **ASP.NET and web development** workload (includes Container Tools and Node.js support)
 
 ### Running with Docker Compose
 
@@ -176,88 +168,52 @@ This starts:
 - **API** on port `8080`
 - **Web UI** on port `8081`
 
-### Running Locally (Development)
+### Development (Visual Studio 2022)
 
-1. Start the database:
-
-```bash
-docker compose up db
-```
-
-2. Add or update EF Core migrations when the schema changes:
-
-```bash
-dotnet ef migrations add <MigrationName> --project Vakaros.Vkx.Api --startup-project Vakaros.Vkx.Api --output-dir Data\Migrations
-```
-
-Apply migrations to the database:
-
-```bash
-dotnet ef database update --project Vakaros.Vkx.Api --startup-project Vakaros.Vkx.Api
-```
-
-> **Note:** The API also applies pending migrations automatically on startup, so the `database update` command is mainly useful for verifying or pre-seeding the schema before running the API.
-
-3. Run the API:
-
-```bash
-cd Vakaros.Vkx.Api
-dotnet run
-```
-
-4. Install web UI dependencies and run it (in a separate terminal):
-
-```bash
-cd Vakaros.Vkx.Web
-npm install
-npm run dev
-```
-
-Open your browser at `http://localhost:3000`.
-
----
-
-### Dev Container (VS Code / Codespaces)
-
-The repository ships with a [Dev Container](https://containers.dev/) configuration that gives you a complete, zero-install development environment — .NET 10 SDK, Node.js 24 LTS, `dotnet-ef`, and TimescaleDB all included.
+The solution is configured for a **full Docker Compose dev loop** directly from Visual Studio. Everything — database, API, and web frontend — runs in Docker with live hot-reload.
 
 **Prerequisites**
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- [VS Code](https://code.visualstudio.com/) with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension  
-  *or* open directly in [GitHub Codespaces](https://codespaces.new/SCarlsen7757/VakarosVkx)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) running with Linux containers
+- Visual Studio 2022 with the **ASP.NET and web development** workload (Container Tools included)
 
-**Open in VS Code**
+**Start the dev environment**
 
-1. Clone the repository and open the folder in VS Code.
-2. When prompted *"Reopen in Container"*, click it — or run **Dev Containers: Reopen in Container** from the Command Palette.
-3. VS Code builds the image, starts the TimescaleDB container, installs all dependencies (`dotnet tool restore` + `npm install`), and connects.
+1. Open `Vakaros.Vkx.slnx` in Visual Studio 2022.
+2. Set **docker-compose** as the startup project (it should be selected by default).
+3. Press **F5** — Visual Studio starts all three services and opens the web app in your browser.
 
-**Run the API and web app inside the container**
+| Service | URL / Port | Notes |
+|---------|-----------|-------|
+| Web UI  | `http://localhost:8081` | Opens automatically on F5 |
+| API     | `http://localhost:8080` | |
+| API docs (Scalar) | `http://localhost:8080/scalar` | |
+| PostgreSQL | `localhost:5432` | Exposed for DB tools (pgAdmin, DataGrip) |
 
-Open two terminals in VS Code (both run inside the container):
+**Hot-reload behaviour**
+
+| Layer | Behaviour |
+|-------|-----------|
+| **C# API** | Visual Studio Fast Mode — changes apply via .NET Hot Reload without a full Docker rebuild. For structural changes, rebuild with **Ctrl+Shift+B** and VS pushes the new binaries automatically. |
+| **Next.js web** | True file-watch hot-reload — save any `.tsx` / `.ts` file and the browser refreshes instantly. No rebuild needed. |
+
+**When to rebuild Docker images**
 
 ```bash
-# Terminal 1 — API with hot reload (runs migrations automatically on startup)
-cd /workspace/Vakaros.Vkx.Api
-dotnet watch
+# Rebuild only the web image (e.g. after adding npm packages)
+docker compose build web
+
+# Full rebuild of all images
+docker compose build
 ```
+
+**Database migrations**
+
+Migrations are applied automatically on API startup. To add a new migration:
 
 ```bash
-# Terminal 2 — Next.js dev server
-cd /workspace/Vakaros.Vkx.Web
-npm run dev
+dotnet ef migrations add <MigrationName> --project Vakaros.Vkx.Api --startup-project Vakaros.Vkx.Api
 ```
-
-VS Code automatically forwards the ports:
-
-| Port | Service |
-|------|---------|
-| `8080` | API |
-| `3000` | Web UI (opens in browser automatically) |
-| `5432` | PostgreSQL (for direct DB access / migrations) |
-
-> **Visual Studio users** — the existing Docker Compose debug profile in `launchSettings.json` continues to work unchanged. The dev container is an opt-in workflow for VS Code and Codespaces.
 
 ---
 

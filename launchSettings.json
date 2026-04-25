@@ -5,9 +5,11 @@
       "commandVersion": "1.0",
       "composeLaunchAction": "LaunchBrowser",
       "composeLaunchServiceName": "api",
-      "composeLaunchUrl": "{Scheme}://localhost:{ServicePort}/scalar",
+      "composeLaunchUrl": "http://localhost:8081",
       "serviceActions": {
-        "api": "StartDebugging"
+        "api": "StartDebugging",
+        "db": "StartWithoutDebugging",
+        "web": "StartWithoutDebugging"
       }
     }
   }
