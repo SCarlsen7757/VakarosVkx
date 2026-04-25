@@ -83,19 +83,33 @@ function FollowBoat({ point, followMode }: { point: L.LatLngExpression | null; f
   return null;
 }
 
-const arrowDivIcon = (heading: number) =>
-  L.divIcon({
+const arrowDivIcon = (heading: number, size: number) => {
+  const half = Math.round(size / 2);
+  return L.divIcon({
     className: "",
-    html: `<div style="transform: rotate(${heading}deg); width:20px; height:20px;">
-      <svg viewBox="0 0 24 24" width="20" height="20">
+    html: `<div style="transform: rotate(${heading}deg); width:${size}px; height:${size}px;">
+      <svg viewBox="0 0 24 24" width="${size}" height="${size}">
         <path d="M12 2 L20 22 L12 18 L4 22 Z" fill="#FF4500" stroke="#fff" stroke-width="1"/>
       </svg></div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    iconSize: [size, size],
+    iconAnchor: [half, half],
   });
+};
+
+/** Metres per pixel on a Web Mercator map at a given zoom and latitude. */
+function metersPerPixel(zoom: number, latDeg: number): number {
+  return (156543.03392 * Math.cos((latDeg * Math.PI) / 180)) / Math.pow(2, zoom);
+}
+
+/** Pixel size for the boat icon so it approximates the real physical length. */
+function boatIconSize(lengthMeters: number, zoom: number, latDeg: number): number {
+  const px = lengthMeters / metersPerPixel(zoom, latDeg);
+  return Math.round(Math.max(12, Math.min(80, px)));
+}
 
 export default function MapView({
   positions, race, legs, startLine, playbackPosition, preRacePositions, windowPositions,
+  boatLengthMeters,
   openSeaMap, trackMode, followMode, onExitFollow, fitTick,
 }: InternalProps) {
   const { resolvedTheme } = useTheme();
@@ -156,6 +170,11 @@ export default function MapView({
   );
 
   const center = points[0] ?? [0, 0];
+  const centerLat = (center as [number, number])[0];
+  const boatLength = (boatLengthMeters != null && isFinite(boatLengthMeters) && boatLengthMeters > 0)
+    ? boatLengthMeters
+    : 11;
+  const iconSize = boatIconSize(boatLength, zoom, centerLat);
 
   return (
     <MapContainer center={center as L.LatLngExpression} zoom={14} className="h-full w-full">
@@ -191,7 +210,7 @@ export default function MapView({
               <Polyline
                 key={i}
                 positions={[p, heatmapPoints[i + 1]]}
-                pathOptions={{ color: speedColor(Math.max(0, Math.min(1, t))), weight: 4, opacity: 0.9 }}
+                pathOptions={{ color: speedColor(Math.max(0, Math.min(1, t))), weight: 3, opacity: 0.9 }}
               />
             );
           })}
@@ -239,7 +258,7 @@ export default function MapView({
       {playbackPosition && (
         <Marker
           position={[playbackPosition.lat, playbackPosition.lon]}
-          icon={arrowDivIcon(playbackPosition.cog)}
+          icon={arrowDivIcon(playbackPosition.cog, iconSize)}
         />
       )}
 

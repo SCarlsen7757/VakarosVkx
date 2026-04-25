@@ -21,6 +21,8 @@ export interface RaceMapProps {
   trackMode?: TrackMode;
   /** Positions within the selected time window — rendered as a highlighted overlay on the track. */
   windowPositions?: Position[] | null;
+  /** Boat length in metres from the assigned boat class — used to scale the playback icon. Defaults to 11 m when not provided. */
+  boatLengthMeters?: number | null;
   /** When true, the map container fills the full height of its flex parent. */
   fill?: boolean;
 }

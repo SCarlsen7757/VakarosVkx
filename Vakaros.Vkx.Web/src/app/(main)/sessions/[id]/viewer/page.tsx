@@ -10,7 +10,7 @@ import { PlaybackControls } from "@/components/race-viewer/playback-controls";
 import { CompassRose, Inclinometer, NumericGauge } from "@/components/gauges/gauges";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import type { SessionDetail, Position } from "@/lib/schemas";
+import type { SessionDetail, Position, Boat } from "@/lib/schemas";
 import { n } from "@/lib/schemas";
 import { useUnitPrefs } from "@/store/settings";
 import { convertSpeed, radiansToDegrees, speedUnitLabel } from "@/lib/units";
@@ -38,6 +38,7 @@ export default function SessionViewerPage({ params }: PageProps) {
 
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [positions, setPositions] = useState<Position[] | null>(null);
+  const [boatLengthMeters, setBoatLengthMeters] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,10 +47,17 @@ export default function SessionViewerPage({ params }: PageProps) {
       fetch(`/api/v1/sessions/${id}`).then((r) => r.ok ? r.json() : Promise.reject(r.status)),
       fetch(`/api/v1/sessions/${id}/races/1/telemetry/positions`).then((r) => r.ok ? r.json() : []),
     ])
-      .then(([s, p]: [SessionDetail, Position[]]) => {
+      .then(async ([s, p]: [SessionDetail, Position[]]) => {
         if (!alive) return;
         setSession(s);
         setPositions(p ?? []);
+        if (s.boatId) {
+          const boat: Boat = await fetch(`/api/v1/boats/${s.boatId}`).then((r) => r.ok ? r.json() : Promise.reject(r.status));
+          if (alive && boat.boatClass?.length != null) {
+            const len = typeof boat.boatClass.length === "string" ? parseFloat(boat.boatClass.length) : boat.boatClass.length;
+            if (isFinite(len) && len > 0) setBoatLengthMeters(len);
+          }
+        }
       })
       .catch((e) => alive && setError(`Failed to load session (${e})`));
     return () => { alive = false; };
@@ -130,7 +138,7 @@ export default function SessionViewerPage({ params }: PageProps) {
         {/* Left column: playback controls + map */}
         <div className="flex flex-col gap-3 lg:w-[42%] lg:shrink-0 min-h-0">
           <PlaybackControls raceStartOffset={0} duration={Math.max(duration, 0)} />
-          <RaceMap race={null} positions={positions} playbackPosition={playbackArrow} windowPositions={windowPositions} fill />
+          <RaceMap race={null} positions={positions} playbackPosition={playbackArrow} windowPositions={windowPositions} boatLengthMeters={boatLengthMeters} fill />
         </div>
 
         {/* Right column: scrollable detail panel */}

@@ -12,7 +12,7 @@ import { CompassRose, HeelTrimCard, NumericGauge, Inclinometer } from "@/compone
 import { Card } from "@/components/ui/controls";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import type { RaceDetail, Position, Course } from "@/lib/schemas";
+import type { RaceDetail, Position, Course, Boat, SessionDetail } from "@/lib/schemas";
 import { n } from "@/lib/schemas";
 import { interpolatePosition } from "@/lib/track-utils";
 import { useUnitPrefs } from "@/store/settings";
@@ -43,27 +43,43 @@ export default function RaceViewerPage({ params }: PageProps) {
   const [race, setRace] = useState<RaceDetail | null>(null);
   const [positions, setPositions] = useState<Position[] | null>(null);
   const [course, setCourse] = useState<Course | null>(null);
+  const [boatLengthMeters, setBoatLengthMeters] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
     const base = `/api/v1/sessions/${id}/races/${raceNum}`;
-    fetch(base)
-      .then((r) => r.ok ? r.json() as Promise<RaceDetail> : Promise.reject(r.status))
-      .then(async (raceData) => {
+    // Fetch race and session in parallel; session is needed for boat class dimensions.
+    Promise.all([
+      fetch(base).then((r) => r.ok ? r.json() as Promise<RaceDetail> : Promise.reject(r.status)),
+      fetch(`/api/v1/sessions/${id}`).then((r) => r.ok ? r.json() as Promise<SessionDetail> : Promise.reject(r.status)),
+    ])
+      .then(async ([raceData, sessionData]) => {
         if (!alive) return;
         setRace(raceData);
         const countdown = raceData.countdownDurationSeconds != null ? n(raceData.countdownDurationSeconds) : 0;
         const fromParam = countdown > 0 ? `?from=${-countdown}` : "";
-        const [posData, courseData] = await Promise.all([
+        const fetches: Promise<unknown>[] = [
           fetch(`${base}/telemetry/positions${fromParam}`).then((r) => r.ok ? r.json() as Promise<Position[]> : Promise.reject(r.status)),
           raceData.courseId != null
             ? fetch(`/api/v1/courses/${raceData.courseId}`).then((r) => r.ok ? r.json() : null)
             : Promise.resolve(null),
-        ]);
+        ];
+        if (sessionData.boatId) {
+          fetches.push(fetch(`/api/v1/boats/${sessionData.boatId}`).then((r) => r.ok ? r.json() as Promise<Boat> : null));
+        }
+        const [posData, courseData, boatData] = await Promise.all(fetches);
         if (!alive) return;
-        setPositions(posData);
-        setCourse(courseData);
+        setPositions(posData as Position[]);
+        setCourse(courseData as Course | null);
+        if (boatData) {
+          const boat = boatData as Boat;
+          const len = boat.boatClass?.length;
+          if (len != null) {
+            const lenNum = typeof len === "string" ? parseFloat(len) : len;
+            if (isFinite(lenNum) && lenNum > 0) setBoatLengthMeters(lenNum);
+          }
+        }
       })
       .catch((e) => alive && setError(`Failed to load race (${e})`));
     return () => { alive = false; };
@@ -175,6 +191,7 @@ export default function RaceViewerPage({ params }: PageProps) {
             startLine={startLine}
             playbackPosition={playbackArrow}
             windowPositions={windowPositions}
+            boatLengthMeters={boatLengthMeters}
             fill
           />
         </div>
