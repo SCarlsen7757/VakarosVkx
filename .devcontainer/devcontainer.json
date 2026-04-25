@@ -27,7 +27,7 @@
         "bradlc.vscode-tailwindcss"
       ],
       "settings": {
-        "dotnet.defaultSolution": "Vakaros.Vkx.slnx",
+        "dotnet.defaultSolution": "disable",
         "editor.formatOnSave": true
         }
     }
