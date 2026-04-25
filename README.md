@@ -29,6 +29,7 @@ A self-hosted sailing telemetry analysis tool for [Vakaros](https://vakaros.com/
   - [Features](#features)
   - [Architecture](#architecture)
     - [Frontend Tech Stack](#frontend-tech-stack)
+    - [API Versioning and TypeScript Codegen](#api-versioning-and-typescript-codegen)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
     - [Running with Docker Compose](#running-with-docker-compose)
@@ -116,9 +117,47 @@ Vakaros devices record sailing telemetry — GPS position, speed, heading, heel,
 | API client | [openapi-fetch](https://openapi-ts.dev/openapi-fetch/) with generated types from [openapi-typescript](https://openapi-ts.dev/) |
 | Theming | [next-themes](https://github.com/pacocoursey/next-themes) |
 
+### API Versioning and TypeScript Codegen
+
+The REST API uses URL-segment versioning (`/api/v1/...`). Each version has a dedicated [OpenAPI](https://www.openapis.org/) document that is generated at **build time** and committed to the repository at `Vakaros.Vkx.Api/OpenApi/v1.json`.
+
+The build pipeline auto-generates the frontend TypeScript types from this spec:
+
+```
+dotnet build
+  └─► GenerateOpenApiDocuments       → Vakaros.Vkx.Api/OpenApi/v1.json
+  └─► GenerateTypeScriptTypes        → Vakaros.Vkx.Web/src/lib/api-types.ts
+        (runs: npm run gen:api)
+```
+
+The generated `api-types.ts` is consumed by [openapi-fetch](https://openapi-ts.dev/openapi-fetch/) in the web app, giving fully typed API calls with no manual maintenance.
+
+**Adding a new API version (v2)**
+
+1. Register the new document in `Program.cs`:
+   ```csharp
+   builder.Services.AddOpenApi("v2");
+   ```
+2. Add a new MSBuild target in `Vakaros.Vkx.Api/Vakaros.Vkx.Api.csproj`:
+   ```xml
+   <Target Name="GenerateTypeScriptTypes_v2"
+           AfterTargets="GenerateOpenApiDocuments"
+           Condition="'$(SkipTypeScriptGeneration)' != 'true'"
+           Inputs="$(MSBuildProjectDirectory)/OpenApi/v2.json"
+           Outputs="$(MSBuildProjectDirectory)/../Vakaros.Vkx.Web/src/lib/api-types-v2.ts">
+     <Exec Command="npm run gen:api:v2"
+           WorkingDirectory="$(MSBuildProjectDirectory)/../Vakaros.Vkx.Web" />
+   </Target>
+   ```
+3. Add the corresponding script to `Vakaros.Vkx.Web/package.json`:
+   ```json
+   "gen:api:v2": "openapi-typescript ../Vakaros.Vkx.Api/OpenApi/v2.json -o src/lib/api-types-v2.ts"
+   ```
+4. Build the solution — `v2.json` and `api-types-v2.ts` are generated automatically.
+
 ---
 
-## Getting Started
+
 
 ### Prerequisites
 
@@ -192,7 +231,7 @@ The repository ships with a [Dev Container](https://containers.dev/) configurati
 
 1. Clone the repository and open the folder in VS Code.
 2. When prompted *"Reopen in Container"*, click it — or run **Dev Containers: Reopen in Container** from the Command Palette.
-3. VS Code builds the image, starts the TimescaleDB container, installs all dependencies (`dotnet tool restore` + `npm ci`), and connects.
+3. VS Code builds the image, starts the TimescaleDB container, installs all dependencies (`dotnet tool restore` + `npm install`), and connects.
 
 **Run the API and web app inside the container**
 
