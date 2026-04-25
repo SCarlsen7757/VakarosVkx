@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/Vakaros.Vkx.Api/Vakaros.Vkx.Api.csproj",
+      "hotReloadOnSave": "all"
+    },
+    {
+      "name": "Web",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/Vakaros.Vkx.Web",
+      "serverReadyAction": {
+        "pattern": "Local:\\s+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "openExternally"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack",
+      "configurations": ["API", "Web"],
+      "stopAll": true
+    }
+  ]
+}

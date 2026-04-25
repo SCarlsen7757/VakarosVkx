@@ -41,6 +41,16 @@
       },
       "isBackground": true,
       "problemMatcher": []
+    },
+    {
+      "label": "Dev: All",
+      "dependsOn": ["Watch API", "Dev: Web"],
+      "dependsOrder": "parallel",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
     }
   ]
 }
