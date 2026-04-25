@@ -47,15 +47,20 @@ export function RaceMap(props: RaceMapProps) {
         fitTick={fitTick}
       />
       <div className="pointer-events-none absolute right-3 top-3 z-[1000] flex flex-col items-end gap-2">
-        <div className="pointer-events-auto rounded-md bg-bg-elevated/95 p-1 shadow-lg ring-1 ring-border-default">
-          <select
-            value={trackMode}
-            onChange={(e) => setTrackMode(e.target.value as TrackMode)}
-            className="rounded bg-transparent text-xs text-text-primary focus:outline-none"
-          >
-            <option value="flat">Flat track</option>
-            <option value="heatmap">Speed heatmap</option>
-          </select>
+        <div className="pointer-events-auto flex overflow-hidden rounded-md ring-1 ring-border-default">
+          {(["flat", "heatmap"] as TrackMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setTrackMode(mode)}
+              className={`px-2 py-1 text-xs transition-colors ${
+                trackMode === mode
+                  ? "bg-action-primary text-white"
+                  : "bg-bg-elevated/95 text-text-primary hover:bg-bg-elevated"
+              }`}
+            >
+              {mode === "flat" ? "Flat" : "Heatmap"}
+            </button>
+          ))}
         </div>
         <label className="pointer-events-auto flex items-center gap-1 rounded-md bg-bg-elevated/95 px-2 py-1 text-xs ring-1 ring-border-default">
           <input type="checkbox" checked={openSeaMap} onChange={(e) => setOpenSeaMap(e.target.checked)} />

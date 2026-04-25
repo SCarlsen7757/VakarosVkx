@@ -6,7 +6,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTheme } from "next-themes";
 import { n } from "@/lib/schemas";
-import { simplifyTrack, simplifyPositions, smoothTrackPositions, zoomToTolerance } from "@/lib/track-utils";
+import { simplifyTrack, simplifyPositionsWithMaxSpeeds, smoothTrackPositions, zoomToTolerance } from "@/lib/track-utils";
 import type { RaceMapProps, TrackMode } from "./race-map";
 
 interface InternalProps extends RaceMapProps {
@@ -124,26 +124,27 @@ export default function MapView({
     [smoothedPreRacePositions, tolerance]
   );
 
-  // For heatmap mode we need per-point speed, so simplify the Position objects.
-  const heatmapPositions = useMemo(
-    () => simplifyPositions(smoothedPositions, tolerance),
+  // For heatmap mode we need per-segment max speed, so simplify with max-speed tracking.
+  const heatmapData = useMemo(
+    () => simplifyPositionsWithMaxSpeeds(smoothedPositions, tolerance),
     [smoothedPositions, tolerance]
   );
+  const heatmapPositions = heatmapData.positions;
+  const heatmapMaxSpeeds = heatmapData.maxSpeeds;
   const heatmapPoints = useMemo(
     () => heatmapPositions.map((p) => [n(p.latitude), n(p.longitude)] as [number, number]),
     [heatmapPositions]
   );
 
   const speedRange = useMemo(() => {
-    if (!heatmapPositions.length) return { min: 0, max: 1 };
+    if (!heatmapMaxSpeeds.length) return { min: 0, max: 1 };
     let min = Infinity, max = -Infinity;
-    for (const p of heatmapPositions) {
-      const v = n(p.speedOverGround);
+    for (const v of heatmapMaxSpeeds) {
       if (v < min) min = v;
       if (v > max) max = v;
     }
     return { min, max: max > min ? max : min + 1 };
-  }, [heatmapPositions]);
+  }, [heatmapMaxSpeeds]);
 
   const smoothedWindowPositions = useMemo(
     () => smoothTrackPositions(windowPositions ?? []),
@@ -184,7 +185,7 @@ export default function MapView({
       {trackMode === "heatmap" && heatmapPositions.length > 1 && (
         <>
           {heatmapPoints.slice(0, -1).map((p, i) => {
-            const v = n(heatmapPositions[i].speedOverGround);
+            const v = heatmapMaxSpeeds[i] ?? 0;
             const t = (v - speedRange.min) / (speedRange.max - speedRange.min);
             return (
               <Polyline

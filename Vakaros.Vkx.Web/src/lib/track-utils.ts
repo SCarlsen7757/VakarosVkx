@@ -80,6 +80,55 @@ export function simplifyPositions(
   return positions.filter((p) => kept.has(`${n(p.longitude)}_${n(p.latitude)}`));
 }
 
+/**
+ * Simplifies a GPS track (RDP) and returns both the retained Position objects
+ * and the **maximum** speedOverGround observed across all original points that
+ * were merged into each segment between consecutive simplified points.
+ *
+ * When zoomed out, many points collapse into one segment; using the max speed
+ * ensures the heatmap colour reflects the fastest moment within that segment
+ * rather than just the speed at the start point.
+ *
+ * @param positions  Raw GPS position array
+ * @param tolerance  RDP tolerance in degrees (default 0.00005° ≈ 5 m)
+ */
+export function simplifyPositionsWithMaxSpeeds(
+  positions: Position[],
+  tolerance = 0.00005
+): { positions: Position[]; maxSpeeds: number[] } {
+  if (positions.length < 2) return { positions, maxSpeeds: [] };
+
+  const pts = positions.map((p) => ({ x: n(p.longitude), y: n(p.latitude) }));
+  const simplified = simplify(pts, tolerance, true);
+
+  // Build a lookup of kept coordinate keys to find their indices in the original array
+  const kept = new Set(simplified.map((p) => `${p.x}_${p.y}`));
+  const keptIndices: number[] = [];
+  for (let i = 0; i < positions.length; i++) {
+    const p = positions[i];
+    if (kept.has(`${n(p.longitude)}_${n(p.latitude)}`)) {
+      keptIndices.push(i);
+    }
+  }
+
+  const simplifiedPositions = keptIndices.map((i) => positions[i]);
+
+  // For each segment [keptIndices[seg] .. keptIndices[seg+1]], find max speed
+  const maxSpeeds: number[] = [];
+  for (let seg = 0; seg < keptIndices.length - 1; seg++) {
+    const start = keptIndices[seg];
+    const end = keptIndices[seg + 1];
+    let maxSpeed = -Infinity;
+    for (let j = start; j <= end; j++) {
+      const v = n(positions[j].speedOverGround);
+      if (v > maxSpeed) maxSpeed = v;
+    }
+    maxSpeeds.push(maxSpeed === -Infinity ? 0 : maxSpeed);
+  }
+
+  return { positions: simplifiedPositions, maxSpeeds };
+}
+
 export interface InterpolatedPosition {
   lat: number;
   lon: number;

@@ -15,6 +15,9 @@ services:
     volumes:
       - ./Vakaros.Vkx.Web:/app
       - web_node_modules:/app/node_modules
+      # Isolate the Next.js build cache from the host so stale chunks never
+      # shadow a fresh in-container compilation after source changes.
+      - web_next_cache:/app/.next
     environment:
       # Required for Next.js file-watching to work on Windows / WSL2 volume mounts.
       WATCHPACK_POLLING: "true"
@@ -28,3 +31,6 @@ volumes:
   # by the host bind-mount above.  Rebuild the image (docker compose build web)
   # whenever package.json dependencies change.
   web_node_modules:
+  # Isolates the Next.js build output from the host so a stale .next directory
+  # never causes chunk-ID mismatches after source changes.
+  web_next_cache:
