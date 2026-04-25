@@ -7,6 +7,9 @@
 .nuget/
 .dotnet/
 
+# Generated OpenAPI artifacts (default/unversioned document — not used)
+Vakaros.Vkx.Api/OpenApi/Vakaros.Vkx.Api.json
+
 # User-specific files
 *.rsuser
 *.suo
