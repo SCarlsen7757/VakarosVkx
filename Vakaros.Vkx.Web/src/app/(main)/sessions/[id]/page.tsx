@@ -12,7 +12,7 @@ import { ErrorBanner } from "@/components/ui/error-banner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { useToast } from "@/hooks/useToast";
-import { ChevronRight, Globe, Lock } from "lucide-react";
+import { ChevronRight, Globe, Lock, Pencil, Check } from "lucide-react";
 import type { components } from "@/lib/api-types";
 
 type TeamDto = components["schemas"]["TeamDto"];
@@ -31,6 +31,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
   const [shares, setShares] = useState<SessionShare[]>([]);
   const [myTeams, setMyTeams] = useState<TeamDto[]>([]);
   const [shareTeamId, setShareTeamId] = useState<string>("");
+  const [isEditing, setIsEditing] = useState(false);
 
   const load = () => {
     api.GET(`/api/v1/sessions/{id}` as any, { params: { path: { id } } } as any).then(({ data, error }: any) => {
@@ -150,7 +151,21 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
       </nav>
 
       <Card className="p-5">
-        <h2 className="mb-4 text-lg font-semibold">Session metadata</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Session metadata</h2>
+          {session.isOwned && (
+            isEditing ? (
+              <Button variant="secondary" onClick={() => setIsEditing(false)}>
+                <Check className="mr-1 h-4 w-4" /> Done editing
+              </Button>
+            ) : (
+              <Button variant="secondary" onClick={() => setIsEditing(true)}>
+                <Pencil className="mr-1 h-4 w-4" /> Edit
+              </Button>
+            )
+          )}
+        </div>
+
         <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
           <div><dt className="text-text-secondary">File</dt><dd>{session.fileName}</dd></div>
           <div><dt className="text-text-secondary">Format</dt><dd>v{n(session.formatVersion)} @ {n(session.telemetryRateHz)} Hz</dd></div>
@@ -161,7 +176,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
         </dl>
 
         <div className="mt-5 flex flex-wrap items-end gap-3">
-          {session.isOwned ? (
+          {isEditing ? (
             <>
               <label className="block w-full max-w-xs">
                 <span className="text-sm text-text-secondary">Boat</span>
@@ -203,7 +218,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
                 <th className="px-3 py-2 text-left">Ended</th>
                 <th className="px-3 py-2 text-left">Duration</th>
                 <th className="px-3 py-2 text-left">Course</th>
-                {session.isOwned && <th className="px-3 py-2"></th>}
+                {isEditing && <th className="px-3 py-2"></th>}
               </tr>
             </thead>
             <tbody>
@@ -218,7 +233,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
                   <td className="px-3 py-2 text-text-secondary">{r.endedAt ? new Date(r.endedAt).toLocaleString() : "—"}</td>
                   <td className="px-3 py-2 font-mono">{r.durationSeconds != null ? formatDuration(n(r.durationSeconds)) : "—"}</td>
                   <td className="px-3 py-2">
-                    {session.isOwned ? (
+                    {isEditing ? (
                       <Select
                         value={raceCourses[String(r.raceNumber)] ?? ""}
                         onChange={(e) => setRaceCourses({ ...raceCourses, [String(r.raceNumber)]: e.target.value })}
@@ -230,7 +245,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
                       <span className="text-text-secondary">{r.courseName ?? "None"}</span>
                     )}
                   </td>
-                  {session.isOwned && (
+                  {isEditing && (
                     <td className="px-3 py-2"><Button variant="secondary" onClick={() => saveRaceCourse(r)}>Save</Button></td>
                   )}
                 </tr>
@@ -244,18 +259,22 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
         <Card className="p-5">
           <h2 className="mb-4 text-lg font-semibold">Sharing</h2>
           {shares.length === 0 ? (
-            <p className="mb-3 text-sm text-text-secondary">Not shared with any teams.</p>
+            <p className={isEditing ? "mb-3 text-sm text-text-secondary" : "text-sm text-text-secondary"}>
+              Not shared with any teams.
+            </p>
           ) : (
             <ul className="mb-4 space-y-1">
               {shares.map((sh) => (
                 <li key={sh.teamId} className="flex items-center justify-between rounded border border-border-default p-2 text-sm">
                   <span>{sh.teamName}</span>
-                  <button onClick={() => removeShare(sh.teamId)} className="text-xs text-red-500 hover:underline">Remove</button>
+                  {isEditing && (
+                    <button onClick={() => removeShare(sh.teamId)} className="text-xs text-red-500 hover:underline">Remove</button>
+                  )}
                 </li>
               ))}
             </ul>
           )}
-          {availableTeams.length > 0 && (
+          {isEditing && availableTeams.length > 0 && (
             <div className="flex gap-2">
               <Select value={shareTeamId} onChange={(e) => setShareTeamId(e.target.value)} className="flex-1">
                 <option value="">— Select a team —</option>
@@ -264,10 +283,10 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
               <Button onClick={addShare} disabled={!shareTeamId}>Share</Button>
             </div>
           )}
-          {availableTeams.length === 0 && shares.length > 0 && (
+          {isEditing && availableTeams.length === 0 && shares.length > 0 && (
             <p className="text-sm text-text-secondary">Shared with all your teams.</p>
           )}
-          {myTeams.length === 0 && (
+          {isEditing && myTeams.length === 0 && (
             <p className="text-sm text-text-secondary">You are not a member of any teams. <Link href="/teams" className="text-action-primary hover:underline">Create or join a team</Link> to share this session.</p>
           )}
         </Card>

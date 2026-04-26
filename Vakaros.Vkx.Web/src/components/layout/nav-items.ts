@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Home, Upload, Layers, Ship, MapPin, Users, UserCircle, Settings as SettingsIcon, ShieldCheck, Sailboat, type LucideIcon,
+  Home, Upload, Layers, Sailboat, MapPin, Users, UserCircle, Settings as SettingsIcon, ShieldCheck, Inbox, type LucideIcon,
 } from "lucide-react";
 
 export interface NavItem {
@@ -16,12 +16,12 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Home", icon: Home, matchPrefix: "/" },
   { href: "/upload", label: "Upload", icon: Upload, matchPrefix: "/upload" },
   { href: "/sessions", label: "Sessions", icon: Layers, matchPrefix: "/sessions" },
-  { href: "/boats", label: "Fleet", icon: Ship, matchPrefix: "/boat" },
+  { href: "/boats", label: "Fleet", icon: Sailboat, matchPrefix: "/boat" },
   { href: "/courses", label: "Courses", icon: MapPin, matchPrefix: "/course" },
   { href: "/teams", label: "Teams", icon: Users, matchPrefix: "/teams" },
   { href: "/account", label: "Account", icon: UserCircle, matchPrefix: "/account" },
   { href: "/admin/users", label: "Admin", icon: ShieldCheck, matchPrefix: "/admin/users", adminOnly: true },
-  { href: "/admin/boat-classes", label: "Class requests", icon: Sailboat, matchPrefix: "/admin/boat-classes", adminOnly: true },
+  { href: "/admin/boat-classes", label: "Class requests", icon: Inbox, matchPrefix: "/admin/boat-classes", adminOnly: true },
   { href: "/settings", label: "Settings", icon: SettingsIcon, matchPrefix: "/settings" },
 ];
 
