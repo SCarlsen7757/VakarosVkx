@@ -5,7 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import type { Course, CourseSummary, Mark } from "@/lib/schemas";
 import { n } from "@/lib/schemas";
-import { Button, Card, Input, Select } from "@/components/ui/controls";
+import { Button, Card, Input, Select, Textarea } from "@/components/ui/controls";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
@@ -164,7 +164,7 @@ export default function CoursesPage() {
             <div className="grid grid-cols-2 gap-3">
               <label><span className="text-sm text-text-secondary">Year</span><Input type="number" value={draft.year} onChange={(e) => setDraft({ ...draft, year: e.target.value })} /></label>
             </div>
-            <label className="block"><span className="text-sm text-text-secondary">Description</span><Input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></label>
+            <label className="block"><span className="text-sm text-text-secondary">Description</span><Textarea value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></label>
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm text-text-secondary">Legs</span>

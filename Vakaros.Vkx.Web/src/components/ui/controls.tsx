@@ -29,6 +29,19 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   );
 }
 
+export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      rows={3}
+      {...props}
+      className={cn(
+        "w-full rounded-md border border-border-default bg-bg-base px-3 py-1.5 text-sm text-text-primary placeholder:text-text-disabled focus:border-border-active focus:outline-none resize-y",
+        props.className
+      )}
+    />
+  );
+}
+
 export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select

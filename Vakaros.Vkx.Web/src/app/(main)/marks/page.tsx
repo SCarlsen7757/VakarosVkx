@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import type { Mark } from "@/lib/schemas";
-import { Button, Card, Input } from "@/components/ui/controls";
+import { Button, Card, Input, Textarea } from "@/components/ui/controls";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
@@ -129,7 +129,7 @@ export default function MarksPage() {
                   <td className="px-3 py-2 text-text-secondary">{m.activeUntil ?? "—"}</td>
                   <td className="px-3 py-2 font-mono">{Number(m.latitude).toFixed(6)}</td>
                   <td className="px-3 py-2 font-mono">{Number(m.longitude).toFixed(6)}</td>
-                  <td className="px-3 py-2 text-text-secondary">{m.description ?? "—"}</td>
+                  <td className="px-3 py-2 text-text-secondary"><span className="block max-w-[16rem] truncate">{m.description ?? "—"}</span></td>
                   <td className="px-3 py-2">
                     <ThreeDotMenu items={[
                       { label: "Edit", onClick: () => openEdit(m) },
@@ -160,7 +160,7 @@ export default function MarksPage() {
               <label className="block min-w-0"><span className="text-sm text-text-secondary">Latitude</span><Input type="number" step="0.000001" value={draft.latitude} onChange={(e) => setDraft({ ...draft, latitude: e.target.value })} /></label>
               <label className="block min-w-0"><span className="text-sm text-text-secondary">Longitude</span><Input type="number" step="0.000001" value={draft.longitude} onChange={(e) => setDraft({ ...draft, longitude: e.target.value })} /></label>
             </div>
-            <label className="block"><span className="text-sm text-text-secondary">Description</span><Input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></label>
+            <label className="block"><span className="text-sm text-text-secondary">Description</span><Textarea value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></label>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="secondary" onClick={() => setPanelId(null)}>Cancel</Button>
               <Button onClick={submit}>Save</Button>

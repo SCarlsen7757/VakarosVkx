@@ -12,7 +12,7 @@ namespace Vakaros.Vkx.Api.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v{version:apiVersion}/boat-classes")]
 public class BoatClassesController(AppDbContext db, ICurrentUser currentUser) : ControllerBase
 {
     [HttpGet]

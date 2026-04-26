@@ -78,7 +78,7 @@ export default function BoatClassesPage() {
   if (!list) return <SkeletonLoader className="h-40" />;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
+    <div className={editingId ? "grid gap-6 lg:grid-cols-[1fr_24rem]" : undefined}>
       <div>
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Boat classes</h1>
@@ -125,9 +125,9 @@ export default function BoatClassesPage() {
           <div className="space-y-3">
             <label className="block"><span className="text-sm text-text-secondary">Name</span><Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></label>
             <div className="grid grid-cols-2 gap-3">
-              <label><span className="text-sm text-text-secondary">Length (m)</span><Input type="number" step="0.01" value={draft.length} onChange={(e) => setDraft({ ...draft, length: e.target.value })} /></label>
-              <label><span className="text-sm text-text-secondary">Width (m)</span><Input type="number" step="0.01" value={draft.width} onChange={(e) => setDraft({ ...draft, width: e.target.value })} /></label>
-              <label><span className="text-sm text-text-secondary">Weight (kg)</span><Input type="number" value={draft.weight} onChange={(e) => setDraft({ ...draft, weight: e.target.value })} /></label>
+              <label className="min-w-0"><span className="text-sm text-text-secondary">Length (m)</span><Input type="number" step="0.01" value={draft.length} onChange={(e) => setDraft({ ...draft, length: e.target.value })} /></label>
+              <label className="min-w-0"><span className="text-sm text-text-secondary">Width (m)</span><Input type="number" step="0.01" value={draft.width} onChange={(e) => setDraft({ ...draft, width: e.target.value })} /></label>
+              <label className="min-w-0"><span className="text-sm text-text-secondary">Weight (kg)</span><Input type="number" value={draft.weight} onChange={(e) => setDraft({ ...draft, weight: e.target.value })} /></label>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="secondary" onClick={() => setEditingId(null)}>Cancel</Button>
