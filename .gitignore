@@ -3,13 +3,6 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-# .NET / NuGet local caches
-.nuget/
-.dotnet/
-
-# Generated OpenAPI artifacts (default/unversioned document — not used)
-Vakaros.Vkx.Api/OpenApi/Vakaros.Vkx.Api.json
-
 # User-specific files
 *.rsuser
 *.suo

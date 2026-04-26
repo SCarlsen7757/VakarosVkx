@@ -540,7 +540,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/BoatClasses": {
+    "/api/v1/boat-classes": {
         parameters: {
             query?: never;
             header?: never;
@@ -604,7 +604,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/BoatClasses/{id}": {
+    "/api/v1/boat-classes/{id}": {
         parameters: {
             query?: never;
             header?: never;

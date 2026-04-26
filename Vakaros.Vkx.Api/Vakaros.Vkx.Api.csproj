@@ -55,14 +55,42 @@
     <Folder Include="Migrations/" />
   </ItemGroup>
 
-  <Target Name="GenerateTypeScriptTypes"
+  <!--
+    OpenAPI document generation & TypeScript type generation
+    =========================================================
+    Microsoft.Extensions.ApiDescription.Server generates OpenAPI spec files at build time.
+    The output filename is controlled by the MSBuild property <OpenApiDocumentName>, which
+    defaults to the assembly name when not set explicitly → Vakaros.Vkx.Api.json.
+
+    To add a v2 API:
+      1. Register the document in Program.cs:  builder.Services.AddOpenApi("v2");
+      2. Add a second GenerateTypeScriptTypes target below (copy GenerateTypeScriptTypesV1,
+         change Inputs to v2.json, Outputs to api-types-v2.ts, Command to "npm run gen:api:v2").
+      3. The npm script "gen:api:v2" is already scaffolded in package.json.
+      4. Document the new version's types in src/lib/schemas.ts.
+  -->
+  <Target Name="GenerateTypeScriptTypesV1"
           AfterTargets="GenerateOpenApiDocuments"
           Condition="'$(SkipTypeScriptGeneration)' != 'true'"
-          Inputs="$(MSBuildProjectDirectory)/OpenApi/v1.json"
+          Inputs="$(MSBuildProjectDirectory)/OpenApi/Vakaros.Vkx.Api.json"
           Outputs="$(MSBuildProjectDirectory)/../Vakaros.Vkx.Web/src/lib/api-types.ts">
-    <Message Text="Generating TypeScript API types from OpenAPI spec..." Importance="high" />
+    <Message Text="Generating TypeScript API types from OpenAPI spec (v1)..." Importance="high" />
     <Exec Command="npm run gen:api"
           WorkingDirectory="$(MSBuildProjectDirectory)/../Vakaros.Vkx.Web" />
   </Target>
+
+  <!--
+    When v2 is ready, uncomment and adjust this target:
+
+  <Target Name="GenerateTypeScriptTypesV2"
+          AfterTargets="GenerateOpenApiDocuments"
+          Condition="'$(SkipTypeScriptGeneration)' != 'true'"
+          Inputs="$(MSBuildProjectDirectory)/OpenApi/v2.json"
+          Outputs="$(MSBuildProjectDirectory)/../Vakaros.Vkx.Web/src/lib/api-types-v2.ts">
+    <Message Text="Generating TypeScript API types from OpenAPI spec (v2)..." Importance="high" />
+    <Exec Command="npm run gen:api:v2"
+          WorkingDirectory="$(MSBuildProjectDirectory)/../Vakaros.Vkx.Web" />
+  </Target>
+  -->
 
 </Project>

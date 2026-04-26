@@ -557,7 +557,7 @@
         }
       }
     },
-    "/api/v1/BoatClasses": {
+    "/api/v1/boat-classes": {
       "get": {
         "tags": [
           "BoatClasses"
@@ -642,7 +642,7 @@
         }
       }
     },
-    "/api/v1/BoatClasses/{id}": {
+    "/api/v1/boat-classes/{id}": {
       "get": {
         "tags": [
           "BoatClasses"
