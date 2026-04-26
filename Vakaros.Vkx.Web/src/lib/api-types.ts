@@ -1424,6 +1424,113 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PendingTeamInviteDto"][];
+                        "application/json": components["schemas"]["PendingTeamInviteDto"][];
+                        "text/json": components["schemas"]["PendingTeamInviteDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/invites/{inviteId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    inviteId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/invites/{inviteId}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    inviteId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sessions/{sessionId}/races": {
         parameters: {
             query?: never;
@@ -2470,7 +2577,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    teamId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TeamPendingInviteDto"][];
+                        "application/json": components["schemas"]["TeamPendingInviteDto"][];
+                        "text/json": components["schemas"]["TeamPendingInviteDto"][];
+                    };
+                };
+            };
+        };
         put?: never;
         post: {
             parameters: {
@@ -2499,41 +2629,6 @@ export interface paths {
                         "application/json": components["schemas"]["TeamInviteDto"];
                         "text/json": components["schemas"]["TeamInviteDto"];
                     };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/invites/{token}/accept": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    token: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
                 };
             };
         };
@@ -2848,6 +2943,19 @@ export interface components {
             courseId: null | string;
             notes: null | string;
         };
+        PendingTeamInviteDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            teamId: string;
+            teamName: string;
+            invitedByEmail: string;
+            role: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
         PersonalAccessTokenDto: {
             /** Format: uuid */
             id: string;
@@ -3072,6 +3180,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             email: string;
+            displayName: string;
             role: string;
             /** Format: date-time */
             createdAt: string;
@@ -3086,6 +3195,19 @@ export interface components {
             role: string;
             /** Format: date-time */
             joinedAt: string;
+        };
+        TeamPendingInviteDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            invitedUserId: string;
+            email: string;
+            displayName: string;
+            role: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt: string;
         };
         TemperatureDto: {
             /** Format: date-time */

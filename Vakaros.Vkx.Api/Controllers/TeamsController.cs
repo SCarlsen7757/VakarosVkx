@@ -1,10 +1,8 @@
-using System.Security.Cryptography;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Vakaros.Vkx.Api.Audit;
 using Vakaros.Vkx.Api.Auth;
 using Vakaros.Vkx.Api.Data;
@@ -21,8 +19,7 @@ public class TeamsController(
     AppDbContext db,
     UserManager<AppUser> userManager,
     ICurrentUser currentUser,
-    IAuditService audit,
-    IOptions<WebOptions> webOptions) : ControllerBase
+    IAuditService audit) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<TeamDto>>> GetMyTeams(CancellationToken ct)
@@ -144,21 +141,42 @@ public class TeamsController(
         if (!await IsAdminAsync(teamId, ct)) return Forbid();
         if (!Enum.TryParse<TeamRole>(req.Role, ignoreCase: true, out var role)) return BadRequest();
 
-        var token = GenerateInviteToken();
+        var invitee = await userManager.FindByEmailAsync(req.Email);
+        if (invitee is null) return NotFound(new { error = "user_not_found" });
+
+        var alreadyMember = await db.TeamMembers.AnyAsync(m => m.TeamId == teamId && m.UserId == invitee.Id, ct);
+        if (alreadyMember) return Conflict(new { error = "already_member" });
+
+        var pendingInvite = await db.TeamInvites.AnyAsync(
+            i => i.TeamId == teamId && i.InvitedUserId == invitee.Id && i.AcceptedAt == null && i.DeclinedAt == null && i.ExpiresAt > DateTimeOffset.UtcNow, ct);
+        if (pendingInvite) return Conflict(new { error = "invite_already_pending" });
+
         var invite = new TeamInvite
         {
             TeamId = teamId,
-            Email = req.Email,
-            Token = token,
+            InvitedUserId = invitee.Id,
+            Email = invitee.Email!,
+            Role = role.ToString(),
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
         };
         db.TeamInvites.Add(invite);
         await db.SaveChangesAsync(ct);
-
-        var url = $"{webOptions.Value.PublicBaseUrl.TrimEnd('/')}/invites/accept?token={token}";
         await audit.LogAsync("team.invite", "team", teamId.ToString(), details: req.Email, ct: ct);
-        // Email infrastructure was removed in the scale-back. The team admin shares this URL out-of-band.
-        return Ok(new TeamInviteWithUrlDto(invite.Id, invite.Email, role.ToString(), invite.CreatedAt, invite.ExpiresAt, url));
+
+        return Ok(new TeamInviteDto(invite.Id, invite.Email, invitee.DisplayName, invite.Role, invite.CreatedAt, invite.ExpiresAt));
+    }
+
+    [HttpGet("{teamId:guid}/invites")]
+    public async Task<ActionResult<List<TeamPendingInviteDto>>> GetInvites(Guid teamId, CancellationToken ct)
+    {
+        if (!await IsAdminAsync(teamId, ct)) return Forbid();
+
+        var invites = await db.TeamInvites
+            .Where(i => i.TeamId == teamId && i.AcceptedAt == null && i.DeclinedAt == null && i.ExpiresAt > DateTimeOffset.UtcNow)
+            .Select(i => new TeamPendingInviteDto(i.Id, i.InvitedUserId, i.Email, i.InvitedUser.DisplayName, i.Role, i.CreatedAt, i.ExpiresAt))
+            .ToListAsync(ct);
+
+        return Ok(invites);
     }
 
     private async Task<bool> IsAdminAsync(Guid teamId, CancellationToken ct)
@@ -166,38 +184,5 @@ public class TeamsController(
         var userId = currentUser.UserId;
         var m = await db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.UserId == userId, ct);
         return m is not null && m.Role >= TeamRole.Admin;
-    }
-
-    private static string GenerateInviteToken()
-    {
-        var bytes = RandomNumberGenerator.GetBytes(32);
-        return Convert.ToBase64String(bytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
-    }
-}
-
-[ApiVersion("1.0")]
-[ApiController]
-[Authorize]
-[Route("api/v{version:apiVersion}/invites")]
-public class InvitesController(AppDbContext db, ICurrentUser currentUser, IAuditService audit) : ControllerBase
-{
-    [HttpPost("{token}/accept")]
-    public async Task<IActionResult> Accept(string token, CancellationToken ct)
-    {
-        var invite = await db.TeamInvites.FirstOrDefaultAsync(i => i.Token == token, ct);
-        if (invite is null) return NotFound();
-        if (invite.AcceptedAt is not null) return BadRequest(new { error = "already_accepted" });
-        if (invite.ExpiresAt < DateTimeOffset.UtcNow) return BadRequest(new { error = "expired" });
-
-        var userId = currentUser.UserId;
-        var existing = await db.TeamMembers.AnyAsync(m => m.TeamId == invite.TeamId && m.UserId == userId, ct);
-        if (!existing)
-        {
-            db.TeamMembers.Add(new TeamMember { TeamId = invite.TeamId, UserId = userId, Role = TeamRole.Member });
-        }
-        invite.AcceptedAt = DateTimeOffset.UtcNow;
-        await db.SaveChangesAsync(ct);
-        await audit.LogAsync("team.invite_accepted", "team", invite.TeamId.ToString(), ct: ct);
-        return Ok(new { teamId = invite.TeamId });
     }
 }

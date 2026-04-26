@@ -33,11 +33,14 @@ public class TeamInvite
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid TeamId { get; set; }
+    public Guid InvitedUserId { get; set; }
     public string Email { get; set; } = string.Empty;
-    public string Token { get; set; } = string.Empty;
+    public string Role { get; set; } = "Member";
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset ExpiresAt { get; set; }
     public DateTimeOffset? AcceptedAt { get; set; }
+    public DateTimeOffset? DeclinedAt { get; set; }
 
     public Team Team { get; set; } = null!;
+    public AppUser InvitedUser { get; set; } = null!;
 }

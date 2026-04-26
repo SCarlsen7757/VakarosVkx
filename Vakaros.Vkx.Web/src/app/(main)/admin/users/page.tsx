@@ -193,8 +193,10 @@ export default function AdminUsersPage() {
                   <div className="text-xs text-text-secondary">{u.email} · {u.roles.join(", ") || "—"} · {u.hasPassword ? "active" : "pending setup"}</div>
                 </div>
                 <div className="flex gap-2">
-                  {!u.hasPassword && (
+                  {!u.hasPassword ? (
                     <button onClick={() => regenerate(u.id)} className="rounded border border-border-default px-2 py-1 text-xs">New setup link</button>
+                  ) : (
+                    <button onClick={() => regenerate(u.id)} className="rounded border border-border-default px-2 py-1 text-xs">Reset password link</button>
                   )}
                   <select
                     className="rounded border border-border-default bg-bg-surface px-2 py-1 text-xs"

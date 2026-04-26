@@ -1673,6 +1673,90 @@
         }
       }
     },
+    "/api/v1/me/invites": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PendingTeamInviteDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PendingTeamInviteDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PendingTeamInviteDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/invites/{inviteId}/accept": {
+      "post": {
+        "tags": [
+          "Me"
+        ],
+        "parameters": [
+          {
+            "name": "inviteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/me/invites/{inviteId}/decline": {
+      "post": {
+        "tags": [
+          "Me"
+        ],
+        "parameters": [
+          {
+            "name": "inviteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/sessions/{sessionId}/races": {
       "get": {
         "tags": [
@@ -3343,26 +3427,51 @@
             }
           }
         }
-      }
-    },
-    "/api/v1/invites/{token}/accept": {
-      "post": {
+      },
+      "get": {
         "tags": [
-          "Invites"
+          "Teams"
         ],
         "parameters": [
           {
-            "name": "token",
+            "name": "teamId",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamPendingInviteDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamPendingInviteDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamPendingInviteDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -4579,6 +4688,45 @@
           }
         }
       },
+      "PendingTeamInviteDto": {
+        "required": [
+          "id",
+          "teamId",
+          "teamName",
+          "invitedByEmail",
+          "role",
+          "createdAt",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "teamName": {
+            "type": "string"
+          },
+          "invitedByEmail": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "PersonalAccessTokenDto": {
         "required": [
           "id",
@@ -5466,6 +5614,7 @@
         "required": [
           "id",
           "email",
+          "displayName",
           "role",
           "createdAt",
           "expiresAt"
@@ -5477,6 +5626,9 @@
             "format": "uuid"
           },
           "email": {
+            "type": "string"
+          },
+          "displayName": {
             "type": "string"
           },
           "role": {
@@ -5516,6 +5668,45 @@
             "type": "string"
           },
           "joinedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TeamPendingInviteDto": {
+        "required": [
+          "id",
+          "invitedUserId",
+          "email",
+          "displayName",
+          "role",
+          "createdAt",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "invitedUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
             "type": "string",
             "format": "date-time"
           }
@@ -5853,9 +6044,6 @@
     },
     {
       "name": "Teams"
-    },
-    {
-      "name": "Invites"
     }
   ]
 }

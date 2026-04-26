@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vakaros.Vkx.Api.Audit;
 using Vakaros.Vkx.Api.Auth;
 using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Api.Models.Entities;
 using Vakaros.Vkx.Shared.Dtos.Me;
 using Vakaros.Vkx.Shared.Dtos.Stats;
+using Vakaros.Vkx.Shared.Dtos.Teams;
 using Vakaros.Vkx.Shared.Dtos.Tokens;
 
 namespace Vakaros.Vkx.Api.Controllers;
@@ -20,6 +22,7 @@ public class MeController(
     AppDbContext db,
     UserManager<AppUser> userManager,
     ICurrentUser currentUser,
+    IAuditService audit,
     AuthOptions authOptions) : ControllerBase
 {
     [HttpGet]
@@ -125,6 +128,60 @@ public class MeController(
         if (pat is null) return NotFound();
         pat.RevokedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    // ── Team Invitations ────────────────────────────────────────────────
+    [HttpGet("invites")]
+    public async Task<ActionResult<List<PendingTeamInviteDto>>> GetMyInvites(CancellationToken ct)
+    {
+        var userId = currentUser.UserId;
+        var invites = await db.TeamInvites
+            .Where(i => i.InvitedUserId == userId && i.AcceptedAt == null && i.DeclinedAt == null && i.ExpiresAt > DateTimeOffset.UtcNow)
+            .Select(i => new PendingTeamInviteDto(
+                i.Id, i.TeamId, i.Team.Name,
+                i.Team.Members.Where(m => m.Role == TeamRole.Owner).Select(m => m.User.Email!).FirstOrDefault() ?? "",
+                i.Role, i.CreatedAt, i.ExpiresAt))
+            .ToListAsync(ct);
+        return Ok(invites);
+    }
+
+    [HttpPost("invites/{inviteId:guid}/accept")]
+    public async Task<IActionResult> AcceptInvite(Guid inviteId, CancellationToken ct)
+    {
+        var userId = currentUser.UserId;
+        var invite = await db.TeamInvites.FirstOrDefaultAsync(i => i.Id == inviteId && i.InvitedUserId == userId, ct);
+        if (invite is null) return NotFound();
+        if (invite.AcceptedAt is not null) return BadRequest(new { error = "already_accepted" });
+        if (invite.DeclinedAt is not null) return BadRequest(new { error = "already_declined" });
+        if (invite.ExpiresAt < DateTimeOffset.UtcNow) return BadRequest(new { error = "expired" });
+
+        var alreadyMember = await db.TeamMembers.AnyAsync(m => m.TeamId == invite.TeamId && m.UserId == userId, ct);
+        if (!alreadyMember)
+        {
+            if (!Enum.TryParse<TeamRole>(invite.Role, ignoreCase: true, out var role))
+                role = TeamRole.Member;
+            db.TeamMembers.Add(new TeamMember { TeamId = invite.TeamId, UserId = userId, Role = role });
+        }
+        invite.AcceptedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(ct);
+        await audit.LogAsync("team.invite_accepted", "team", invite.TeamId.ToString(), ct: ct);
+        return Ok(new { teamId = invite.TeamId });
+    }
+
+    [HttpPost("invites/{inviteId:guid}/decline")]
+    public async Task<IActionResult> DeclineInvite(Guid inviteId, CancellationToken ct)
+    {
+        var userId = currentUser.UserId;
+        var invite = await db.TeamInvites.FirstOrDefaultAsync(i => i.Id == inviteId && i.InvitedUserId == userId, ct);
+        if (invite is null) return NotFound();
+        if (invite.AcceptedAt is not null) return BadRequest(new { error = "already_accepted" });
+        if (invite.DeclinedAt is not null) return BadRequest(new { error = "already_declined" });
+        if (invite.ExpiresAt < DateTimeOffset.UtcNow) return BadRequest(new { error = "expired" });
+
+        invite.DeclinedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(ct);
+        await audit.LogAsync("team.invite_declined", "team", invite.TeamId.ToString(), ct: ct);
         return NoContent();
     }
 }

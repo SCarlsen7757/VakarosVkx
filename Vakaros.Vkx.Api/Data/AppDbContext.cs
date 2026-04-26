@@ -226,14 +226,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasKey(i => i.Id);
             e.Property(i => i.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(i => i.TeamId).HasColumnName("team_id");
+            e.Property(i => i.InvitedUserId).HasColumnName("invited_user_id");
             e.Property(i => i.Email).HasColumnName("email").IsRequired();
-            e.Property(i => i.Token).HasColumnName("token").IsRequired();
+            e.Property(i => i.Role).HasColumnName("role").IsRequired();
             e.Property(i => i.CreatedAt).HasColumnName("created_at");
             e.Property(i => i.ExpiresAt).HasColumnName("expires_at");
             e.Property(i => i.AcceptedAt).HasColumnName("accepted_at");
-            e.HasIndex(i => i.Token).IsUnique();
-            e.HasIndex(i => new { i.TeamId, i.Email });
+            e.Property(i => i.DeclinedAt).HasColumnName("declined_at");
+            e.HasIndex(i => i.InvitedUserId);
+            e.HasIndex(i => new { i.TeamId, i.InvitedUserId });
             e.HasOne(i => i.Team).WithMany(t => t.Invites).HasForeignKey(i => i.TeamId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(i => i.InvitedUser).WithMany().HasForeignKey(i => i.InvitedUserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Invitation>(e =>
