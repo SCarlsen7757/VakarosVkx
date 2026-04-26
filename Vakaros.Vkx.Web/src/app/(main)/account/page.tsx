@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { components } from "@/lib/api-types";
+import { Input, Button } from "@/components/ui/controls";
 
 type TokenDto = components["schemas"]["PersonalAccessTokenDto"];
 
@@ -68,10 +69,10 @@ export default function AccountPage() {
     <div className="space-y-8">
       <section>
         <h1 className="mb-4 text-2xl font-bold text-action-primary">Account</h1>
-        <div className="space-y-2">
+        <div className="max-w-md space-y-2">
           <label className="block text-sm">Display name</label>
-          <input className="w-full max-w-md rounded border border-border-default bg-bg-surface p-2" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-          <button onClick={saveProfile} className="rounded bg-action-primary px-3 py-1.5 text-white">Save</button>
+          <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+          <Button onClick={saveProfile}>Save</Button>
         </div>
         <p className="mt-2 text-sm text-text-secondary">{me.email} · {me.roles?.join(", ") || "User"}</p>
       </section>
@@ -79,28 +80,28 @@ export default function AccountPage() {
       <section>
         <h2 className="mb-2 text-xl font-semibold">Change password</h2>
         <form onSubmit={changePassword} className="max-w-md space-y-2">
-          <input className="w-full rounded border border-border-default bg-bg-surface p-2" type="password" autoComplete="current-password" placeholder="Current password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
-          <input className="w-full rounded border border-border-default bg-bg-surface p-2" type="password" autoComplete="new-password" placeholder="New password (min 12 chars)" minLength={12} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
-          <input className="w-full rounded border border-border-default bg-bg-surface p-2" type="password" autoComplete="new-password" placeholder="Confirm new password" minLength={12} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+          <Input type="password" autoComplete="current-password" placeholder="Current password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
+          <Input type="password" autoComplete="new-password" placeholder="New password (min 12 chars)" minLength={12} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+          <Input type="password" autoComplete="new-password" placeholder="Confirm new password" minLength={12} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
           {pwMessage && <div className={`text-sm ${pwMessage.ok ? "text-green-500" : "text-red-500"}`}>{pwMessage.text}</div>}
-          <button type="submit" className="rounded bg-action-primary px-3 py-1.5 text-white">Change password</button>
+          <Button type="submit">Change password</Button>
         </form>
       </section>
 
       <section>
         <h2 className="mb-2 text-xl font-semibold">Personal access tokens</h2>
-        <div className="mb-3 flex gap-2">
-          <input className="flex-1 rounded border border-border-default bg-bg-surface p-2" placeholder="Token name (e.g. console-uploader)" value={newTokenName} onChange={(e) => setNewTokenName(e.target.value)} />
-          <button onClick={createToken} disabled={!newTokenName} className="rounded bg-action-primary px-3 py-1.5 text-white disabled:opacity-50">Create</button>
+        <div className="mb-3 max-w-md space-y-2">
+          <Input placeholder="Token name (e.g. console-uploader)" value={newTokenName} onChange={(e) => setNewTokenName(e.target.value)} />
+          <Button onClick={createToken} disabled={!newTokenName}>Create</Button>
         </div>
         {createdToken && (
-          <div className="mb-3 rounded border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm">
+          <div className="mb-3 max-w-md rounded border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm">
             <p className="font-bold">Copy this token now — you won&apos;t see it again:</p>
             <code className="mt-1 block break-all font-mono text-xs">{createdToken}</code>
             <button className="mt-2 text-xs underline" onClick={() => setCreatedToken(null)}>Dismiss</button>
           </div>
         )}
-        <ul className="space-y-1">
+        <ul className="max-w-md space-y-1">
           {tokens.map((t) => (
             <li key={t.id} className="flex items-center justify-between rounded border border-border-default p-2 text-sm">
               <span>{t.name} <span className="text-text-secondary">({t.tokenPrefix}…)</span></span>
@@ -112,7 +113,7 @@ export default function AccountPage() {
       </section>
 
       <section>
-        <button onClick={logout} className="rounded border border-red-500 px-3 py-1.5 text-red-500">Sign out</button>
+        <Button variant="danger" onClick={logout}>Sign out</Button>
       </section>
     </div>
   );
