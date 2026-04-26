@@ -171,7 +171,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
           <div><dt className="text-text-secondary">Format</dt><dd>v{n(session.formatVersion)} @ {n(session.telemetryRateHz)} Hz</dd></div>
           <div><dt className="text-text-secondary">Started</dt><dd>{new Date(session.startedAt).toLocaleString()}</dd></div>
           <div><dt className="text-text-secondary">Duration</dt><dd className="font-mono">{formatDuration(dur)}</dd></div>
-          <div><dt className="text-text-secondary">Body frame</dt><dd>{session.isFixedToBodyFrame ? "Yes" : "No"}</dd></div>
+          <div><dt className="text-text-secondary">Fixed Body frame</dt><dd>{session.isFixedToBodyFrame ? "Yes" : "No"}</dd></div>
           <div><dt className="text-text-secondary">Uploaded</dt><dd>{new Date(session.uploadedAt).toLocaleString()}</dd></div>
         </dl>
 
