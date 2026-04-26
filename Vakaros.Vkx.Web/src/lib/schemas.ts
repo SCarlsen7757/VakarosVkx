@@ -13,6 +13,7 @@ export type BoatStats = Schemas["BoatStatsDto"];
 export type BoatClass = Schemas["BoatClassDto"];
 export type Mark = Schemas["MarkDto"];
 export type Course = Schemas["CourseDto"];
+export type CourseSummary = Schemas["CourseSummaryDto"];
 export type CourseLeg = Schemas["CourseLegDto"];
 export type Position = Schemas["PositionDto"];
 export type Wind = Schemas["WindDto"];

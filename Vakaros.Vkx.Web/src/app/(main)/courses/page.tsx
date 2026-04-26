@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import type { Course, Mark } from "@/lib/schemas";
+import type { Course, CourseSummary, Mark } from "@/lib/schemas";
 import { n } from "@/lib/schemas";
 import { Button, Card, Input, Select } from "@/components/ui/controls";
 import { ErrorBanner } from "@/components/ui/error-banner";
@@ -11,8 +11,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { FilterToolbar, SearchInput } from "@/components/ui/filter-toolbar";
 import { ThreeDotMenu } from "@/components/ui/three-dot-menu";
-import { useUnitPrefs } from "@/store/settings";
-import { convertDistance, distanceUnitLabel } from "@/lib/units";
 import { useToast } from "@/hooks/useToast";
 import { Plus, X, ArrowUp, ArrowDown } from "lucide-react";
 
@@ -23,18 +21,17 @@ const emptyDraft = (): Draft => ({ name: "", year: String(new Date().getFullYear
 
 export default function CoursesPage() {
   const toast = useToast();
-  const { prefs } = useUnitPrefs();
-  const [list, setList] = useState<Course[] | null>(null);
+  const [list, setList] = useState<CourseSummary[] | null>(null);
   const [marks, setMarks] = useState<Mark[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(emptyDraft());
   const [yearFilter, setYearFilter] = useState("");
   const [search, setSearch] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState<Course | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<CourseSummary | null>(null);
 
   const load = () => api.GET("/api/v1/courses" as any, {} as any).then(({ data, error }: any) => {
-    if (error) setError("Failed to load"); else setList(data as Course[]);
+    if (error) setError("Failed to load"); else setList(data as CourseSummary[]);
   });
   useEffect(() => {
     load();
@@ -57,15 +54,20 @@ export default function CoursesPage() {
     });
   }, [list, yearFilter, search]);
 
-  const startEdit = (c: Course | null) => {
+  const startEdit = async (c: CourseSummary | null) => {
     if (c) {
       setEditingId(String(c.id));
-      setDraft({
-        name: c.name,
-        year: String(n(c.year)),
-        description: c.description ?? "",
-        legs: c.legs.map((l) => ({ markId: String(l.markId), legName: l.legName ?? "" })),
-      });
+      setDraft({ name: c.name, year: String(n(c.year)), description: c.description ?? "", legs: [] });
+      const { data } = await api.GET(`/api/v1/courses/${c.id}` as any, {} as any) as any;
+      if (data) {
+        const full = data as Course;
+        setDraft({
+          name: full.name,
+          year: String(n(full.year)),
+          description: full.description ?? "",
+          legs: full.legs.map((l) => ({ markId: String(l.markId), legName: l.legName ?? "" })),
+        });
+      }
     } else {
       setEditingId("new");
       setDraft(emptyDraft());
@@ -86,7 +88,7 @@ export default function CoursesPage() {
       name: draft.name,
       year: Number(draft.year),
       description: draft.description || null,
-      legs: draft.legs.filter((l) => l.markId).map((l) => ({ markId: Number(l.markId), legName: l.legName || null })),
+      legs: draft.legs.filter((l) => l.markId).map((l) => ({ markId: l.markId, legName: l.legName || null })),
     };
     const isNew = editingId === "new";
     const url = isNew ? "/api/v1/courses" : `/api/v1/courses/${editingId}`;
@@ -95,7 +97,7 @@ export default function CoursesPage() {
     else toast.push({ kind: "error", message: "Save failed." });
   };
 
-  const doDelete = async (c: Course) => {
+  const doDelete = async (c: CourseSummary) => {
     const res = await fetch(`/api/v1/courses/${c.id}`, { method: "DELETE" });
     setConfirmDelete(null);
     if (res.ok || res.status === 204) { toast.push({ kind: "success", message: "Deleted." }); load(); }
@@ -107,7 +109,7 @@ export default function CoursesPage() {
   if (!list) return <SkeletonLoader className="h-40" />;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_28rem]">
+    <div className={editingId ? "grid gap-6 lg:grid-cols-[1fr_28rem]" : undefined}>
       <div>
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Courses</h1>
@@ -130,7 +132,6 @@ export default function CoursesPage() {
                 <th className="px-3 py-2 text-left">Name</th>
                 <th className="px-3 py-2 text-left">Year</th>
                 <th className="px-3 py-2 text-left">Legs</th>
-                <th className="px-3 py-2 text-left">Length</th>
                 <th className="w-10"></th>
               </tr>
             </thead>
@@ -139,15 +140,14 @@ export default function CoursesPage() {
                 <tr key={String(c.id)} className="cursor-pointer border-t border-border-default text-sm hover:bg-bg-elevated/40" onClick={() => startEdit(c)}>
                   <td className="px-3 py-2">{c.name}</td>
                   <td className="px-3 py-2 text-text-secondary">{n(c.year)}</td>
-                  <td className="px-3 py-2 text-text-secondary">{c.legs.length}</td>
-                  <td className="px-3 py-2 font-mono">{convertDistance(n(c.totalLengthMeters), prefs.course).toFixed(2)} {distanceUnitLabel(prefs.course)}</td>
+                  <td className="px-3 py-2 text-text-secondary">{n(c.legCount)}</td>
                   <td className="px-3 py-2"><ThreeDotMenu items={[
                     { label: "Edit", onClick: () => startEdit(c) },
                     { label: "Delete", destructive: true, onClick: () => setConfirmDelete(c) },
                   ]} /></td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={5} className="px-3 py-8 text-center text-text-secondary">No courses.</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={4} className="px-3 py-8 text-center text-text-secondary">No courses.</td></tr>}
             </tbody>
           </table>
         </Card>
