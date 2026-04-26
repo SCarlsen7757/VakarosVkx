@@ -61,7 +61,7 @@ public class AuthController(
     {
         await signInManager.SignOutAsync();
         await audit.LogAsync("auth.logout");
-        return Ok();
+        return NoContent();
     }
 
     // ── Setup link redemption (used by users created by an admin) ──────
