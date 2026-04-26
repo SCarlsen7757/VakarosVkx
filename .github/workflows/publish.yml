@@ -1,0 +1,44 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  version:
+    name: Get version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gitversion.outputs.majorMinorPatch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Get GitVersion
+        id: gitversion
+        uses: ./.github/actions/get-gitversion
+
+  docker-api:
+    name: Docker Build & Push — API
+    needs: version
+    uses: ./.github/workflows/_docker-api.yml
+    with:
+      push: true
+      version: ${{ needs.version.outputs.version }}
+    permissions:
+      contents: read
+      packages: write
+
+  docker-web:
+    name: Docker Build & Push — Web
+    needs: version
+    uses: ./.github/workflows/_docker-web.yml
+    with:
+      push: true
+      version: ${{ needs.version.outputs.version }}
+    permissions:
+      contents: read
+      packages: write

@@ -1,0 +1,22 @@
+name: Build API
+description: Restores and builds the Vakaros.Vkx.Api .NET project.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: "10.x"
+
+    - name: Restore dependencies
+      shell: bash
+      run: dotnet restore Vakaros.Vkx.Api/Vakaros.Vkx.Api.csproj
+
+    - name: Build
+      shell: bash
+      run: >
+        dotnet build Vakaros.Vkx.Api/Vakaros.Vkx.Api.csproj
+        --no-restore
+        -c Release
+        /p:SkipTypeScriptGeneration=true

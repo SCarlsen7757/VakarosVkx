@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  version:
+    name: Get version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gitversion.outputs.semVer }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Get GitVersion
+        id: gitversion
+        uses: ./.github/actions/get-gitversion
+
+  build-api:
+    name: Build API
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build API
+        uses: ./.github/actions/build-api
+
+  build-web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build Web
+        uses: ./.github/actions/build-web
+
+  docker-api:
+    name: Docker Build — API
+    needs: version
+    uses: ./.github/workflows/_docker-api.yml
+    with:
+      push: false
+      version: pr-${{ github.event.pull_request.number }}
+
+  docker-web:
+    name: Docker Build — Web
+    needs: version
+    uses: ./.github/workflows/_docker-web.yml
+    with:
+      push: false
+      version: pr-${{ github.event.pull_request.number }}
