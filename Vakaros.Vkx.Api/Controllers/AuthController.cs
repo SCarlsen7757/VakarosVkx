@@ -37,6 +37,11 @@ public class AuthController(
     {
         if (!authOptions.Local.Enabled) return BadRequest(new { error = "local_auth_disabled" });
 
+        // If a session is already active (e.g. stale cookie from a previous user),
+        // sign it out first so Identity starts from a clean state.
+        if (User.Identity?.IsAuthenticated == true)
+            await signInManager.SignOutAsync();
+
         var user = await userManager.FindByEmailAsync(req.Email);
         if (user is null) return Unauthorized();
 

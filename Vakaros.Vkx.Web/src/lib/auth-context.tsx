@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "./api";
 import type { components } from "./api-types";
 
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [providers, setProviders] = useState<Providers | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const refresh = useCallback(async () => {
     try {
@@ -36,9 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await api.POST("/api/v1/auth/logout");
-    setMe(null);
-  }, []);
+    const { response } = await api.POST("/api/v1/auth/logout");
+    if (response.ok) {
+      setMe(null);
+      router.push("/login");
+    }
+  }, [router]);
 
   useEffect(() => { void refresh(); }, [refresh]);
 

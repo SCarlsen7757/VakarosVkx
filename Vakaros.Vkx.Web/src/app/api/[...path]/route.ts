@@ -43,15 +43,24 @@ async function proxy(req: NextRequest, path: string[]): Promise<NextResponse> {
   const upstream = await fetch(target, {
     method: req.method,
     headers: reqHeaders,
-    body: hasBody ? req.body : undefined,
+    // req.body can be null for bodyless POSTs (e.g. logout); pass undefined
+    // instead of null because undici rejects a null body source.
+    body: hasBody ? (req.body ?? undefined) : undefined,
     // @ts-expect-error
     duplex: "half",
   });
 
   // Build forwarded response headers.
   const resHeaders = new Headers();
+  // Forward each Set-Cookie header individually so that multiple cookies
+  // (e.g. sliding-expiration refresh + auth cookie clearance on logout) are
+  // all sent to the browser. Headers.set() would overwrite duplicates.
+  upstream.headers.getSetCookie().forEach((cookie) => {
+    resHeaders.append("set-cookie", cookie);
+  });
   upstream.headers.forEach((value, key) => {
     const k = key.toLowerCase();
+    if (k === "set-cookie") return; // already handled above
     if (HOP_BY_HOP.has(k)) return;
     // Node fetch already decoded the body — strip these so the browser does
     // not try to decode an already-decoded stream (ERR_CONTENT_DECODING_FAILED).
