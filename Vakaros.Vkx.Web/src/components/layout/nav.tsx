@@ -29,8 +29,14 @@ function useNotificationCounts() {
     fetch();
     const interval = setInterval(fetch, 60_000);
     const onFocus = () => fetch();
+    const onChanged = () => fetch();
     window.addEventListener("focus", onFocus);
-    return () => { clearInterval(interval); window.removeEventListener("focus", onFocus); };
+    window.addEventListener("vakaros:notifications-changed", onChanged);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("vakaros:notifications-changed", onChanged);
+    };
   }, [me, providers?.mode]);
 
   return { pendingInvites: Number(counts?.pendingTeamInvites ?? 0), pendingBoatClassRequests: isAdmin ? Number(counts?.pendingBoatClassRequests ?? 0) : 0 };

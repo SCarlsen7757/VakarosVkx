@@ -111,7 +111,7 @@ export default function AdminUsersPage() {
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Invite a known user (per-user setup link)</h2>
-        <form onSubmit={createUser} className="grid grid-cols-1 gap-2 sm:grid-cols-4">
+        <form onSubmit={createUser} className="flex max-w-sm flex-col gap-2">
           <input className="rounded border border-border-default bg-bg-surface p-2" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <input className="rounded border border-border-default bg-bg-surface p-2" placeholder="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
           <select className="rounded border border-border-default bg-bg-surface p-2" value={role} onChange={(e) => setRole(e.target.value as "User" | "Admin")}>
@@ -136,14 +136,14 @@ export default function AdminUsersPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Shareable invitation links</h2>
         <p className="text-xs text-text-secondary">Useful for bulk onboarding — anyone with the link can register an account using their own email.</p>
-        <form onSubmit={createInvitation} className="grid grid-cols-1 gap-2 sm:grid-cols-5">
+        <form onSubmit={createInvitation} className="flex max-w-sm flex-col gap-2">
           <select className="rounded border border-border-default bg-bg-surface p-2" value={invRole} onChange={(e) => setInvRole(e.target.value as "User" | "Admin")}>
             <option value="User">User</option>
             <option value="Admin">Admin</option>
           </select>
           <input className="rounded border border-border-default bg-bg-surface p-2" type="number" min={1} placeholder="Max uses (blank = ∞)" value={invMaxUses} onChange={(e) => setInvMaxUses(e.target.value)} />
           <input className="rounded border border-border-default bg-bg-surface p-2" type="number" min={1} placeholder="Expires in days (blank = never)" value={invExpiresInDays} onChange={(e) => setInvExpiresInDays(e.target.value)} />
-          <input className="rounded border border-border-default bg-bg-surface p-2 sm:col-span-1" placeholder="Note (optional)" value={invNote} onChange={(e) => setInvNote(e.target.value)} />
+          <input className="rounded border border-border-default bg-bg-surface p-2" placeholder="Note (optional)" value={invNote} onChange={(e) => setInvNote(e.target.value)} />
           <button type="submit" className="rounded bg-action-primary p-2 text-white">Create link</button>
         </form>
         {invError && <div className="text-sm text-red-500">{invError}</div>}

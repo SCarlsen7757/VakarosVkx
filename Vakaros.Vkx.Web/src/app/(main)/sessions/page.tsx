@@ -24,7 +24,7 @@ type VisibilityFilter = "mine" | "team" | "public";
 function SessionBadges({ session }: { session: SessionSummary }) {
   return (
     <span className="ml-1 inline-flex gap-1">
-      {!session.isOwned && session.sharedViaTeams?.map((t) => (
+      {session.sharedViaTeams?.map((t) => (
         <span key={t} className="rounded bg-blue-500/15 px-1.5 py-0.5 text-[10px] font-medium text-blue-400">{t}</span>
       ))}
       {session.isPublic && (

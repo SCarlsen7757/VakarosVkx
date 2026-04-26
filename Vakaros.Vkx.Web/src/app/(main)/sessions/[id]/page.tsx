@@ -161,18 +161,25 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
         </dl>
 
         <div className="mt-5 flex flex-wrap items-end gap-3">
-          <label className="block w-full max-w-xs">
-            <span className="text-sm text-text-secondary">Boat</span>
-            <Select value={boatId} onChange={(e) => setBoatId(e.target.value)} disabled={!session.isOwned}>
-              <option value="">— Unassigned —</option>
-              {boats.map((b) => <option key={String(b.id)} value={String(b.id)}>{b.name}</option>)}
-            </Select>
-          </label>
-          {session.isOwned && <Button onClick={saveBoat}>Save</Button>}
-          {session.isOwned && (
-            <Button variant="secondary" onClick={togglePublic}>
-              {session.isPublic ? <><Lock className="mr-1 h-4 w-4" /> Make Private</> : <><Globe className="mr-1 h-4 w-4" /> Make Public</>}
-            </Button>
+          {session.isOwned ? (
+            <>
+              <label className="block w-full max-w-xs">
+                <span className="text-sm text-text-secondary">Boat</span>
+                <Select value={boatId} onChange={(e) => setBoatId(e.target.value)}>
+                  <option value="">— Unassigned —</option>
+                  {boats.map((b) => <option key={String(b.id)} value={String(b.id)}>{b.name}</option>)}
+                </Select>
+              </label>
+              <Button onClick={saveBoat}>Save</Button>
+              <Button variant="secondary" onClick={togglePublic}>
+                {session.isPublic ? <><Lock className="mr-1 h-4 w-4" /> Make Private</> : <><Globe className="mr-1 h-4 w-4" /> Make Public</>}
+              </Button>
+            </>
+          ) : (
+            <div>
+              <dt className="text-sm text-text-secondary">Boat</dt>
+              <dd className="text-sm">{session.boatName ?? <span className="text-text-secondary">Unassigned</span>}</dd>
+            </div>
           )}
           <Link
             href={`/sessions/${id}/viewer`}
@@ -211,14 +218,17 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
                   <td className="px-3 py-2 text-text-secondary">{r.endedAt ? new Date(r.endedAt).toLocaleString() : "—"}</td>
                   <td className="px-3 py-2 font-mono">{r.durationSeconds != null ? formatDuration(n(r.durationSeconds)) : "—"}</td>
                   <td className="px-3 py-2">
-                    <Select
-                      value={raceCourses[String(r.raceNumber)] ?? ""}
-                      onChange={(e) => setRaceCourses({ ...raceCourses, [String(r.raceNumber)]: e.target.value })}
-                      disabled={!session.isOwned}
-                    >
-                      <option value="">— None —</option>
-                      {courses.map((c) => <option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
-                    </Select>
+                    {session.isOwned ? (
+                      <Select
+                        value={raceCourses[String(r.raceNumber)] ?? ""}
+                        onChange={(e) => setRaceCourses({ ...raceCourses, [String(r.raceNumber)]: e.target.value })}
+                      >
+                        <option value="">— None —</option>
+                        {courses.map((c) => <option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
+                      </Select>
+                    ) : (
+                      <span className="text-text-secondary">{r.courseName ?? "None"}</span>
+                    )}
                   </td>
                   {session.isOwned && (
                     <td className="px-3 py-2"><Button variant="secondary" onClick={() => saveRaceCourse(r)}>Save</Button></td>
