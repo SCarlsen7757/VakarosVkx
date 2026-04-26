@@ -13,8 +13,10 @@ public record SessionDetailDto(
     short FormatVersion,
     short TelemetryRateHz,
     bool IsFixedToBodyFrame,
+    bool IsPublic,
     DateTimeOffset StartedAt,
     DateTimeOffset EndedAt,
     DateTimeOffset UploadedAt,
     string? Notes,
+    bool IsOwned,
     List<RaceDto> Races);

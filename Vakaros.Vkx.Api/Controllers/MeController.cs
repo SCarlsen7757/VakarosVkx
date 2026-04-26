@@ -184,4 +184,28 @@ public class MeController(
         await audit.LogAsync("team.invite_declined", "team", invite.TeamId.ToString(), ct: ct);
         return NoContent();
     }
+
+    [HttpGet("notification-counts")]
+    public async Task<ActionResult<NotificationCountsDto>> GetNotificationCounts(CancellationToken ct)
+    {
+        if (authOptions.IsSingleUser)
+        {
+            var pendingRequests = await db.BoatClassRequests
+                .CountAsync(r => r.Status == Models.Entities.BoatClassRequestStatus.Pending, ct);
+            return Ok(new NotificationCountsDto(0, pendingRequests));
+        }
+
+        var userId = currentUser.UserId;
+        var pendingInvites = await db.TeamInvites
+            .CountAsync(i => i.InvitedUserId == userId && i.AcceptedAt == null && i.DeclinedAt == null && i.ExpiresAt > DateTimeOffset.UtcNow, ct);
+
+        var isAdmin = await userManager.IsInRoleAsync(
+            (await userManager.FindByIdAsync(userId.ToString()))!, AuthConstants.AdminRole);
+
+        var pendingBoatClassRequests = isAdmin
+            ? await db.BoatClassRequests.CountAsync(r => r.Status == Models.Entities.BoatClassRequestStatus.Pending, ct)
+            : 0;
+
+        return Ok(new NotificationCountsDto(pendingInvites, pendingBoatClassRequests));
+    }
 }

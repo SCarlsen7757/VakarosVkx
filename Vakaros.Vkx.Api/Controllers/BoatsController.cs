@@ -50,8 +50,8 @@ public class BoatsController(AppDbContext db, ICurrentUser currentUser) : Contro
     public async Task<ActionResult<BoatDto>> Create(CreateBoatRequest request, CancellationToken ct)
     {
         var userId = currentUser.UserId;
-        // Ensure the boat class is owned by the same user (cross-owner refs not allowed for now).
-        var classExists = await db.BoatClasses.AnyAsync(bc => bc.Id == request.BoatClassId && bc.OwnerUserId == userId, ct);
+        // Ensure the boat class exists (now site-wide, not per-user).
+        var classExists = await db.BoatClasses.AnyAsync(bc => bc.Id == request.BoatClassId, ct);
         if (!classExists) return BadRequest(new { message = "Unknown boat class." });
 
         var boat = new Boat
@@ -82,7 +82,7 @@ public class BoatsController(AppDbContext db, ICurrentUser currentUser) : Contro
         var boat = await db.Boats.FirstOrDefaultAsync(b => b.Id == id && b.OwnerUserId == userId, ct);
         if (boat is null) return NotFound();
 
-        var classExists = await db.BoatClasses.AnyAsync(bc => bc.Id == request.BoatClassId && bc.OwnerUserId == userId, ct);
+        var classExists = await db.BoatClasses.AnyAsync(bc => bc.Id == request.BoatClassId, ct);
         if (!classExists) return BadRequest(new { message = "Unknown boat class." });
 
         boat.Name = request.Name;

@@ -11,16 +11,14 @@ namespace Vakaros.Vkx.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
-[Authorize]
 [Route("api/v{version:apiVersion}/boat-classes")]
-public class BoatClassesController(AppDbContext db, ICurrentUser currentUser) : ControllerBase
+public class BoatClassesController(AppDbContext db) : ControllerBase
 {
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<List<BoatClassDto>>> GetAll(CancellationToken ct)
     {
-        var userId = currentUser.UserId;
         var classes = await db.BoatClasses
-            .Where(bc => bc.OwnerUserId == userId)
             .OrderBy(bc => bc.Name)
             .Select(bc => new BoatClassDto(bc.Id, bc.Name, bc.Length, bc.Width, bc.Weight))
             .ToListAsync(ct);
@@ -28,11 +26,11 @@ public class BoatClassesController(AppDbContext db, ICurrentUser currentUser) : 
     }
 
     [HttpGet("{id:guid}")]
+    [AllowAnonymous]
     public async Task<ActionResult<BoatClassDto>> GetById(Guid id, CancellationToken ct)
     {
-        var userId = currentUser.UserId;
         var boatClass = await db.BoatClasses
-            .Where(bc => bc.Id == id && bc.OwnerUserId == userId)
+            .Where(bc => bc.Id == id)
             .Select(bc => new BoatClassDto(bc.Id, bc.Name, bc.Length, bc.Width, bc.Weight))
             .FirstOrDefaultAsync(ct);
         if (boatClass is null) return NotFound();
@@ -40,11 +38,11 @@ public class BoatClassesController(AppDbContext db, ICurrentUser currentUser) : 
     }
 
     [HttpPost]
+    [Authorize(Roles = AuthConstants.AdminRole)]
     public async Task<ActionResult<BoatClassDto>> Create(CreateBoatClassRequest request, CancellationToken ct)
     {
         var boatClass = new BoatClass
         {
-            OwnerUserId = currentUser.UserId,
             Name = request.Name,
             Length = request.Length,
             Width = request.Width,
@@ -57,10 +55,10 @@ public class BoatClassesController(AppDbContext db, ICurrentUser currentUser) : 
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = AuthConstants.AdminRole)]
     public async Task<ActionResult<BoatClassDto>> Update(Guid id, UpdateBoatClassRequest request, CancellationToken ct)
     {
-        var userId = currentUser.UserId;
-        var boatClass = await db.BoatClasses.FirstOrDefaultAsync(bc => bc.Id == id && bc.OwnerUserId == userId, ct);
+        var boatClass = await db.BoatClasses.FindAsync([id], ct);
         if (boatClass is null) return NotFound();
         boatClass.Name = request.Name;
         boatClass.Length = request.Length;
@@ -71,10 +69,10 @@ public class BoatClassesController(AppDbContext db, ICurrentUser currentUser) : 
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = AuthConstants.AdminRole)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
-        var userId = currentUser.UserId;
-        var boatClass = await db.BoatClasses.FirstOrDefaultAsync(bc => bc.Id == id && bc.OwnerUserId == userId, ct);
+        var boatClass = await db.BoatClasses.FindAsync([id], ct);
         if (boatClass is null) return NotFound();
         var isReferenced = await db.Boats.AnyAsync(b => b.BoatClassId == id, ct);
         if (isReferenced)

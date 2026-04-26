@@ -1,8 +1,10 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import type { components } from "@/lib/api-types";
+import type { SessionSummary } from "@/lib/schemas";
 
 type Member = components["schemas"]["TeamMemberDto"];
 type PendingInvite = components["schemas"]["TeamPendingInviteDto"];
@@ -14,6 +16,7 @@ export default function TeamDetailPage({ params }: { params: Promise<{ id: strin
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteMessage, setInviteMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [sessions, setSessions] = useState<SessionSummary[] | null>(null);
 
   async function load() {
     const [{ data: m }, { data: pi }] = await Promise.all([
@@ -25,7 +28,16 @@ export default function TeamDetailPage({ params }: { params: Promise<{ id: strin
     setIsAdmin(pi !== undefined);
   }
 
-  useEffect(() => { void load(); }, [id]);
+  async function loadSessions() {
+    const res = await fetch(`/api/v1/teams/${id}/sessions`);
+    if (res.ok) setSessions(await res.json());
+    else setSessions([]);
+  }
+
+  useEffect(() => {
+    void load();
+    void loadSessions();
+  }, [id]);
 
   async function invite(e: React.FormEvent) {
     e.preventDefault();
@@ -109,6 +121,28 @@ export default function TeamDetailPage({ params }: { params: Promise<{ id: strin
           </ul>
         </section>
       )}
+
+      <section>
+        <h2 className="mb-2 text-lg font-semibold">Sessions</h2>
+        {sessions === null ? (
+          <p className="text-sm text-text-secondary">Loading…</p>
+        ) : sessions.length === 0 ? (
+          <p className="text-sm text-text-secondary">No sessions have been shared with this team yet.</p>
+        ) : (
+          <ul className="space-y-1">
+            {sessions.map((s) => (
+              <li key={s.id} className="flex items-center justify-between rounded border border-border-default p-2 text-sm">
+                <div>
+                  <Link href={`/sessions/${s.id}`} className="font-medium text-action-primary hover:underline">{s.fileName}</Link>
+                  <span className="ml-2 text-text-secondary">{new Date(s.startedAt).toLocaleDateString()}</span>
+                  {s.isPublic && <span className="ml-2 rounded bg-green-500/15 px-1.5 py-0.5 text-[10px] font-medium text-green-400">Public</span>}
+                </div>
+                <span className="text-text-secondary">{s.raceCount} race{s.raceCount === 1 ? "" : "s"}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

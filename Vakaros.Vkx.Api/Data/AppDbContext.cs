@@ -29,6 +29,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<SessionShare> SessionShares => Set<SessionShare>();
     public DbSet<PersonalAccessToken> PersonalAccessTokens => Set<PersonalAccessToken>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+    public DbSet<BoatClassRequest> BoatClassRequests => Set<BoatClassRequest>();
 
     // Hypertables
     public DbSet<PositionReading> Positions => Set<PositionReading>();
@@ -66,12 +67,30 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.ToTable("boat_classes");
             e.HasKey(bc => bc.Id);
             e.Property(bc => bc.Id).HasColumnName("id").ValueGeneratedNever();
-            e.Property(bc => bc.OwnerUserId).HasColumnName("owner_user_id");
             e.Property(bc => bc.Name).HasColumnName("name").IsRequired();
             e.Property(bc => bc.Length).HasColumnName("length");
             e.Property(bc => bc.Width).HasColumnName("width");
             e.Property(bc => bc.Weight).HasColumnName("weight");
-            e.HasIndex(bc => bc.OwnerUserId);
+        });
+
+        modelBuilder.Entity<BoatClassRequest>(e =>
+        {
+            e.ToTable("boat_class_requests");
+            e.HasKey(r => r.Id);
+            e.Property(r => r.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(r => r.RequestedByUserId).HasColumnName("requested_by_user_id");
+            e.Property(r => r.Name).HasColumnName("name").IsRequired();
+            e.Property(r => r.Length).HasColumnName("length");
+            e.Property(r => r.Width).HasColumnName("width");
+            e.Property(r => r.Weight).HasColumnName("weight");
+            e.Property(r => r.Notes).HasColumnName("notes");
+            e.Property(r => r.Status).HasColumnName("status").HasConversion<int>();
+            e.Property(r => r.ReviewedByUserId).HasColumnName("reviewed_by_user_id");
+            e.Property(r => r.ReviewedAt).HasColumnName("reviewed_at");
+            e.Property(r => r.CreatedAt).HasColumnName("created_at");
+            e.HasOne(r => r.RequestedByUser).WithMany().HasForeignKey(r => r.RequestedByUserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(r => r.RequestedByUserId);
+            e.HasIndex(r => r.Status);
         });
 
         // ── Boats ───────────────────────────────────────────────────────────
@@ -149,6 +168,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(s => s.FormatVersion).HasColumnName("format_version");
             e.Property(s => s.TelemetryRateHz).HasColumnName("telemetry_rate_hz");
             e.Property(s => s.IsFixedToBodyFrame).HasColumnName("is_fixed_to_body_frame");
+            e.Property(s => s.IsPublic).HasColumnName("is_public");
             e.Property(s => s.StartedAt).HasColumnName("started_at");
             e.Property(s => s.EndedAt).HasColumnName("ended_at");
             e.Property(s => s.UploadedAt).HasColumnName("uploaded_at");
@@ -262,7 +282,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasKey(s => new { s.SessionId, s.TeamId });
             e.Property(s => s.SessionId).HasColumnName("session_id");
             e.Property(s => s.TeamId).HasColumnName("team_id");
-            e.Property(s => s.Permission).HasColumnName("permission").HasConversion<int>();
             e.Property(s => s.CreatedAt).HasColumnName("created_at");
             e.HasOne(s => s.Session).WithMany(sess => sess.Shares).HasForeignKey(s => s.SessionId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(s => s.Team).WithMany().HasForeignKey(s => s.TeamId).OnDelete(DeleteBehavior.Cascade);

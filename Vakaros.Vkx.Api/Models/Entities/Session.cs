@@ -11,6 +11,7 @@ public class Session
     public short FormatVersion { get; set; }
     public short TelemetryRateHz { get; set; }
     public bool IsFixedToBodyFrame { get; set; }
+    public bool IsPublic { get; set; } = false;
     public DateTimeOffset StartedAt { get; set; }
     public DateTimeOffset EndedAt { get; set; }
     public DateTimeOffset UploadedAt { get; set; } = DateTimeOffset.UtcNow;

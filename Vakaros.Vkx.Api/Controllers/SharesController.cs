@@ -23,34 +23,32 @@ public class SharesController(AppDbContext db, ICurrentUser currentUser, IAuditS
         if (!await db.Sessions.AnyAsync(s => s.Id == sessionId && s.OwnerUserId == userId, ct)) return NotFound();
         var shares = await db.SessionShares
             .Where(sh => sh.SessionId == sessionId)
-            .Select(sh => new SessionShareDto(sh.SessionId, sh.TeamId, sh.Team.Name, sh.Permission.ToString(), sh.CreatedAt))
+            .Select(sh => new SessionShareDto(sh.SessionId, sh.TeamId, sh.Team.Name, sh.CreatedAt))
             .ToListAsync(ct);
         return Ok(shares);
     }
 
     [HttpPut]
-    public async Task<ActionResult<SessionShareDto>> CreateOrUpdate(Guid sessionId, [FromBody] CreateOrUpdateShareRequest req, CancellationToken ct)
+    public async Task<ActionResult<SessionShareDto>> CreateOrUpdate(Guid sessionId, [FromBody] CreateShareRequest req, CancellationToken ct)
     {
         var userId = currentUser.UserId;
         if (!await db.Sessions.AnyAsync(s => s.Id == sessionId && s.OwnerUserId == userId, ct)) return NotFound();
-        if (!Enum.TryParse<SharePermission>(req.Permission, ignoreCase: true, out var perm)) return BadRequest();
-        if (!await db.Teams.AnyAsync(t => t.Id == req.TeamId, ct)) return BadRequest(new { error = "unknown_team" });
+
+        // Owner must be a member of the target team
+        var isMember = await db.TeamMembers.AnyAsync(m => m.TeamId == req.TeamId && m.UserId == userId, ct);
+        if (!isMember) return BadRequest(new { error = "not_team_member" });
 
         var existing = await db.SessionShares.FirstOrDefaultAsync(sh => sh.SessionId == sessionId && sh.TeamId == req.TeamId, ct);
         if (existing is null)
         {
-            existing = new SessionShare { SessionId = sessionId, TeamId = req.TeamId, Permission = perm };
+            existing = new SessionShare { SessionId = sessionId, TeamId = req.TeamId };
             db.SessionShares.Add(existing);
         }
-        else
-        {
-            existing.Permission = perm;
-        }
         await db.SaveChangesAsync(ct);
-        await audit.LogAsync("session.share", "session", sessionId.ToString(), details: $"{req.TeamId}:{perm}", ct: ct);
+        await audit.LogAsync("session.share", "session", sessionId.ToString(), details: req.TeamId.ToString(), ct: ct);
 
         var teamName = await db.Teams.Where(t => t.Id == req.TeamId).Select(t => t.Name).FirstAsync(ct);
-        return Ok(new SessionShareDto(sessionId, req.TeamId, teamName, perm.ToString(), existing.CreatedAt));
+        return Ok(new SessionShareDto(sessionId, req.TeamId, teamName, existing.CreatedAt));
     }
 
     [HttpDelete("{teamId:guid}")]

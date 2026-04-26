@@ -36,12 +36,12 @@ public sealed class SessionAccessHandler(
             .AnyAsync(s => s.Id == sessionId && s.OwnerUserId == userId);
         if (isOwner) { context.Succeed(requirement); return; }
 
-        // Otherwise, must be in a team that has a share with sufficient permission.
-        var minPermission = requirement.RequireWrite ? SharePermission.Write : SharePermission.Read;
+        // Otherwise, must be in a team that has a share (all shares grant read access; write = owner only).
+        if (requirement.RequireWrite) return;
 
         var hasShare = await (
             from share in db.SessionShares
-            where share.SessionId == sessionId && share.Permission >= minPermission
+            where share.SessionId == sessionId
             join member in db.TeamMembers on share.TeamId equals member.TeamId
             where member.UserId == userId
             select share.SessionId).AnyAsync();

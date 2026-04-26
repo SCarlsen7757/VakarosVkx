@@ -5,6 +5,107 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/v1/admin/boat-class-requests": {
+      "get": {
+        "tags": [
+          "AdminBoatClassRequests"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoatClassRequestDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoatClassRequestDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoatClassRequestDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/boat-class-requests/{id}/approve": {
+      "post": {
+        "tags": [
+          "AdminBoatClassRequests"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoatClassDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoatClassDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoatClassDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/boat-class-requests/{id}/reject": {
+      "post": {
+        "tags": [
+          "AdminBoatClassRequests"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/admin/users": {
       "get": {
         "tags": [
@@ -757,6 +858,91 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/boat-classes/requests": {
+      "post": {
+        "tags": [
+          "BoatClassRequests"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBoatClassRequestRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBoatClassRequestRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBoatClassRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoatClassRequestDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoatClassRequestDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoatClassRequestDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "BoatClassRequests"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoatClassRequestDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoatClassRequestDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoatClassRequestDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1753,6 +1939,35 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/me/notification-counts": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCountsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCountsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCountsDto"
+                }
+              }
+            }
           }
         }
       }
@@ -2979,17 +3194,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateOrUpdateShareRequest"
+                "$ref": "#/components/schemas/CreateShareRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateOrUpdateShareRequest"
+                "$ref": "#/components/schemas/CreateShareRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateOrUpdateShareRequest"
+                "$ref": "#/components/schemas/CreateShareRequest"
               }
             }
           },
@@ -3475,6 +3690,55 @@
           }
         }
       }
+    },
+    "/api/v1/teams/{teamId}/sessions": {
+      "get": {
+        "tags": [
+          "Teams"
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionSummaryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionSummaryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3593,6 +3857,85 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "BoatClassRequestDto": {
+        "required": [
+          "id",
+          "requestedByUserId",
+          "requestedByEmail",
+          "name",
+          "length",
+          "width",
+          "weight",
+          "notes",
+          "status",
+          "createdAt",
+          "reviewedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestedByUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestedByEmail": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "length": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "weight": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reviewedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -4011,6 +4354,54 @@
           }
         }
       },
+      "CreateBoatClassRequestRequest": {
+        "required": [
+          "name",
+          "length",
+          "width",
+          "weight",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "length": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "weight": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateBoatRequest": {
         "required": [
           "name",
@@ -4165,22 +4556,6 @@
           }
         }
       },
-      "CreateOrUpdateShareRequest": {
-        "required": [
-          "teamId",
-          "permission"
-        ],
-        "type": "object",
-        "properties": {
-          "teamId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "permission": {
-            "type": "string"
-          }
-        }
-      },
       "CreatePatRequest": {
         "required": [
           "name",
@@ -4214,6 +4589,18 @@
           },
           "plaintextToken": {
             "type": "string"
+          }
+        }
+      },
+      "CreateShareRequest": {
+        "required": [
+          "teamId"
+        ],
+        "type": "object",
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -4636,6 +5023,31 @@
           }
         }
       },
+      "NotificationCountsDto": {
+        "required": [
+          "pendingTeamInvites",
+          "pendingBoatClassRequests"
+        ],
+        "type": "object",
+        "properties": {
+          "pendingTeamInvites": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pendingBoatClassRequests": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "PatchRaceRequest": {
         "required": [
           "courseId",
@@ -4662,7 +5074,8 @@
         "required": [
           "boatId",
           "courseId",
-          "notes"
+          "notes",
+          "isPublic"
         ],
         "type": "object",
         "properties": {
@@ -4684,6 +5097,12 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "isPublic": {
+            "type": [
+              "null",
+              "boolean"
             ]
           }
         }
@@ -5159,10 +5578,12 @@
           "formatVersion",
           "telemetryRateHz",
           "isFixedToBodyFrame",
+          "isPublic",
           "startedAt",
           "endedAt",
           "uploadedAt",
           "notes",
+          "isOwned",
           "races"
         ],
         "type": "object",
@@ -5222,6 +5643,9 @@
           "isFixedToBodyFrame": {
             "type": "boolean"
           },
+          "isPublic": {
+            "type": "boolean"
+          },
           "startedAt": {
             "type": "string",
             "format": "date-time"
@@ -5240,6 +5664,9 @@
               "string"
             ]
           },
+          "isOwned": {
+            "type": "boolean"
+          },
           "races": {
             "type": "array",
             "items": {
@@ -5253,7 +5680,6 @@
           "sessionId",
           "teamId",
           "teamName",
-          "permission",
           "createdAt"
         ],
         "type": "object",
@@ -5267,9 +5693,6 @@
             "format": "uuid"
           },
           "teamName": {
-            "type": "string"
-          },
-          "permission": {
             "type": "string"
           },
           "createdAt": {
@@ -5293,7 +5716,10 @@
           "endedAt",
           "uploadedAt",
           "notes",
-          "raceCount"
+          "raceCount",
+          "isOwned",
+          "isPublic",
+          "sharedViaTeams"
         ],
         "type": "object",
         "properties": {
@@ -5374,6 +5800,18 @@
               "string"
             ],
             "format": "int32"
+          },
+          "isOwned": {
+            "type": "boolean"
+          },
+          "isPublic": {
+            "type": "boolean"
+          },
+          "sharedViaTeams": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -6007,6 +6445,9 @@
   },
   "tags": [
     {
+      "name": "AdminBoatClassRequests"
+    },
+    {
       "name": "Admin"
     },
     {
@@ -6017,6 +6458,9 @@
     },
     {
       "name": "BoatClasses"
+    },
+    {
+      "name": "BoatClassRequests"
     },
     {
       "name": "Boats"

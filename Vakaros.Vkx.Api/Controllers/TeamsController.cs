@@ -7,6 +7,7 @@ using Vakaros.Vkx.Api.Audit;
 using Vakaros.Vkx.Api.Auth;
 using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Api.Models.Entities;
+using Vakaros.Vkx.Shared.Dtos.Sessions;
 using Vakaros.Vkx.Shared.Dtos.Teams;
 
 namespace Vakaros.Vkx.Api.Controllers;
@@ -184,5 +185,38 @@ public class TeamsController(
         var userId = currentUser.UserId;
         var m = await db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.UserId == userId, ct);
         return m is not null && m.Role >= TeamRole.Admin;
+    }
+
+    [HttpGet("{teamId:guid}/sessions")]
+    public async Task<ActionResult<List<SessionSummaryDto>>> GetTeamSessions(Guid teamId, CancellationToken ct)
+    {
+        var userId = currentUser.UserId;
+        if (!await db.TeamMembers.AnyAsync(tm => tm.TeamId == teamId && tm.UserId == userId, ct)) return NotFound();
+
+        var sessions = await db.Sessions
+            .Where(s => db.SessionShares.Any(sh => sh.SessionId == s.Id && sh.TeamId == teamId))
+            .Include(s => s.Boat)
+            .Include(s => s.Course)
+            .Include(s => s.Races)
+            .Include(s => s.Shares).ThenInclude(sh => sh.Team)
+            .OrderByDescending(s => s.StartedAt)
+            .ToListAsync(ct);
+
+        var userTeamIds = await db.TeamMembers.Where(m => m.UserId == userId).Select(m => m.TeamId).ToListAsync(ct);
+
+        var result = sessions.Select(s => new SessionSummaryDto(
+            s.Id, s.BoatId, s.Boat?.Name,
+            s.CourseId, s.Course?.Name,
+            s.FileName, s.FormatVersion, s.TelemetryRateHz, s.IsFixedToBodyFrame,
+            s.StartedAt, s.EndedAt, s.UploadedAt, s.Notes, s.Races.Count,
+            IsOwned: s.OwnerUserId == userId,
+            IsPublic: s.IsPublic,
+            SharedViaTeams: s.Shares
+                .Where(sh => userTeamIds.Contains(sh.TeamId))
+                .Select(sh => sh.Team.Name)
+                .ToList()
+        )).ToList();
+
+        return Ok(result);
     }
 }

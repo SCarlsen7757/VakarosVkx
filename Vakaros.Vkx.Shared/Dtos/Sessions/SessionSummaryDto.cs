@@ -14,4 +14,7 @@ public record SessionSummaryDto(
     DateTimeOffset EndedAt,
     DateTimeOffset UploadedAt,
     string? Notes,
-    int RaceCount);
+    int RaceCount,
+    bool IsOwned,
+    bool IsPublic,
+    IReadOnlyList<string> SharedViaTeams);

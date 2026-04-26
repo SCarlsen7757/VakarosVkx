@@ -2,12 +2,54 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NAV_ITEMS, isActive, type NavItem } from "./nav-items";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { ThemeToggle } from "./theme-toggle";
 import { useAuth } from "@/lib/auth-context";
+import type { components } from "@/lib/api-types";
+
+type NotificationCounts = components["schemas"]["NotificationCountsDto"];
+
+function useNotificationCounts() {
+  const { me, providers } = useAuth();
+  const isAdmin = providers?.mode === "SingleUser" || !!me?.roles?.includes("Admin");
+  const [counts, setCounts] = useState<NotificationCounts | null>(null);
+
+  useEffect(() => {
+    if (!me && providers?.mode !== "SingleUser") return;
+
+    const fetch = () => {
+      window.fetch("/api/v1/me/notification-counts").then(async (res) => {
+        if (res.ok) setCounts(await res.json());
+      }).catch(() => {/* ignore */});
+    };
+
+    fetch();
+    const interval = setInterval(fetch, 60_000);
+    const onFocus = () => fetch();
+    window.addEventListener("focus", onFocus);
+    return () => { clearInterval(interval); window.removeEventListener("focus", onFocus); };
+  }, [me, providers?.mode]);
+
+  return { pendingInvites: Number(counts?.pendingTeamInvites ?? 0), pendingBoatClassRequests: isAdmin ? Number(counts?.pendingBoatClassRequests ?? 0) : 0 };
+}
+
+function BadgeDot({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
+function badgeForItem(item: NavItem, badges: { pendingInvites: number; pendingBoatClassRequests: number }) {
+  if (item.href === "/teams") return badges.pendingInvites;
+  if (item.href === "/admin/boat-classes") return badges.pendingBoatClassRequests;
+  return 0;
+}
 
 function useVisibleNavItems(): NavItem[] {
   const { me, providers } = useAuth();
@@ -19,6 +61,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const items = useVisibleNavItems();
+  const badges = useNotificationCounts();
 
   return (
     <aside
@@ -42,6 +85,7 @@ export function Sidebar() {
       <nav className="flex-1 space-y-1 px-2">
         {items.map((item) => {
           const active = isActive(pathname, item);
+          const badge = badgeForItem(item, badges);
           return (
             <Link
               key={item.href}
@@ -55,8 +99,9 @@ export function Sidebar() {
               )}
               title={collapsed ? item.label : undefined}
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className="h-5 w-5 shrink-0" />
               {!collapsed && <span>{item.label}</span>}
+              {!collapsed && <BadgeDot count={badge} />}
             </Link>
           );
         })}
@@ -71,24 +116,32 @@ export function Sidebar() {
 export function IconRail() {
   const pathname = usePathname();
   const items = useVisibleNavItems();
+  const badges = useNotificationCounts();
   return (
     <aside className="hidden lg:flex xl:hidden w-16 flex-col items-center border-r border-border-default bg-bg-surface py-4">
       <span className="mb-4 text-xs font-bold text-action-primary">VKX</span>
       <nav className="flex-1 space-y-1">
         {items.map((item) => {
           const active = isActive(pathname, item);
+          const badge = badgeForItem(item, badges);
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={item.label}
-              className={cn(
-                "flex items-center justify-center rounded-md p-2",
-                active ? "bg-action-primary/10 text-action-primary" : "text-text-secondary hover:bg-bg-elevated hover:text-text-primary"
+            <div key={item.href} className="relative">
+              <Link
+                href={item.href}
+                title={item.label}
+                className={cn(
+                  "flex items-center justify-center rounded-md p-2",
+                  active ? "bg-action-primary/10 text-action-primary" : "text-text-secondary hover:bg-bg-elevated hover:text-text-primary"
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+              </Link>
+              {badge > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
+                  {badge > 9 ? "9+" : badge}
+                </span>
               )}
-            >
-              <item.icon className="h-5 w-5" />
-            </Link>
+            </div>
           );
         })}
       </nav>
@@ -100,13 +153,15 @@ export function IconRail() {
 export function BottomTabBar() {
   const pathname = usePathname();
   const items = useVisibleNavItems();
+  const badges = useNotificationCounts();
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border-default bg-bg-surface">
       <ul className={cn("grid", items.length <= 8 ? "grid-cols-8" : "grid-cols-9")}>
         {items.map((item) => {
           const active = isActive(pathname, item);
+          const badge = badgeForItem(item, badges);
           return (
-            <li key={item.href}>
+            <li key={item.href} className="relative">
               <Link
                 href={item.href}
                 className={cn(
@@ -114,7 +169,14 @@ export function BottomTabBar() {
                   active ? "text-action-primary" : "text-text-secondary"
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <span className="relative">
+                  <item.icon className="h-5 w-5" />
+                  {badge > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white">
+                      {badge > 9 ? "9+" : badge}
+                    </span>
+                  )}
+                </span>
                 <span>{item.label}</span>
               </Link>
             </li>
