@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Vakaros.Vkx.Api.Data.Migrations
+namespace Vakaros.Vkx.Api.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -35,7 +35,6 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    owner_user_id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
                     length = table.Column<double>(type: "double precision", nullable: true),
                     width = table.Column<double>(type: "double precision", nullable: true),
@@ -260,16 +259,45 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "boat_class_requests",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    requested_by_user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "text", nullable: false),
+                    length = table.Column<double>(type: "double precision", nullable: true),
+                    width = table.Column<double>(type: "double precision", nullable: true),
+                    weight = table.Column<double>(type: "double precision", nullable: true),
+                    notes = table.Column<string>(type: "text", nullable: true),
+                    status = table.Column<int>(type: "integer", nullable: false),
+                    reviewed_by_user_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    reviewed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_boat_class_requests", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_boat_class_requests_users_requested_by_user_id",
+                        column: x => x.requested_by_user_id,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "team_invites",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     team_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    invited_user_id = table.Column<Guid>(type: "uuid", nullable: false),
                     email = table.Column<string>(type: "text", nullable: false),
-                    token = table.Column<string>(type: "text", nullable: false),
+                    role = table.Column<string>(type: "text", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    accepted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                    accepted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    declined_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -279,6 +307,12 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         column: x => x.team_id,
                         principalTable: "teams",
                         principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_team_invites_users_invited_user_id",
+                        column: x => x.invited_user_id,
+                        principalTable: "users",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -406,6 +440,7 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     format_version = table.Column<short>(type: "smallint", nullable: false),
                     telemetry_rate_hz = table.Column<short>(type: "smallint", nullable: false),
                     is_fixed_to_body_frame = table.Column<bool>(type: "boolean", nullable: false),
+                    is_public = table.Column<bool>(type: "boolean", nullable: false),
                     started_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     ended_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     uploaded_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -618,7 +653,6 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 {
                     session_id = table.Column<Guid>(type: "uuid", nullable: false),
                     team_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    permission = table.Column<int>(type: "integer", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -730,9 +764,14 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_boat_classes_owner_user_id",
-                table: "boat_classes",
-                column: "owner_user_id");
+                name: "IX_boat_class_requests_requested_by_user_id",
+                table: "boat_class_requests",
+                column: "requested_by_user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_boat_class_requests_status",
+                table: "boat_class_requests",
+                column: "status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_boats_boat_class_id",
@@ -877,15 +916,14 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                 column: "session_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_team_invites_team_id_email",
+                name: "IX_team_invites_invited_user_id",
                 table: "team_invites",
-                columns: new[] { "team_id", "email" });
+                column: "invited_user_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_team_invites_token",
+                name: "IX_team_invites_team_id_invited_user_id",
                 table: "team_invites",
-                column: "token",
-                unique: true);
+                columns: new[] { "team_id", "invited_user_id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_team_members_user_id",
@@ -939,6 +977,9 @@ namespace Vakaros.Vkx.Api.Data.Migrations
         {
             migrationBuilder.DropTable(
                 name: "audit_events");
+
+            migrationBuilder.DropTable(
+                name: "boat_class_requests");
 
             migrationBuilder.DropTable(
                 name: "course_legs");

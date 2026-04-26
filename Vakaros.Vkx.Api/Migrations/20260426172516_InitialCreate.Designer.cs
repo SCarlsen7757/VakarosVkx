@@ -9,10 +9,10 @@ using Vakaros.Vkx.Api.Data;
 
 #nullable disable
 
-namespace Vakaros.Vkx.Api.Data.Migrations
+namespace Vakaros.Vkx.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260423172053_InitialCreate")]
+    [Migration("20260426172516_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -347,9 +347,57 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
-                    b.Property<Guid>("OwnerUserId")
+                    b.Property<double?>("Weight")
+                        .HasColumnType("double precision")
+                        .HasColumnName("weight");
+
+                    b.Property<double?>("Width")
+                        .HasColumnType("double precision")
+                        .HasColumnName("width");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("boat_classes", (string)null);
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.BoatClassRequest", b =>
+                {
+                    b.Property<Guid>("Id")
                         .HasColumnType("uuid")
-                        .HasColumnName("owner_user_id");
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<double?>("Length")
+                        .HasColumnType("double precision")
+                        .HasColumnName("length");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid>("RequestedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requested_by_user_id");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reviewed_at");
+
+                    b.Property<Guid?>("ReviewedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewed_by_user_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
 
                     b.Property<double?>("Weight")
                         .HasColumnType("double precision")
@@ -361,9 +409,11 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OwnerUserId");
+                    b.HasIndex("RequestedByUserId");
 
-                    b.ToTable("boat_classes", (string)null);
+                    b.HasIndex("Status");
+
+                    b.ToTable("boat_class_requests", (string)null);
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Course", b =>
@@ -893,6 +943,10 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_fixed_to_body_frame");
 
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_public");
+
                     b.Property<string>("Notes")
                         .HasColumnType("text")
                         .HasColumnName("notes");
@@ -940,10 +994,6 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
-
-                    b.Property<int>("Permission")
-                        .HasColumnType("integer")
-                        .HasColumnName("permission");
 
                     b.HasKey("SessionId", "TeamId");
 
@@ -1050,6 +1100,10 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<DateTimeOffset?>("DeclinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("declined_at");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1059,21 +1113,24 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
 
+                    b.Property<Guid>("InvitedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("invited_user_id");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("role");
+
                     b.Property<Guid>("TeamId")
                         .HasColumnType("uuid")
                         .HasColumnName("team_id");
 
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("token");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("Token")
-                        .IsUnique();
+                    b.HasIndex("InvitedUserId");
 
-                    b.HasIndex("TeamId", "Email");
+                    b.HasIndex("TeamId", "InvitedUserId");
 
                     b.ToTable("team_invites", (string)null);
                 });
@@ -1209,6 +1266,17 @@ namespace Vakaros.Vkx.Api.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("BoatClass");
+                });
+
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.BoatClassRequest", b =>
+                {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.AppUser", "RequestedByUser")
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RequestedByUser");
                 });
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.CourseLeg", b =>
@@ -1385,11 +1453,19 @@ namespace Vakaros.Vkx.Api.Data.Migrations
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.TeamInvite", b =>
                 {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.AppUser", "InvitedUser")
+                        .WithMany()
+                        .HasForeignKey("InvitedUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Vakaros.Vkx.Api.Models.Entities.Team", "Team")
                         .WithMany("Invites")
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("InvitedUser");
 
                     b.Navigation("Team");
                 });
