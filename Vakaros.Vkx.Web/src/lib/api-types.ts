@@ -1743,7 +1743,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/sessions/{sessionId}/races": {
+    "/api/v1/races": {
         parameters: {
             query?: never;
             header?: never;
@@ -1752,11 +1752,11 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    sessionId: string;
+                query?: {
+                    sessionId?: string;
                 };
+                header?: never;
+                path?: never;
                 cookie?: never;
             };
             requestBody?: never;
@@ -1782,7 +1782,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}": {
+    "/api/v1/races/{raceId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1794,8 +1794,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -1824,8 +1823,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -1852,7 +1850,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/positions": {
+    "/api/v1/races/{raceId}/telemetry/positions": {
         parameters: {
             query?: never;
             header?: never;
@@ -1867,8 +1865,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -1895,7 +1892,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/wind": {
+    "/api/v1/races/{raceId}/telemetry/wind": {
         parameters: {
             query?: never;
             header?: never;
@@ -1910,8 +1907,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -1938,7 +1934,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/speed-through-water": {
+    "/api/v1/races/{raceId}/telemetry/speed-through-water": {
         parameters: {
             query?: never;
             header?: never;
@@ -1953,8 +1949,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -1981,7 +1976,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/depth": {
+    "/api/v1/races/{raceId}/telemetry/depth": {
         parameters: {
             query?: never;
             header?: never;
@@ -1996,8 +1991,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -2024,7 +2018,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/temperature": {
+    "/api/v1/races/{raceId}/telemetry/temperature": {
         parameters: {
             query?: never;
             header?: never;
@@ -2039,8 +2033,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -2067,7 +2060,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/load": {
+    "/api/v1/races/{raceId}/telemetry/load": {
         parameters: {
             query?: never;
             header?: never;
@@ -2082,8 +2075,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -2110,7 +2102,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/shift-angles": {
+    "/api/v1/races/{raceId}/telemetry/shift-angles": {
         parameters: {
             query?: never;
             header?: never;
@@ -2125,8 +2117,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -2153,7 +2144,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/analysis/start-line-length": {
+    "/api/v1/races/{raceId}/analysis/start-line-length": {
         parameters: {
             query?: never;
             header?: never;
@@ -2165,8 +2156,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -2193,7 +2183,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/summary": {
+    "/api/v1/races/{raceId}/summary": {
         parameters: {
             query?: never;
             header?: never;
@@ -2205,8 +2195,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -2231,8 +2220,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -2252,8 +2240,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    sessionId: string;
-                    raceNumber: number;
+                    raceId: string;
                 };
                 cookie?: never;
             };
@@ -3280,6 +3267,8 @@ export interface components {
             quaternionZ: number | string;
         };
         RaceDetailDto: {
+            /** Format: uuid */
+            id: string;
             /** Format: int32 */
             raceNumber: number | string;
             /** Format: uuid */
@@ -3304,6 +3293,8 @@ export interface components {
             startAnalysis: null | components["schemas"]["StartAnalysisDto"];
         };
         RaceDto: {
+            /** Format: uuid */
+            id: string;
             /** Format: int32 */
             raceNumber: number | string;
             /** Format: uuid */

@@ -13,34 +13,37 @@ namespace Vakaros.Vkx.Api.Controllers;
 [ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/v{version:apiVersion}/sessions/{sessionId:guid}/races/{raceNumber:int}/summary")]
+[Route("api/v{version:apiVersion}/races/{raceId:guid}/summary")]
 public class RaceSummaryController(AppDbContext db, IConfiguration config, IServiceProvider sp, SessionAuthorizer sessionAuth) : ControllerBase
 {
     private RaceSummaryService? SummaryService => sp.GetService<RaceSummaryService>();
 
     [HttpGet]
-    public async Task<ActionResult<RaceSummaryDto>> Get(Guid sessionId, int raceNumber, CancellationToken ct)
+    public async Task<ActionResult<RaceSummaryDto>> Get(Guid raceId, CancellationToken ct)
     {
-        if (!await sessionAuth.CanReadAsync(sessionId, ct)) return NotFound();
+        var race = await db.Races.FirstOrDefaultAsync(r => r.Id == raceId, ct);
+        if (race is null) return NotFound();
+        if (!await sessionAuth.CanReadAsync(race.SessionId, ct)) return NotFound();
 
         var report = await db.RaceSummaryReports
-            .FirstOrDefaultAsync(r => r.SessionId == sessionId && r.RaceNumber == raceNumber, ct);
+            .FirstOrDefaultAsync(r => r.RaceId == raceId, ct);
         if (report is null) return NotFound();
 
         var summaryService = SummaryService;
         var isStale = false;
         if (summaryService is not null)
         {
-            var currentHash = await summaryService.ComputeCurrentHashAsync(sessionId, raceNumber, ct);
+            var currentHash = await summaryService.ComputeCurrentHashAsync(raceId, ct);
             isStale = currentHash is not null && currentHash != report.ContextHash;
         }
         return Ok(new RaceSummaryDto(report.Content, report.Model, report.GeneratedAt, isStale));
     }
 
     [HttpPost]
-    public async Task Post(Guid sessionId, int raceNumber, CancellationToken ct)
+    public async Task Post(Guid raceId, CancellationToken ct)
     {
-        if (!await sessionAuth.CanWriteAsync(sessionId, ct))
+        var race = await db.Races.FirstOrDefaultAsync(r => r.Id == raceId, ct);
+        if (race is null || !await sessionAuth.CanWriteAsync(race.SessionId, ct))
         {
             HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
             return;
@@ -53,7 +56,7 @@ public class RaceSummaryController(AppDbContext db, IConfiguration config, IServ
             return;
         }
 
-        var result = await summaryService.BuildContextAsync(sessionId, raceNumber, ct);
+        var result = await summaryService.BuildContextAsync(raceId, ct);
         if (result is null)
         {
             HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
@@ -76,15 +79,18 @@ public class RaceSummaryController(AppDbContext db, IConfiguration config, IServ
         }
         await Response.WriteAsync("data: [DONE]\n\n", ct);
         await Response.Body.FlushAsync(ct);
-        await summaryService.SaveAsync(sessionId, raceNumber, accumulated.ToString(), model, hash, ct);
+        await summaryService.SaveAsync(raceId, accumulated.ToString(), model, hash, ct);
     }
 
     [HttpDelete]
-    public async Task<IActionResult> Delete(Guid sessionId, int raceNumber, CancellationToken ct)
+    public async Task<IActionResult> Delete(Guid raceId, CancellationToken ct)
     {
-        if (!await sessionAuth.CanWriteAsync(sessionId, ct)) return NotFound();
+        var race = await db.Races.FirstOrDefaultAsync(r => r.Id == raceId, ct);
+        if (race is null) return NotFound();
+        if (!await sessionAuth.CanWriteAsync(race.SessionId, ct)) return NotFound();
+
         var report = await db.RaceSummaryReports
-            .FirstOrDefaultAsync(r => r.SessionId == sessionId && r.RaceNumber == raceNumber, ct);
+            .FirstOrDefaultAsync(r => r.RaceId == raceId, ct);
         if (report is not null)
         {
             db.RaceSummaryReports.Remove(report);
@@ -93,3 +99,4 @@ public class RaceSummaryController(AppDbContext db, IConfiguration config, IServ
         return NoContent();
     }
 }
+

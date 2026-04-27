@@ -2,11 +2,14 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vakaros.Vkx.Api.Audit;
 using Vakaros.Vkx.Api.Auth;
 using Vakaros.Vkx.Api.Data;
+using Vakaros.Vkx.Api.Models.Entities;
 using Vakaros.Vkx.Api.Services;
 using Vakaros.Vkx.Shared.Dtos.Races;
 using Vakaros.Vkx.Shared.Dtos.Sessions;
+using Vakaros.Vkx.Shared.Dtos.Shares;
 
 namespace Vakaros.Vkx.Api.Controllers;
 
@@ -17,7 +20,8 @@ public class SessionsController(
     AppDbContext db,
     VkxIngestionService ingestionService,
     ICurrentUser currentUser,
-    SessionAuthorizer sessionAuth) : ControllerBase
+    SessionAuthorizer sessionAuth,
+    IAuditService audit) : ControllerBase
 {
     [HttpPost]
     [Authorize]
@@ -46,7 +50,7 @@ public class SessionsController(
             session.StartedAt, session.EndedAt, session.UploadedAt, session.Notes,
             IsOwned: true,
             [.. session.Races.OrderBy(r => r.RaceNumber).Select(r => new RaceDto(
-                r.RaceNumber, r.CourseId, r.Course?.Name,
+                r.Id, r.RaceNumber, r.CourseId, r.Course?.Name,
                 r.CountdownStartedAt, r.CountdownDurationSeconds,
                 r.StartedAt, r.EndedAt,
                 r.EndedAt.HasValue ? (r.EndedAt.Value - r.StartedAt).TotalSeconds : null,
@@ -159,6 +163,58 @@ public class SessionsController(
         return NoContent();
     }
 
+    // ── Shares ──────────────────────────────────────────────────────────
+
+    [HttpGet("{sessionId:guid}/shares")]
+    [Authorize]
+    public async Task<ActionResult<List<SessionShareDto>>> GetShares(Guid sessionId, CancellationToken ct)
+    {
+        var userId = currentUser.UserId;
+        if (!await db.Sessions.AnyAsync(s => s.Id == sessionId && s.OwnerUserId == userId, ct)) return NotFound();
+        var shares = await db.SessionShares
+            .Where(sh => sh.SessionId == sessionId)
+            .Select(sh => new SessionShareDto(sh.SessionId, sh.TeamId, sh.Team.Name, sh.CreatedAt))
+            .ToListAsync(ct);
+        return Ok(shares);
+    }
+
+    [HttpPut("{sessionId:guid}/shares")]
+    [Authorize]
+    public async Task<ActionResult<SessionShareDto>> CreateOrUpdateShare(Guid sessionId, [FromBody] CreateShareRequest req, CancellationToken ct)
+    {
+        var userId = currentUser.UserId;
+        if (!await db.Sessions.AnyAsync(s => s.Id == sessionId && s.OwnerUserId == userId, ct)) return NotFound();
+
+        var isMember = await db.TeamMembers.AnyAsync(m => m.TeamId == req.TeamId && m.UserId == userId, ct);
+        if (!isMember) return BadRequest(new { error = "not_team_member" });
+
+        var existing = await db.SessionShares.FirstOrDefaultAsync(sh => sh.SessionId == sessionId && sh.TeamId == req.TeamId, ct);
+        if (existing is null)
+        {
+            existing = new SessionShare { SessionId = sessionId, TeamId = req.TeamId };
+            db.SessionShares.Add(existing);
+        }
+        await db.SaveChangesAsync(ct);
+        await audit.LogAsync("session.share", "session", sessionId.ToString(), details: req.TeamId.ToString(), ct: ct);
+
+        var teamName = await db.Teams.Where(t => t.Id == req.TeamId).Select(t => t.Name).FirstAsync(ct);
+        return Ok(new SessionShareDto(sessionId, req.TeamId, teamName, existing.CreatedAt));
+    }
+
+    [HttpDelete("{sessionId:guid}/shares/{teamId:guid}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteShare(Guid sessionId, Guid teamId, CancellationToken ct)
+    {
+        var userId = currentUser.UserId;
+        if (!await db.Sessions.AnyAsync(s => s.Id == sessionId && s.OwnerUserId == userId, ct)) return NotFound();
+        var share = await db.SessionShares.FirstOrDefaultAsync(sh => sh.SessionId == sessionId && sh.TeamId == teamId, ct);
+        if (share is null) return NotFound();
+        db.SessionShares.Remove(share);
+        await db.SaveChangesAsync(ct);
+        await audit.LogAsync("session.unshare", "session", sessionId.ToString(), details: teamId.ToString(), ct: ct);
+        return NoContent();
+    }
+
     private static SessionDetailDto BuildDetail(Models.Entities.Session session, bool isOwned) =>
         new(
             session.Id, session.BoatId, session.Boat?.Name,
@@ -168,7 +224,7 @@ public class SessionsController(
             session.StartedAt, session.EndedAt, session.UploadedAt, session.Notes,
             isOwned,
             [.. session.Races.Select(r => new RaceDto(
-                r.RaceNumber, r.CourseId, r.Course?.Name,
+                r.Id, r.RaceNumber, r.CourseId, r.Course?.Name,
                 r.CountdownStartedAt, r.CountdownDurationSeconds,
                 r.StartedAt, r.EndedAt,
                 r.EndedAt.HasValue ? (r.EndedAt.Value - r.StartedAt).TotalSeconds : null,

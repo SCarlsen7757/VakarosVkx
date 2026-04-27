@@ -1972,7 +1972,7 @@
         }
       }
     },
-    "/api/v1/sessions/{sessionId}/races": {
+    "/api/v1/races": {
       "get": {
         "tags": [
           "Races"
@@ -1980,8 +1980,7 @@
         "parameters": [
           {
             "name": "sessionId",
-            "in": "path",
-            "required": true,
+            "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -2021,29 +2020,19 @@
         }
       }
     },
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}": {
+    "/api/v1/races/{raceId}": {
       "get": {
         "tags": [
           "Races"
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           }
         ],
@@ -2076,22 +2065,12 @@
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           }
         ],
@@ -2139,29 +2118,19 @@
         }
       }
     },
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/positions": {
+    "/api/v1/races/{raceId}/telemetry/positions": {
       "get": {
         "tags": [
           "Races"
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           },
           {
@@ -2222,29 +2191,19 @@
         }
       }
     },
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/wind": {
+    "/api/v1/races/{raceId}/telemetry/wind": {
       "get": {
         "tags": [
           "Races"
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           },
           {
@@ -2305,29 +2264,19 @@
         }
       }
     },
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/speed-through-water": {
+    "/api/v1/races/{raceId}/telemetry/speed-through-water": {
       "get": {
         "tags": [
           "Races"
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           },
           {
@@ -2388,29 +2337,19 @@
         }
       }
     },
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/depth": {
+    "/api/v1/races/{raceId}/telemetry/depth": {
       "get": {
         "tags": [
           "Races"
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           },
           {
@@ -2471,29 +2410,19 @@
         }
       }
     },
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/temperature": {
+    "/api/v1/races/{raceId}/telemetry/temperature": {
       "get": {
         "tags": [
           "Races"
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           },
           {
@@ -2554,29 +2483,19 @@
         }
       }
     },
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/load": {
+    "/api/v1/races/{raceId}/telemetry/load": {
       "get": {
         "tags": [
           "Races"
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           },
           {
@@ -2637,29 +2556,19 @@
         }
       }
     },
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/telemetry/shift-angles": {
+    "/api/v1/races/{raceId}/telemetry/shift-angles": {
       "get": {
         "tags": [
           "Races"
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           },
           {
@@ -2720,29 +2629,19 @@
         }
       }
     },
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/analysis/start-line-length": {
+    "/api/v1/races/{raceId}/analysis/start-line-length": {
       "get": {
         "tags": [
           "Races"
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           }
         ],
@@ -2770,29 +2669,19 @@
         }
       }
     },
-    "/api/v1/sessions/{sessionId}/races/{raceNumber}/summary": {
+    "/api/v1/races/{raceId}/summary": {
       "get": {
         "tags": [
           "RaceSummary"
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           }
         ],
@@ -2825,22 +2714,12 @@
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           }
         ],
@@ -2856,22 +2735,12 @@
         ],
         "parameters": [
           {
-            "name": "sessionId",
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "raceNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
             }
           }
         ],
@@ -3130,7 +2999,7 @@
     "/api/v1/sessions/{sessionId}/shares": {
       "get": {
         "tags": [
-          "Shares"
+          "Sessions"
         ],
         "parameters": [
           {
@@ -3177,7 +3046,7 @@
       },
       "put": {
         "tags": [
-          "Shares"
+          "Sessions"
         ],
         "parameters": [
           {
@@ -3237,7 +3106,7 @@
     "/api/v1/sessions/{sessionId}/shares/{teamId}": {
       "delete": {
         "tags": [
-          "Shares"
+          "Sessions"
         ],
         "parameters": [
           {
@@ -5290,6 +5159,7 @@
       },
       "RaceDetailDto": {
         "required": [
+          "id",
           "raceNumber",
           "courseId",
           "countdownStartedAt",
@@ -5306,6 +5176,10 @@
         ],
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
           "raceNumber": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -5413,6 +5287,7 @@
       },
       "RaceDto": {
         "required": [
+          "id",
           "raceNumber",
           "courseId",
           "courseName",
@@ -5427,6 +5302,10 @@
         ],
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
           "raceNumber": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -6482,9 +6361,6 @@
     },
     {
       "name": "Sessions"
-    },
-    {
-      "name": "Shares"
     },
     {
       "name": "Teams"

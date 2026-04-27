@@ -22,8 +22,7 @@ function quatToHeelTrim(w: number, x: number, y: number, z: number) {
 }
 
 interface Props {
-  sessionId: string | number;
-  raceNumber: number | null; // null for full session viewer
+  raceId: string;
   /** Absolute ms timestamp of the race start signal — used to convert window offsets to ms. */
   raceStartMs: number;
   /** Countdown duration in seconds (0 for session viewer). Used to fetch pre-race telemetry. */
@@ -38,7 +37,7 @@ async function fetchJson<T>(url: string): Promise<T | null> {
   return r.json() as Promise<T>;
 }
 
-export function TelemetryPanels({ sessionId, raceNumber, raceStartMs, raceStartOffset }: Props) {
+export function TelemetryPanels({ raceId, raceStartMs, raceStartOffset }: Props) {
   const { prefs } = useUnitPrefs();
   const { windowStart, windowEnd, position } = useRaceViewerStore();
 
@@ -56,8 +55,7 @@ export function TelemetryPanels({ sessionId, raceNumber, raceStartMs, raceStartO
   const [shifts, setShifts] = useState<Channel<ShiftAngle>>({ data: null, error: false });
 
   useEffect(() => {
-    if (raceNumber == null) return;
-    const base = `/api/v1/sessions/${sessionId}/races/${raceNumber}`;
+    const base = `/api/v1/races/${raceId}`;
     const from = raceStartOffset > 0 ? `?from=${-raceStartOffset}` : "";
     fetchJson<Position[]>(`${base}/telemetry/positions${from}`).then((d) => setPositions({ data: d ?? [], error: !d }));
     fetchJson<Wind[]>(`${base}/telemetry/wind${from}`).then((d) => setWind({ data: d ?? [], error: false }));
@@ -66,7 +64,7 @@ export function TelemetryPanels({ sessionId, raceNumber, raceStartMs, raceStartO
     fetchJson<Temperature[]>(`${base}/telemetry/temperature${from}`).then((d) => setTemp({ data: d ?? [], error: false }));
     fetchJson<Load[]>(`${base}/telemetry/load${from}`).then((d) => setLoad({ data: d ?? [], error: false }));
     fetchJson<ShiftAngle[]>(`${base}/telemetry/shift-angles${from}`).then((d) => setShifts({ data: d ?? [], error: false }));
-  }, [sessionId, raceNumber, raceStartOffset]);
+  }, [raceId, raceStartOffset]);
 
   const posData = positions.data ?? [];
 

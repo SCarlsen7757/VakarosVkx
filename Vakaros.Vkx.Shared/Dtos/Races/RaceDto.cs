@@ -1,6 +1,7 @@
 namespace Vakaros.Vkx.Shared.Dtos.Races;
 
 public record RaceDto(
+    Guid Id,
     int RaceNumber,
     Guid? CourseId,
     string? CourseName,

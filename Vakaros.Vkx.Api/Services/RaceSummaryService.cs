@@ -17,12 +17,13 @@ public class RaceSummaryService(
     /// Returns null when the race or session cannot be found.
     /// </summary>
     public async Task<(RaceSummaryContext Context, string Hash)?> BuildContextAsync(
-        Guid sessionId, int raceNumber, CancellationToken ct)
+        Guid raceId, CancellationToken ct)
     {
         var race = await db.Races
-            .FirstOrDefaultAsync(r => r.SessionId == sessionId && r.RaceNumber == raceNumber, ct);
+            .FirstOrDefaultAsync(r => r.Id == raceId, ct);
         if (race is null) return null;
 
+        var sessionId = race.SessionId;
         var session = await db.Sessions
             .Include(s => s.Boat).ThenInclude(b => b!.BoatClass)
             .Include(s => s.Course)
@@ -66,7 +67,7 @@ public class RaceSummaryService(
             BoatName: session.Boat?.Name ?? "Unknown",
             BoatClass: session.Boat?.BoatClass?.Name,
             CourseName: session.Course?.Name ?? race.Course?.Name,
-            RaceNumber: raceNumber,
+            RaceNumber: race.RaceNumber,
             StartedAt: race.StartedAt,
             DurationSeconds: duration,
             SailedDistanceMeters: race.SailedDistanceMeters,
@@ -91,10 +92,10 @@ public class RaceSummaryService(
     /// <summary>
     /// Upserts the completed report into the database.
     /// </summary>
-    public async Task SaveAsync(Guid sessionId, int raceNumber, string content, string model, string contextHash, CancellationToken ct)
+    public async Task SaveAsync(Guid raceId, string content, string model, string contextHash, CancellationToken ct)
     {
         var existing = await db.RaceSummaryReports
-            .FirstOrDefaultAsync(r => r.SessionId == sessionId && r.RaceNumber == raceNumber, ct);
+            .FirstOrDefaultAsync(r => r.RaceId == raceId, ct);
 
         if (existing is not null)
         {
@@ -105,10 +106,12 @@ public class RaceSummaryService(
         }
         else
         {
+            var race = await db.Races.FirstAsync(r => r.Id == raceId, ct);
             db.RaceSummaryReports.Add(new()
             {
-                SessionId = sessionId,
-                RaceNumber = raceNumber,
+                SessionId = race.SessionId,
+                RaceNumber = race.RaceNumber,
+                RaceId = raceId,
                 Content = content,
                 Model = model,
                 ContextHash = contextHash,
@@ -122,9 +125,9 @@ public class RaceSummaryService(
     /// <summary>
     /// Computes the current context hash for staleness detection.
     /// </summary>
-    public async Task<string?> ComputeCurrentHashAsync(Guid sessionId, int raceNumber, CancellationToken ct)
+    public async Task<string?> ComputeCurrentHashAsync(Guid raceId, CancellationToken ct)
     {
-        var result = await BuildContextAsync(sessionId, raceNumber, ct);
+        var result = await BuildContextAsync(raceId, ct);
         return result?.Hash;
     }
 

@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/useToast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sparkles, Square, RefreshCw, Trash2, Copy } from "lucide-react";
 
-export function AiSummary({ sessionId, raceNumber }: { sessionId: string | number; raceNumber: number }) {
+export function AiSummary({ raceId }: { raceId: string }) {
   const toast = useToast();
   const [summary, setSummary] = useState<RaceSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,7 @@ export function AiSummary({ sessionId, raceNumber }: { sessionId: string | numbe
   const [confirmDel, setConfirmDel] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
-  const url = `/api/v1/sessions/${sessionId}/races/${raceNumber}/summary`;
+  const url = `/api/v1/races/${raceId}/summary`;
 
   const load = async () => {
     setLoading(true);
@@ -27,7 +27,7 @@ export function AiSummary({ sessionId, raceNumber }: { sessionId: string | numbe
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [sessionId, raceNumber]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [raceId]);
 
   const generate = async () => {
     setStreaming(true);

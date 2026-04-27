@@ -45,12 +45,17 @@ export default function SessionViewerPage({ params }: PageProps) {
     let alive = true;
     Promise.all([
       fetch(`/api/v1/sessions/${id}`).then((r) => r.ok ? r.json() : Promise.reject(r.status)),
-      fetch(`/api/v1/sessions/${id}/races/1/telemetry/positions`).then((r) => r.ok ? r.json() : []),
     ])
-      .then(async ([s, p]: [SessionDetail, Position[]]) => {
+      .then(async ([s]: [SessionDetail]) => {
         if (!alive) return;
         setSession(s);
-        setPositions(p ?? []);
+        const firstRaceId = s.races.length > 0 ? s.races[0].id : null;
+        if (firstRaceId) {
+          const p: Position[] = await fetch(`/api/v1/races/${firstRaceId}/telemetry/positions`).then((r) => r.ok ? r.json() : []);
+          if (alive) setPositions(p ?? []);
+        } else {
+          setPositions([]);
+        }
         if (s.boatId) {
           const boat: Boat = await fetch(`/api/v1/boats/${s.boatId}`).then((r) => r.ok ? r.json() : Promise.reject(r.status));
           if (alive && boat.boatClass?.length != null) {
@@ -155,7 +160,7 @@ export default function SessionViewerPage({ params }: PageProps) {
           {showCharts && session.races.length > 0 && (
             <>
               <TimeWindowSlicer raceStartOffset={0} />
-              <TelemetryPanels sessionId={id} raceNumber={n(session.races[0].raceNumber)} raceStartMs={startMs} raceStartOffset={0} />
+              <TelemetryPanels raceId={String(session.races[0].id)} raceStartMs={startMs} raceStartOffset={0} />
             </>
           )}
         </div>

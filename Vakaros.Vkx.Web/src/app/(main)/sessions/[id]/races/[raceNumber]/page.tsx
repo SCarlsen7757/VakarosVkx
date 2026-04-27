@@ -40,6 +40,7 @@ export default function RaceViewerPage({ params }: PageProps) {
   const windowStart = useRaceViewerStore((s) => s.windowStart);
   const windowEnd = useRaceViewerStore((s) => s.windowEnd);
 
+  const [raceId, setRaceId] = useState<string | null>(null);
   const [race, setRace] = useState<RaceDetail | null>(null);
   const [positions, setPositions] = useState<Position[] | null>(null);
   const [course, setCourse] = useState<Course | null>(null);
@@ -48,19 +49,26 @@ export default function RaceViewerPage({ params }: PageProps) {
 
   useEffect(() => {
     let alive = true;
-    const base = `/api/v1/sessions/${id}/races/${raceNum}`;
-    // Fetch race and session in parallel; session is needed for boat class dimensions.
+    // Fetch session to resolve the raceId from the races list, and session for boat info.
     Promise.all([
-      fetch(base).then((r) => r.ok ? r.json() as Promise<RaceDetail> : Promise.reject(r.status)),
       fetch(`/api/v1/sessions/${id}`).then((r) => r.ok ? r.json() as Promise<SessionDetail> : Promise.reject(r.status)),
     ])
-      .then(async ([raceData, sessionData]) => {
+      .then(async ([sessionData]) => {
+        if (!alive) return;
+        const raceEntry = sessionData.races.find((r) => n(r.raceNumber) === raceNum);
+        if (!raceEntry?.id) { setError(`Race ${raceNum} not found`); return; }
+        const resolvedRaceId = String(raceEntry.id);
+        setRaceId(resolvedRaceId);
+
+        const raceBase = `/api/v1/races/${resolvedRaceId}`;
+        const raceData: RaceDetail = await fetch(raceBase).then((r) => r.ok ? r.json() : Promise.reject(r.status));
         if (!alive) return;
         setRace(raceData);
+
         const countdown = raceData.countdownDurationSeconds != null ? n(raceData.countdownDurationSeconds) : 0;
         const fromParam = countdown > 0 ? `?from=${-countdown}` : "";
         const fetches: Promise<unknown>[] = [
-          fetch(`${base}/telemetry/positions${fromParam}`).then((r) => r.ok ? r.json() as Promise<Position[]> : Promise.reject(r.status)),
+          fetch(`${raceBase}/telemetry/positions${fromParam}`).then((r) => r.ok ? r.json() as Promise<Position[]> : Promise.reject(r.status)),
           raceData.courseId != null
             ? fetch(`/api/v1/courses/${raceData.courseId}`).then((r) => r.ok ? r.json() : null)
             : Promise.resolve(null),
@@ -234,12 +242,12 @@ export default function RaceViewerPage({ params }: PageProps) {
             </Card>
           )}
 
-          <StartAnalysisPanel data={race.startAnalysis} sessionId={id} raceNumber={raceNum} compact={compactMode} />
+          <StartAnalysisPanel data={race.startAnalysis} raceId={raceId ?? ""} compact={compactMode} />
 
           {showCharts && (
             <>
               <TimeWindowSlicer raceStartOffset={raceStartOffset} />
-              <TelemetryPanels sessionId={id} raceNumber={raceNum} raceStartMs={startMs} raceStartOffset={raceStartOffset} />
+              <TelemetryPanels raceId={raceId ?? ""} raceStartMs={startMs} raceStartOffset={raceStartOffset} />
             </>
           )}
         </div>

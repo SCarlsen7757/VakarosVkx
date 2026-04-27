@@ -77,7 +77,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
 
   const saveRaceCourse = async (race: Race) => {
     const courseId = raceCourses[String(race.raceNumber)];
-    const res = await fetch(`/api/v1/sessions/${id}/races/${race.raceNumber}`, {
+    const res = await fetch(`/api/v1/races/${race.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ courseId: courseId ? courseId : null }),

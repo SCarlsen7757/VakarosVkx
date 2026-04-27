@@ -206,13 +206,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(r => r.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(r => r.SessionId).HasColumnName("session_id");
             e.Property(r => r.RaceNumber).HasColumnName("race_number");
+            e.Property(r => r.RaceId).HasColumnName("race_id");
             e.Property(r => r.Content).HasColumnName("content").IsRequired();
             e.Property(r => r.Model).HasColumnName("model").IsRequired();
             e.Property(r => r.ContextHash).HasColumnName("context_hash").IsRequired();
             e.Property(r => r.GeneratedAt).HasColumnName("generated_at");
             e.HasIndex(r => new { r.SessionId, r.RaceNumber }).IsUnique();
+            e.HasIndex(r => r.RaceId).IsUnique();
             e.HasOne(r => r.Session).WithMany()
                 .HasForeignKey(r => r.SessionId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(r => r.Race).WithMany()
+                .HasForeignKey(r => r.RaceId).OnDelete(DeleteBehavior.NoAction);
         });
 
         // ── Teams ───────────────────────────────────────────────────────────

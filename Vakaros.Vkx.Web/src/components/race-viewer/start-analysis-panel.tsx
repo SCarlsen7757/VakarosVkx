@@ -9,22 +9,21 @@ import { convertSpeed, speedUnitLabel } from "@/lib/units";
 
 interface Props {
   data: StartAnalysis | null | undefined;
-  sessionId: string | number;
-  raceNumber: number;
+  raceId: string;
   compact?: boolean;
 }
 
-export function StartAnalysisPanel({ data, sessionId, raceNumber, compact = false }: Props) {
+export function StartAnalysisPanel({ data, raceId, compact = false }: Props) {
   const { prefs } = useUnitPrefs();
   const [lineLength, setLineLength] = useState<number | null>(null);
 
   useEffect(() => {
     if (!data) return;
-    fetch(`/api/v1/sessions/${sessionId}/races/${raceNumber}/analysis/start-line-length`)
+    fetch(`/api/v1/races/${raceId}/analysis/start-line-length`)
       .then((r) => r.ok ? r.json() : null)
       .then((v) => setLineLength(v != null && typeof v.lengthMeters !== "undefined" ? parseFloat(v.lengthMeters) : null))
       .catch(() => null);
-  }, [sessionId, raceNumber, data]);
+  }, [raceId, data]);
 
   if (!data) return null;
   const bias = data.timeBiasSeconds != null ? n(data.timeBiasSeconds) : null;
