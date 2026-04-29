@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import type { components } from "@/lib/api-types";
-import { triggerNotificationRefresh } from "@/lib/notifications";
 
 type Team = components["schemas"]["TeamDto"];
 type PendingInvite = components["schemas"]["PendingTeamInviteDto"];
@@ -35,13 +34,11 @@ export default function TeamsPage() {
 
   async function acceptInvite(inviteId: string) {
     await api.POST("/api/v1/me/invites/{inviteId}/accept", { params: { path: { inviteId } } });
-    triggerNotificationRefresh();
     await load();
   }
 
   async function declineInvite(inviteId: string) {
     await api.POST("/api/v1/me/invites/{inviteId}/decline", { params: { path: { inviteId } } });
-    triggerNotificationRefresh();
     await load();
   }
 

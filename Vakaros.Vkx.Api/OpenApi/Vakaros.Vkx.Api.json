@@ -1972,6 +1972,18 @@
         }
       }
     },
+    "/api/v1/me/notifications/stream": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/races": {
       "get": {
         "tags": [
@@ -2160,33 +2172,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PositionDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PositionDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PositionDto"
-                  }
-                }
-              }
-            }
+            "description": "OK"
           }
         }
       }
@@ -2233,33 +2219,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/WindDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/WindDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/WindDto"
-                  }
-                }
-              }
-            }
+            "description": "OK"
           }
         }
       }
@@ -2306,33 +2266,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SpeedThroughWaterDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SpeedThroughWaterDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SpeedThroughWaterDto"
-                  }
-                }
-              }
-            }
+            "description": "OK"
           }
         }
       }
@@ -2379,33 +2313,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DepthDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DepthDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DepthDto"
-                  }
-                }
-              }
-            }
+            "description": "OK"
           }
         }
       }
@@ -2452,33 +2360,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TemperatureDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TemperatureDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TemperatureDto"
-                  }
-                }
-              }
-            }
+            "description": "OK"
           }
         }
       }
@@ -2525,33 +2407,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LoadDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LoadDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LoadDto"
-                  }
-                }
-              }
-            }
+            "description": "OK"
           }
         }
       }
@@ -2598,30 +2454,69 @@
         ],
         "responses": {
           "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/races/{raceId}/telemetry": {
+      "get": {
+        "tags": [
+          "Races"
+        ],
+        "summary": "Fetches all telemetry channels in a single request.",
+        "parameters": [
+          {
+            "name": "raceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ShiftAngleDto"
-                  }
+                  "$ref": "#/components/schemas/RaceTelemetryDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ShiftAngleDto"
-                  }
+                  "$ref": "#/components/schemas/RaceTelemetryDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ShiftAngleDto"
-                  }
+                  "$ref": "#/components/schemas/RaceTelemetryDto"
                 }
               }
             }
@@ -5408,6 +5303,62 @@
           },
           "isStale": {
             "type": "boolean"
+          }
+        }
+      },
+      "RaceTelemetryDto": {
+        "required": [
+          "positions",
+          "wind",
+          "speedThroughWater",
+          "depth",
+          "temperature",
+          "load",
+          "shiftAngles"
+        ],
+        "type": "object",
+        "properties": {
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PositionDto"
+            }
+          },
+          "wind": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WindDto"
+            }
+          },
+          "speedThroughWater": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpeedThroughWaterDto"
+            }
+          },
+          "depth": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepthDto"
+            }
+          },
+          "temperature": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemperatureDto"
+            }
+          },
+          "load": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LoadDto"
+            }
+          },
+          "shiftAngles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShiftAngleDto"
+            }
           }
         }
       },

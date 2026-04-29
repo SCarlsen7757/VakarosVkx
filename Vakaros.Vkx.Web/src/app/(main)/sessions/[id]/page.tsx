@@ -7,15 +7,33 @@ import { api } from "@/lib/api";
 import type { SessionDetail, Boat, Course, Race, SessionShare } from "@/lib/schemas";
 import { n } from "@/lib/schemas";
 import { formatDuration } from "@/lib/units";
-import { Button, Card, Select } from "@/components/ui/controls";
+import { Button, Card, Select, Textarea } from "@/components/ui/controls";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { useToast } from "@/hooks/useToast";
-import { ChevronRight, Globe, Lock, Pencil, Check } from "lucide-react";
+import { ChevronRight, Globe, Lock, Pencil, X } from "lucide-react";
 import type { components } from "@/lib/api-types";
 
 type TeamDto = components["schemas"]["TeamDto"];
+
+interface SessionDraft {
+  boatId: string;
+  isPublic: boolean;
+  notes: string;
+  raceCourses: Record<string, string>; // raceId → courseId
+}
+
+function buildDraft(session: SessionDetail, races: Race[]): SessionDraft {
+  const raceCourses: Record<string, string> = {};
+  races.forEach((r) => { raceCourses[String(r.id)] = String(r.courseId ?? ""); });
+  return {
+    boatId: String(session.boatId ?? ""),
+    isPublic: session.isPublic ?? false,
+    notes: session.notes ?? "",
+    raceCourses,
+  };
+}
 
 export default function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -25,13 +43,13 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
   const [boats, setBoats] = useState<Boat[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [boatId, setBoatId] = useState<string>("");
-  const [raceCourses, setRaceCourses] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
   const [shares, setShares] = useState<SessionShare[]>([]);
   const [myTeams, setMyTeams] = useState<TeamDto[]>([]);
   const [shareTeamId, setShareTeamId] = useState<string>("");
-  const [isEditing, setIsEditing] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [draft, setDraft] = useState<SessionDraft>({ boatId: "", isPublic: false, notes: "", raceCourses: {} });
+  const [saving, setSaving] = useState(false);
 
   const load = () => {
     api.GET(`/api/v1/sessions/{id}` as any, { params: { path: { id } } } as any).then(({ data, error }: any) => {
@@ -39,10 +57,6 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
       else {
         const s = data as SessionDetail;
         setSession(s);
-        setBoatId(String(s.boatId ?? ""));
-        const initial: Record<string, string> = {};
-        s.races.forEach((r) => { initial[String(r.raceNumber)] = String(r.courseId ?? ""); });
-        setRaceCourses(initial);
       }
     });
   };
@@ -65,36 +79,44 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
     api.GET("/api/v1/teams" as any, {} as any).then(({ data }: any) => setMyTeams((data as TeamDto[]) ?? []));
   }, [session?.isOwned]);
 
-  const saveBoat = async () => {
-    const res = await fetch(`/api/v1/sessions/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ boatId: boatId ? boatId : null }),
-    });
-    if (res.ok) { toast.push({ kind: "success", message: "Boat assigned." }); load(); }
-    else toast.push({ kind: "error", message: "Failed to update session." });
-  };
-
-  const saveRaceCourse = async (race: Race) => {
-    const courseId = raceCourses[String(race.raceNumber)];
-    const res = await fetch(`/api/v1/races/${race.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ courseId: courseId ? courseId : null }),
-    });
-    if (res.ok) { toast.push({ kind: "success", message: `Race ${race.raceNumber} updated.` }); load(); }
-    else toast.push({ kind: "error", message: "Failed to update race." });
-  };
-
-  const togglePublic = async () => {
+  const openPanel = () => {
     if (!session) return;
-    const res = await fetch(`/api/v1/sessions/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isPublic: !session.isPublic }),
-    });
-    if (res.ok) { toast.push({ kind: "success", message: session.isPublic ? "Session set to private." : "Session is now public." }); load(); }
-    else toast.push({ kind: "error", message: "Failed to update." });
+    setDraft(buildDraft(session, session.races as Race[]));
+    setPanelOpen(true);
+  };
+
+  const savePanel = async () => {
+    if (!session) return;
+    setSaving(true);
+    try {
+      const sessionRes = await fetch(`/api/v1/sessions/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          boatId: draft.boatId || null,
+          isPublic: draft.isPublic,
+          notes: draft.notes || null,
+        }),
+      });
+      if (!sessionRes.ok) { toast.push({ kind: "error", message: "Failed to update session." }); return; }
+
+      const racePatches = (session.races as Race[])
+        .filter((r) => String(r.courseId ?? "") !== draft.raceCourses[String(r.id)])
+        .map((r) =>
+          fetch(`/api/v1/races/${r.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ courseId: draft.raceCourses[String(r.id)] || null }),
+          })
+        );
+      await Promise.all(racePatches);
+
+      toast.push({ kind: "success", message: "Session updated." });
+      setPanelOpen(false);
+      load();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addShare = async () => {
@@ -138,164 +160,181 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
   const availableTeams = myTeams.filter((t) => !sharedTeamIds.has(t.id));
 
   return (
-    <div className="space-y-6">
-      <nav className="flex items-center gap-1 text-sm text-text-secondary">
-        <Link href="/sessions" className="hover:text-text-primary">Sessions</Link>
-        <ChevronRight className="h-4 w-4" />
-        <span className="text-text-primary">{session.fileName}</span>
-        {session.isPublic && (
-          <span className="ml-2 inline-flex items-center gap-1 rounded bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-400">
-            <Globe className="h-3 w-3" /> Public
-          </span>
-        )}
-      </nav>
-
-      <Card className="p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Session metadata</h2>
-          {session.isOwned && (
-            isEditing ? (
-              <Button variant="secondary" onClick={() => setIsEditing(false)}>
-                <Check className="mr-1 h-4 w-4" /> Done editing
-              </Button>
-            ) : (
-              <Button variant="secondary" onClick={() => setIsEditing(true)}>
-                <Pencil className="mr-1 h-4 w-4" /> Edit
-              </Button>
-            )
+    <div className={panelOpen ? "grid gap-6 lg:grid-cols-[1fr_28rem]" : undefined}>
+      {/* ── Main content ── */}
+      <div className="space-y-6">
+        <nav className="flex items-center gap-1 text-sm text-text-secondary">
+          <Link href="/sessions" className="hover:text-text-primary">Sessions</Link>
+          <ChevronRight className="h-4 w-4" />
+          <span className="text-text-primary">{session.fileName}</span>
+          {session.isPublic && (
+            <span className="ml-2 inline-flex items-center gap-1 rounded bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-400">
+              <Globe className="h-3 w-3" /> Public
+            </span>
           )}
-        </div>
+        </nav>
 
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-          <div><dt className="text-text-secondary">File</dt><dd>{session.fileName}</dd></div>
-          <div><dt className="text-text-secondary">Format</dt><dd>v{n(session.formatVersion)} @ {n(session.telemetryRateHz)} Hz</dd></div>
-          <div><dt className="text-text-secondary">Started</dt><dd>{new Date(session.startedAt).toLocaleString()}</dd></div>
-          <div><dt className="text-text-secondary">Duration</dt><dd className="font-mono">{formatDuration(dur)}</dd></div>
-          <div><dt className="text-text-secondary">Fixed Body frame</dt><dd>{session.isFixedToBodyFrame ? "Yes" : "No"}</dd></div>
-          <div><dt className="text-text-secondary">Uploaded</dt><dd>{new Date(session.uploadedAt).toLocaleString()}</dd></div>
-        </dl>
-
-        <div className="mt-5 flex flex-wrap items-end gap-3">
-          {isEditing ? (
-            <>
-              <label className="block w-full max-w-xs">
-                <span className="text-sm text-text-secondary">Boat</span>
-                <Select value={boatId} onChange={(e) => setBoatId(e.target.value)}>
-                  <option value="">— Unassigned —</option>
-                  {boats.map((b) => <option key={String(b.id)} value={String(b.id)}>{b.name}</option>)}
-                </Select>
-              </label>
-              <Button onClick={saveBoat}>Save</Button>
-              <Button variant="secondary" onClick={togglePublic}>
-                {session.isPublic ? <><Lock className="mr-1 h-4 w-4" /> Make Private</> : <><Globe className="mr-1 h-4 w-4" /> Make Public</>}
+        <Card className="p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Session metadata</h2>
+            {session.isOwned && (
+              <Button variant="secondary" onClick={openPanel}>
+                <Pencil className="mr-1 h-4 w-4" /> Edit session
               </Button>
-            </>
+            )}
+          </div>
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+            <div><dt className="text-text-secondary">File</dt><dd>{session.fileName}</dd></div>
+            <div><dt className="text-text-secondary">Format</dt><dd>v{n(session.formatVersion)} @ {n(session.telemetryRateHz)} Hz</dd></div>
+            <div><dt className="text-text-secondary">Started</dt><dd>{new Date(session.startedAt).toLocaleString()}</dd></div>
+            <div><dt className="text-text-secondary">Duration</dt><dd className="font-mono">{formatDuration(dur)}</dd></div>
+            <div><dt className="text-text-secondary">Fixed Body frame</dt><dd>{session.isFixedToBodyFrame ? "Yes" : "No"}</dd></div>
+            <div><dt className="text-text-secondary">Uploaded</dt><dd>{new Date(session.uploadedAt).toLocaleString()}</dd></div>
+            <div><dt className="text-text-secondary">Boat</dt><dd>{session.boatName ?? <span className="text-text-secondary">Unassigned</span>}</dd></div>
+            <div><dt className="text-text-secondary">Visibility</dt><dd>{session.isPublic ? "Public" : "Private"}</dd></div>
+          </dl>
+          <div className="mt-4">
+            <Link
+              href={`/sessions/${id}/viewer`}
+              className="inline-flex items-center rounded-md border border-border-default bg-bg-surface px-3 py-1.5 text-sm font-medium hover:bg-bg-elevated"
+            >
+              View session data
+            </Link>
+          </div>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <h2 className="px-5 pt-4 text-lg font-semibold">Races</h2>
+          {session.races.length === 0 ? (
+            <p className="px-5 py-8 text-sm text-text-secondary">No races detected in this session.</p>
           ) : (
-            <div>
-              <dt className="text-sm text-text-secondary">Boat</dt>
-              <dd className="text-sm">{session.boatName ?? <span className="text-text-secondary">Unassigned</span>}</dd>
-            </div>
+            <table className="w-full">
+              <thead className="bg-bg-elevated text-xs uppercase tracking-wider text-text-secondary">
+                <tr>
+                  <th className="px-3 py-2 text-left">Race #</th>
+                  <th className="px-3 py-2 text-left">Started</th>
+                  <th className="px-3 py-2 text-left">Ended</th>
+                  <th className="px-3 py-2 text-left">Duration</th>
+                  <th className="px-3 py-2 text-left">Course</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(session.races as Race[]).map((r) => (
+                  <tr key={String(r.raceNumber)} className="border-t border-border-default text-sm">
+                    <td className="px-3 py-2">
+                      <Link className="text-action-primary hover:underline" href={`/sessions/${id}/races/${r.raceNumber}`}>
+                        Race {n(r.raceNumber)}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 text-text-secondary">{new Date(r.startedAt).toLocaleString()}</td>
+                    <td className="px-3 py-2 text-text-secondary">{r.endedAt ? new Date(r.endedAt).toLocaleString() : "—"}</td>
+                    <td className="px-3 py-2 font-mono">{r.durationSeconds != null ? formatDuration(n(r.durationSeconds)) : "—"}</td>
+                    <td className="px-3 py-2 text-text-secondary">{r.courseName ?? "None"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
-          <Link
-            href={`/sessions/${id}/viewer`}
-            className="ml-auto inline-flex items-center rounded-md border border-border-default bg-bg-surface px-3 py-1.5 text-sm font-medium hover:bg-bg-elevated"
-          >
-            View session data
-          </Link>
-        </div>
-      </Card>
+        </Card>
 
-      <Card className="overflow-hidden">
-        <h2 className="px-5 pt-4 text-lg font-semibold">Races</h2>
-        {session.races.length === 0 ? (
-          <p className="px-5 py-8 text-sm text-text-secondary">No races detected in this session.</p>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-bg-elevated text-xs uppercase tracking-wider text-text-secondary">
-              <tr>
-                <th className="px-3 py-2 text-left">Race #</th>
-                <th className="px-3 py-2 text-left">Started</th>
-                <th className="px-3 py-2 text-left">Ended</th>
-                <th className="px-3 py-2 text-left">Duration</th>
-                <th className="px-3 py-2 text-left">Course</th>
-                {isEditing && <th className="px-3 py-2"></th>}
-              </tr>
-            </thead>
-            <tbody>
-              {session.races.map((r) => (
-                <tr key={String(r.raceNumber)} className="border-t border-border-default text-sm">
-                  <td className="px-3 py-2">
-                    <Link className="text-action-primary hover:underline" href={`/sessions/${id}/races/${r.raceNumber}`}>
-                      Race {n(r.raceNumber)}
-                    </Link>
-                  </td>
-                  <td className="px-3 py-2 text-text-secondary">{new Date(r.startedAt).toLocaleString()}</td>
-                  <td className="px-3 py-2 text-text-secondary">{r.endedAt ? new Date(r.endedAt).toLocaleString() : "—"}</td>
-                  <td className="px-3 py-2 font-mono">{r.durationSeconds != null ? formatDuration(n(r.durationSeconds)) : "—"}</td>
-                  <td className="px-3 py-2">
-                    {isEditing ? (
+        {session.isOwned && (
+          <Card className="p-5">
+            <h2 className="mb-4 text-lg font-semibold">Sharing</h2>
+            {shares.length === 0 ? (
+              <p className="mb-3 text-sm text-text-secondary">Not shared with any teams.</p>
+            ) : (
+              <ul className="mb-4 space-y-1">
+                {shares.map((sh) => (
+                  <li key={sh.teamId} className="flex items-center justify-between rounded border border-border-default p-2 text-sm">
+                    <span>{sh.teamName}</span>
+                    <button onClick={() => removeShare(sh.teamId)} className="text-xs text-red-500 hover:underline">Remove</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {availableTeams.length > 0 && (
+              <div className="flex gap-2">
+                <Select value={shareTeamId} onChange={(e) => setShareTeamId(e.target.value)} className="flex-1">
+                  <option value="">— Select a team —</option>
+                  {availableTeams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </Select>
+                <Button onClick={addShare} disabled={!shareTeamId}>Share</Button>
+              </div>
+            )}
+            {myTeams.length === 0 && (
+              <p className="text-sm text-text-secondary">You are not a member of any teams. <Link href="/teams" className="text-action-primary hover:underline">Create or join a team</Link> to share this session.</p>
+            )}
+          </Card>
+        )}
+
+        {session.isOwned && (
+          <div className="flex justify-end">
+            <Button variant="danger" onClick={() => setConfirm(true)}>Delete session</Button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Edit panel ── */}
+      {panelOpen && (
+        <Card className="p-5 self-start">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Edit session</h2>
+            <button onClick={() => setPanelOpen(false)} className="text-text-secondary hover:text-text-primary">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-sm text-text-secondary">Boat</span>
+              <Select value={draft.boatId} onChange={(e) => setDraft({ ...draft, boatId: e.target.value })}>
+                <option value="">— Unassigned —</option>
+                {boats.map((b) => <option key={String(b.id)} value={String(b.id)}>{b.name}</option>)}
+              </Select>
+            </label>
+
+            <label className="block">
+              <span className="text-sm text-text-secondary">Notes</span>
+              <Textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} rows={3} />
+            </label>
+
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-text-secondary">Visibility</span>
+              <Button
+                variant="secondary"
+                onClick={() => setDraft({ ...draft, isPublic: !draft.isPublic })}
+              >
+                {draft.isPublic ? <><Globe className="mr-1 h-4 w-4" /> Public</> : <><Lock className="mr-1 h-4 w-4" /> Private</>}
+              </Button>
+            </div>
+
+            {session.races.length > 0 && (
+              <div>
+                <p className="mb-2 text-sm text-text-secondary">Race courses</p>
+                <div className="space-y-2">
+                  {(session.races as Race[]).map((r) => (
+                    <div key={String(r.id)} className="flex items-center gap-2 text-sm">
+                      <span className="w-16 shrink-0 text-text-secondary">Race {n(r.raceNumber)}</span>
                       <Select
-                        value={raceCourses[String(r.raceNumber)] ?? ""}
-                        onChange={(e) => setRaceCourses({ ...raceCourses, [String(r.raceNumber)]: e.target.value })}
+                        value={draft.raceCourses[String(r.id)] ?? ""}
+                        onChange={(e) => setDraft({ ...draft, raceCourses: { ...draft.raceCourses, [String(r.id)]: e.target.value } })}
+                        className="flex-1"
                       >
                         <option value="">— None —</option>
                         {courses.map((c) => <option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
                       </Select>
-                    ) : (
-                      <span className="text-text-secondary">{r.courseName ?? "None"}</span>
-                    )}
-                  </td>
-                  {isEditing && (
-                    <td className="px-3 py-2"><Button variant="secondary" onClick={() => saveRaceCourse(r)}>Save</Button></td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Card>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-      {session.isOwned && (
-        <Card className="p-5">
-          <h2 className="mb-4 text-lg font-semibold">Sharing</h2>
-          {shares.length === 0 ? (
-            <p className={isEditing ? "mb-3 text-sm text-text-secondary" : "text-sm text-text-secondary"}>
-              Not shared with any teams.
-            </p>
-          ) : (
-            <ul className="mb-4 space-y-1">
-              {shares.map((sh) => (
-                <li key={sh.teamId} className="flex items-center justify-between rounded border border-border-default p-2 text-sm">
-                  <span>{sh.teamName}</span>
-                  {isEditing && (
-                    <button onClick={() => removeShare(sh.teamId)} className="text-xs text-red-500 hover:underline">Remove</button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-          {isEditing && availableTeams.length > 0 && (
-            <div className="flex gap-2">
-              <Select value={shareTeamId} onChange={(e) => setShareTeamId(e.target.value)} className="flex-1">
-                <option value="">— Select a team —</option>
-                {availableTeams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </Select>
-              <Button onClick={addShare} disabled={!shareTeamId}>Share</Button>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="secondary" onClick={() => setPanelOpen(false)}>Cancel</Button>
+              <Button onClick={savePanel} disabled={saving}>{saving ? "Saving…" : "Save"}</Button>
             </div>
-          )}
-          {isEditing && availableTeams.length === 0 && shares.length > 0 && (
-            <p className="text-sm text-text-secondary">Shared with all your teams.</p>
-          )}
-          {isEditing && myTeams.length === 0 && (
-            <p className="text-sm text-text-secondary">You are not a member of any teams. <Link href="/teams" className="text-action-primary hover:underline">Create or join a team</Link> to share this session.</p>
-          )}
+          </div>
         </Card>
-      )}
-
-      {session.isOwned && (
-        <div className="flex justify-end">
-          <Button variant="danger" onClick={() => setConfirm(true)}>Delete session</Button>
-        </div>
       )}
 
       <ConfirmDialog

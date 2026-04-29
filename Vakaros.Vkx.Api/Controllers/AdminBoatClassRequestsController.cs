@@ -7,13 +7,15 @@ using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Api.Models.Entities;
 using Vakaros.Vkx.Shared.Dtos.BoatClasses;
 
+using Vakaros.Vkx.Api.Services;
+
 namespace Vakaros.Vkx.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
 [Authorize(Roles = AuthConstants.AdminRole)]
 [Route("api/v{version:apiVersion}/admin/boat-class-requests")]
-public class AdminBoatClassRequestsController(AppDbContext db, ICurrentUser currentUser) : ControllerBase
+public class AdminBoatClassRequestsController(AppDbContext db, ICurrentUser currentUser, NotificationBus notificationBus) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<BoatClassRequestDto>>> GetPending(CancellationToken ct)
@@ -51,6 +53,8 @@ public class AdminBoatClassRequestsController(AppDbContext db, ICurrentUser curr
         request.ReviewedByUserId = adminId;
         request.ReviewedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
+        notificationBus.Notify(request.RequestedByUserId);
+        notificationBus.NotifyAll();
 
         return Ok(new BoatClassDto(boatClass.Id, boatClass.Name, boatClass.Length, boatClass.Width, boatClass.Weight));
     }
@@ -68,6 +72,8 @@ public class AdminBoatClassRequestsController(AppDbContext db, ICurrentUser curr
         request.ReviewedByUserId = adminId;
         request.ReviewedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
+        notificationBus.Notify(request.RequestedByUserId);
+        notificationBus.NotifyAll();
         return NoContent();
     }
 }

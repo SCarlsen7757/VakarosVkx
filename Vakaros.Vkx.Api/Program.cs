@@ -126,6 +126,7 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<RaceDetectionService>();
 builder.Services.AddScoped<VkxIngestionService>();
 builder.Services.AddScoped<StartAnalysisService>();
+builder.Services.AddSingleton<NotificationBus>();
 
 // CORS
 builder.Services.AddCors(opts =>

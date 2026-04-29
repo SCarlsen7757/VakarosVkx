@@ -62,108 +62,163 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
     }
 
     [HttpGet("{raceId:guid}/telemetry/positions")]
-    public async Task<ActionResult<List<PositionDto>>> GetPositions(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
+    public async Task<IActionResult> GetPositions(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
         var race = await db.Races.FirstOrDefaultAsync(r => r.Id == raceId, ct);
         if (race is null) return NotFound();
         if (!await sessionAuth.CanReadAsync(race.SessionId, ct)) return NotFound();
         var (start, end) = ComputeTimeWindow(race, from, to);
-        var positions = await db.Positions
+        var positions = db.Positions
             .Where(p => p.SessionId == race.SessionId && p.Time >= start && p.Time <= end)
             .OrderBy(p => p.Time)
             .Select(p => new PositionDto(p.Time, p.Latitude, p.Longitude, p.SpeedOverGround, p.CourseOverGround, p.Altitude, p.QuaternionW, p.QuaternionX, p.QuaternionY, p.QuaternionZ))
-            .ToListAsync(ct);
+            .AsAsyncEnumerable();
         return Ok(positions);
     }
 
     [HttpGet("{raceId:guid}/telemetry/wind")]
-    public async Task<ActionResult<List<WindDto>>> GetWind(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
+    public async Task<IActionResult> GetWind(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
         var race = await db.Races.FirstOrDefaultAsync(r => r.Id == raceId, ct);
         if (race is null) return NotFound();
         if (!await sessionAuth.CanReadAsync(race.SessionId, ct)) return NotFound();
         var (start, end) = ComputeTimeWindow(race, from, to);
-        var readings = await db.WindReadings
+        var readings = db.WindReadings
             .Where(w => w.SessionId == race.SessionId && w.Time >= start && w.Time <= end)
             .OrderBy(w => w.Time)
             .Select(w => new WindDto(w.Time, w.WindDirection, w.WindSpeed))
-            .ToListAsync(ct);
+            .AsAsyncEnumerable();
         return Ok(readings);
     }
 
     [HttpGet("{raceId:guid}/telemetry/speed-through-water")]
-    public async Task<ActionResult<List<SpeedThroughWaterDto>>> GetSpeedThroughWater(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
+    public async Task<IActionResult> GetSpeedThroughWater(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
         var race = await db.Races.FirstOrDefaultAsync(r => r.Id == raceId, ct);
         if (race is null) return NotFound();
         if (!await sessionAuth.CanReadAsync(race.SessionId, ct)) return NotFound();
         var (start, end) = ComputeTimeWindow(race, from, to);
-        var readings = await db.SpeedThroughWater
+        var readings = db.SpeedThroughWater
             .Where(s => s.SessionId == race.SessionId && s.Time >= start && s.Time <= end)
             .OrderBy(s => s.Time)
             .Select(s => new SpeedThroughWaterDto(s.Time, s.ForwardSpeed, s.HorizontalSpeed))
-            .ToListAsync(ct);
+            .AsAsyncEnumerable();
         return Ok(readings);
     }
 
     [HttpGet("{raceId:guid}/telemetry/depth")]
-    public async Task<ActionResult<List<DepthDto>>> GetDepth(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
+    public async Task<IActionResult> GetDepth(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
         var race = await db.Races.FirstOrDefaultAsync(r => r.Id == raceId, ct);
         if (race is null) return NotFound();
         if (!await sessionAuth.CanReadAsync(race.SessionId, ct)) return NotFound();
         var (start, end) = ComputeTimeWindow(race, from, to);
-        var readings = await db.DepthReadings
+        var readings = db.DepthReadings
             .Where(d => d.SessionId == race.SessionId && d.Time >= start && d.Time <= end)
             .OrderBy(d => d.Time)
             .Select(d => new DepthDto(d.Time, d.Depth))
-            .ToListAsync(ct);
+            .AsAsyncEnumerable();
         return Ok(readings);
     }
 
     [HttpGet("{raceId:guid}/telemetry/temperature")]
-    public async Task<ActionResult<List<TemperatureDto>>> GetTemperature(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
+    public async Task<IActionResult> GetTemperature(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
         var race = await db.Races.FirstOrDefaultAsync(r => r.Id == raceId, ct);
         if (race is null) return NotFound();
         if (!await sessionAuth.CanReadAsync(race.SessionId, ct)) return NotFound();
         var (start, end) = ComputeTimeWindow(race, from, to);
-        var readings = await db.TemperatureReadings
+        var readings = db.TemperatureReadings
             .Where(t => t.SessionId == race.SessionId && t.Time >= start && t.Time <= end)
             .OrderBy(t => t.Time)
             .Select(t => new TemperatureDto(t.Time, t.Temperature))
-            .ToListAsync(ct);
+            .AsAsyncEnumerable();
         return Ok(readings);
     }
 
     [HttpGet("{raceId:guid}/telemetry/load")]
-    public async Task<ActionResult<List<LoadDto>>> GetLoad(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
+    public async Task<IActionResult> GetLoad(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
         var race = await db.Races.FirstOrDefaultAsync(r => r.Id == raceId, ct);
         if (race is null) return NotFound();
         if (!await sessionAuth.CanReadAsync(race.SessionId, ct)) return NotFound();
         var (start, end) = ComputeTimeWindow(race, from, to);
-        var readings = await db.LoadReadings
+        var readings = db.LoadReadings
             .Where(l => l.SessionId == race.SessionId && l.Time >= start && l.Time <= end)
             .OrderBy(l => l.Time)
             .Select(l => new LoadDto(l.Time, l.SensorName, l.Load))
-            .ToListAsync(ct);
+            .AsAsyncEnumerable();
         return Ok(readings);
     }
 
     [HttpGet("{raceId:guid}/telemetry/shift-angles")]
-    public async Task<ActionResult<List<ShiftAngleDto>>> GetShiftAngles(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
+    public async Task<IActionResult> GetShiftAngles(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
         var race = await db.Races.FirstOrDefaultAsync(r => r.Id == raceId, ct);
         if (race is null) return NotFound();
         if (!await sessionAuth.CanReadAsync(race.SessionId, ct)) return NotFound();
         var (start, end) = ComputeTimeWindow(race, from, to);
-        var readings = await db.ShiftAngles
+        var readings = db.ShiftAngles
             .Where(s => s.SessionId == race.SessionId && s.Time >= start && s.Time <= end)
             .OrderBy(s => s.Time)
             .Select(s => new ShiftAngleDto(s.Time, s.IsPort, s.IsManual, s.TrueHeading, s.SpeedOverGround))
-            .ToListAsync(ct);
+            .AsAsyncEnumerable();
         return Ok(readings);
+    }
+
+    [HttpGet("{raceId:guid}/telemetry")]
+    [EndpointSummary("Fetches all telemetry channels in a single request.")]
+    public async Task<ActionResult<RaceTelemetryDto>> GetTelemetry(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
+    {
+        var race = await db.Races.FirstOrDefaultAsync(r => r.Id == raceId, ct);
+        if (race is null) return NotFound();
+        if (!await sessionAuth.CanReadAsync(race.SessionId, ct)) return NotFound();
+        var (start, end) = ComputeTimeWindow(race, from, to);
+        var sid = race.SessionId;
+
+        var positions = await db.Positions
+            .Where(p => p.SessionId == sid && p.Time >= start && p.Time <= end)
+            .OrderBy(p => p.Time)
+            .Select(p => new PositionDto(p.Time, p.Latitude, p.Longitude, p.SpeedOverGround, p.CourseOverGround, p.Altitude, p.QuaternionW, p.QuaternionX, p.QuaternionY, p.QuaternionZ))
+            .ToListAsync(ct);
+
+        var wind = await db.WindReadings
+            .Where(w => w.SessionId == sid && w.Time >= start && w.Time <= end)
+            .OrderBy(w => w.Time)
+            .Select(w => new WindDto(w.Time, w.WindDirection, w.WindSpeed))
+            .ToListAsync(ct);
+
+        var stw = await db.SpeedThroughWater
+            .Where(s => s.SessionId == sid && s.Time >= start && s.Time <= end)
+            .OrderBy(s => s.Time)
+            .Select(s => new SpeedThroughWaterDto(s.Time, s.ForwardSpeed, s.HorizontalSpeed))
+            .ToListAsync(ct);
+
+        var depth = await db.DepthReadings
+            .Where(d => d.SessionId == sid && d.Time >= start && d.Time <= end)
+            .OrderBy(d => d.Time)
+            .Select(d => new DepthDto(d.Time, d.Depth))
+            .ToListAsync(ct);
+
+        var temperature = await db.TemperatureReadings
+            .Where(t => t.SessionId == sid && t.Time >= start && t.Time <= end)
+            .OrderBy(t => t.Time)
+            .Select(t => new TemperatureDto(t.Time, t.Temperature))
+            .ToListAsync(ct);
+
+        var load = await db.LoadReadings
+            .Where(l => l.SessionId == sid && l.Time >= start && l.Time <= end)
+            .OrderBy(l => l.Time)
+            .Select(l => new LoadDto(l.Time, l.SensorName, l.Load))
+            .ToListAsync(ct);
+
+        var shiftAngles = await db.ShiftAngles
+            .Where(s => s.SessionId == sid && s.Time >= start && s.Time <= end)
+            .OrderBy(s => s.Time)
+            .Select(s => new ShiftAngleDto(s.Time, s.IsPort, s.IsManual, s.TrueHeading, s.SpeedOverGround))
+            .ToListAsync(ct);
+
+        return Ok(new RaceTelemetryDto(positions, wind, stw, depth, temperature, load, shiftAngles));
     }
 
     [HttpGet("{raceId:guid}/analysis/start-line-length")]

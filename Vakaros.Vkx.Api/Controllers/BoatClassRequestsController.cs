@@ -7,13 +7,15 @@ using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Api.Models.Entities;
 using Vakaros.Vkx.Shared.Dtos.BoatClasses;
 
+using Vakaros.Vkx.Api.Services;
+
 namespace Vakaros.Vkx.Api.Controllers;
 
 [ApiVersion("1.0")]
 [ApiController]
 [Authorize]
 [Route("api/v{version:apiVersion}/boat-classes/requests")]
-public class BoatClassRequestsController(AppDbContext db, ICurrentUser currentUser) : ControllerBase
+public class BoatClassRequestsController(AppDbContext db, ICurrentUser currentUser, NotificationBus notificationBus) : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<BoatClassRequestDto>> Create([FromBody] CreateBoatClassRequestRequest req, CancellationToken ct)
@@ -30,6 +32,7 @@ public class BoatClassRequestsController(AppDbContext db, ICurrentUser currentUs
         };
         db.BoatClassRequests.Add(request);
         await db.SaveChangesAsync(ct);
+        notificationBus.NotifyAll();
 
         var email = await db.Users.Where(u => u.Id == userId).Select(u => u.Email!).FirstOrDefaultAsync(ct) ?? "";
         return CreatedAtAction(nameof(GetMine), null,

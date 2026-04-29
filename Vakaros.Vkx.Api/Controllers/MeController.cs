@@ -7,6 +7,7 @@ using Vakaros.Vkx.Api.Audit;
 using Vakaros.Vkx.Api.Auth;
 using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Api.Models.Entities;
+using Vakaros.Vkx.Api.Services;
 using Vakaros.Vkx.Shared.Dtos.Me;
 using Vakaros.Vkx.Shared.Dtos.Stats;
 using Vakaros.Vkx.Shared.Dtos.Teams;
@@ -23,7 +24,8 @@ public class MeController(
     UserManager<AppUser> userManager,
     ICurrentUser currentUser,
     IAuditService audit,
-    AuthOptions authOptions) : ControllerBase
+    AuthOptions authOptions,
+    NotificationBus notificationBus) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<UserProfileDto>> GetProfile()
@@ -207,5 +209,75 @@ public class MeController(
             : 0;
 
         return Ok(new NotificationCountsDto(pendingInvites, pendingBoatClassRequests));
+    }
+
+    /// <summary>
+    /// Long-lived SSE endpoint that pushes <see cref="NotificationCountsDto"/> whenever
+    /// notification-relevant data changes. The initial counts are sent immediately on connect.
+    /// </summary>
+    [HttpGet("notifications/stream")]
+    public async Task StreamNotifications(CancellationToken ct)
+    {
+        Guid userId;
+        bool isAdmin;
+
+        if (authOptions.IsSingleUser)
+        {
+            userId = AuthConstants.SystemUserId;
+            isAdmin = true;
+        }
+        else
+        {
+            userId = currentUser.UserId;
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            if (user is null) { Response.StatusCode = StatusCodes.Status401Unauthorized; return; }
+            isAdmin = await userManager.IsInRoleAsync(user, AuthConstants.AdminRole);
+        }
+
+        Response.ContentType = "text/event-stream";
+        Response.Headers.CacheControl = "no-cache";
+        Response.Headers.Connection = "keep-alive";
+
+        var reader = notificationBus.Subscribe(userId);
+        try
+        {
+            await SendNotificationCountsAsync(userId, isAdmin, ct);
+
+            await foreach (var _ in reader.ReadAllAsync(ct))
+                await SendNotificationCountsAsync(userId, isAdmin, ct);
+        }
+        catch (OperationCanceledException) { /* client disconnected */ }
+        finally
+        {
+            notificationBus.Unsubscribe(userId);
+        }
+    }
+
+    private async Task SendNotificationCountsAsync(Guid userId, bool isAdmin, CancellationToken ct)
+    {
+        int pendingInvites;
+        int pendingBoatClassRequests;
+
+        if (authOptions.IsSingleUser)
+        {
+            pendingInvites = 0;
+            pendingBoatClassRequests = isAdmin
+                ? await db.BoatClassRequests.CountAsync(r => r.Status == Models.Entities.BoatClassRequestStatus.Pending, ct)
+                : 0;
+        }
+        else
+        {
+            pendingInvites = await db.TeamInvites
+                .CountAsync(i => i.InvitedUserId == userId && i.AcceptedAt == null && i.DeclinedAt == null && i.ExpiresAt > DateTimeOffset.UtcNow, ct);
+            pendingBoatClassRequests = isAdmin
+                ? await db.BoatClassRequests.CountAsync(r => r.Status == Models.Entities.BoatClassRequestStatus.Pending, ct)
+                : 0;
+        }
+
+        var counts = new NotificationCountsDto(pendingInvites, pendingBoatClassRequests);
+        var json = System.Text.Json.JsonSerializer.Serialize(counts,
+            new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
+        await Response.WriteAsync($"data: {json}\n\n", ct);
+        await Response.Body.FlushAsync(ct);
     }
 }

@@ -10,6 +10,8 @@ using Vakaros.Vkx.Api.Models.Entities;
 using Vakaros.Vkx.Shared.Dtos.Sessions;
 using Vakaros.Vkx.Shared.Dtos.Teams;
 
+using Vakaros.Vkx.Api.Services;
+
 namespace Vakaros.Vkx.Api.Controllers;
 
 [ApiVersion("1.0")]
@@ -20,7 +22,8 @@ public class TeamsController(
     AppDbContext db,
     UserManager<AppUser> userManager,
     ICurrentUser currentUser,
-    IAuditService audit) : ControllerBase
+    IAuditService audit,
+    NotificationBus notificationBus) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<TeamDto>>> GetMyTeams(CancellationToken ct)
@@ -163,6 +166,7 @@ public class TeamsController(
         db.TeamInvites.Add(invite);
         await db.SaveChangesAsync(ct);
         await audit.LogAsync("team.invite", "team", teamId.ToString(), details: req.Email, ct: ct);
+        notificationBus.Notify(invitee.Id);
 
         return Ok(new TeamInviteDto(invite.Id, invite.Email, invitee.DisplayName, invite.Role, invite.CreatedAt, invite.ExpiresAt));
     }

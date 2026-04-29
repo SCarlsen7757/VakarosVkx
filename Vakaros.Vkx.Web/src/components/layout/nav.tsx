@@ -20,22 +20,36 @@ function useNotificationCounts() {
   useEffect(() => {
     if (!me && providers?.mode !== "SingleUser") return;
 
-    const fetch = () => {
-      window.fetch("/api/v1/me/notification-counts").then(async (res) => {
-        if (res.ok) setCounts(await res.json());
-      }).catch(() => {/* ignore */});
+    let source: EventSource | null = null;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const connect = () => {
+      source?.close();
+      source = new EventSource("/api/v1/me/notifications/stream");
+      source.onmessage = (e) => {
+        try { setCounts(JSON.parse(e.data as string) as NotificationCounts); } catch { /* ignore */ }
+      };
+      source.onerror = () => {
+        source?.close();
+        source = null;
+        retryTimeout = setTimeout(connect, 30_000);
+      };
     };
 
-    fetch();
-    const interval = setInterval(fetch, 60_000);
-    const onFocus = () => fetch();
-    const onChanged = () => fetch();
+    connect();
+
+    const onFocus = () => {
+      if (!source || source.readyState === EventSource.CLOSED) {
+        if (retryTimeout) clearTimeout(retryTimeout);
+        connect();
+      }
+    };
+
     window.addEventListener("focus", onFocus);
-    window.addEventListener("vakaros:notifications-changed", onChanged);
     return () => {
-      clearInterval(interval);
+      source?.close();
+      if (retryTimeout) clearTimeout(retryTimeout);
       window.removeEventListener("focus", onFocus);
-      window.removeEventListener("vakaros:notifications-changed", onChanged);
     };
   }, [me, providers?.mode]);
 

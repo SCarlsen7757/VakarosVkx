@@ -5,7 +5,6 @@ import { Button, Card } from "@/components/ui/controls";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { useToast } from "@/hooks/useToast";
 import type { BoatClassRequest } from "@/lib/schemas";
-import { triggerNotificationRefresh } from "@/lib/notifications";
 
 export default function AdminBoatClassesPage() {
   const toast = useToast();
@@ -24,7 +23,6 @@ export default function AdminBoatClassesPage() {
     const res = await fetch(`/api/v1/admin/boat-class-requests/${id}/approve`, { method: "POST" });
     if (res.ok) {
       toast.push({ kind: "success", message: "Request approved — boat class created." });
-      triggerNotificationRefresh();
       load();
     } else toast.push({ kind: "error", message: "Failed to approve." });
   };
@@ -33,7 +31,6 @@ export default function AdminBoatClassesPage() {
     const res = await fetch(`/api/v1/admin/boat-class-requests/${id}/reject`, { method: "POST" });
     if (res.ok) {
       toast.push({ kind: "success", message: "Request rejected." });
-      triggerNotificationRefresh();
       load();
     } else toast.push({ kind: "error", message: "Failed to reject." });
   };

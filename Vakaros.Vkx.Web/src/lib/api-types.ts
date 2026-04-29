@@ -1743,6 +1743,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/notifications/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/races": {
         parameters: {
             query?: never;
@@ -1876,11 +1909,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["PositionDto"][];
-                        "application/json": components["schemas"]["PositionDto"][];
-                        "text/json": components["schemas"]["PositionDto"][];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -1918,11 +1947,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["WindDto"][];
-                        "application/json": components["schemas"]["WindDto"][];
-                        "text/json": components["schemas"]["WindDto"][];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -1960,11 +1985,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["SpeedThroughWaterDto"][];
-                        "application/json": components["schemas"]["SpeedThroughWaterDto"][];
-                        "text/json": components["schemas"]["SpeedThroughWaterDto"][];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -2002,11 +2023,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["DepthDto"][];
-                        "application/json": components["schemas"]["DepthDto"][];
-                        "text/json": components["schemas"]["DepthDto"][];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -2044,11 +2061,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["TemperatureDto"][];
-                        "application/json": components["schemas"]["TemperatureDto"][];
-                        "text/json": components["schemas"]["TemperatureDto"][];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -2086,11 +2099,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["LoadDto"][];
-                        "application/json": components["schemas"]["LoadDto"][];
-                        "text/json": components["schemas"]["LoadDto"][];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -2128,10 +2137,49 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/races/{raceId}/telemetry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fetches all telemetry channels in a single request. */
+        get: {
+            parameters: {
+                query?: {
+                    from?: number | string;
+                    to?: number | string;
+                };
+                header?: never;
+                path: {
+                    raceId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
                     content: {
-                        "text/plain": components["schemas"]["ShiftAngleDto"][];
-                        "application/json": components["schemas"]["ShiftAngleDto"][];
-                        "text/json": components["schemas"]["ShiftAngleDto"][];
+                        "text/plain": components["schemas"]["RaceTelemetryDto"];
+                        "application/json": components["schemas"]["RaceTelemetryDto"];
+                        "text/json": components["schemas"]["RaceTelemetryDto"];
                     };
                 };
             };
@@ -3322,6 +3370,15 @@ export interface components {
             /** Format: date-time */
             generatedAt: string;
             isStale: boolean;
+        };
+        RaceTelemetryDto: {
+            positions: components["schemas"]["PositionDto"][];
+            wind: components["schemas"]["WindDto"][];
+            speedThroughWater: components["schemas"]["SpeedThroughWaterDto"][];
+            depth: components["schemas"]["DepthDto"][];
+            temperature: components["schemas"]["TemperatureDto"][];
+            load: components["schemas"]["LoadDto"][];
+            shiftAngles: components["schemas"]["ShiftAngleDto"][];
         };
         RedeemInvitationRequest: {
             token: string;
