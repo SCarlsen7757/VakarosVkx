@@ -9,11 +9,13 @@ This document describes the features, screens, and behaviour of the Vakaros VKX 
 The application lets users upload Vakaros `.vkx` sailing data files, browse the recorded sessions
 and races, and analyse telemetry through an interactive map and charts. It also provides
 administration pages for the reference data that annotates sessions (boats, boat classes, course
-marks, and courses).
+marks, and courses). Users can collaborate by organising into teams and sharing sessions with them.
 
 ### Application Constraints
 
-- **Authentication** – single-user application; no login or user accounts are required.
+- **Authentication modes** – the backend operates in one of two modes configured server-side:
+  - **MultiUser** (default) – full authentication with email/password accounts, roles, teams, and personal access tokens. New users are invited by an admin or via a shareable invitation link.
+  - **SingleUser** – authentication is disabled; all requests are treated as the system user. A yellow info banner is shown at the top of every authenticated page to indicate that auth is bypassed.
 - **Browser support** – target the latest stable release of Chrome, Firefox, Edge, and Safari only. No support for legacy or end-of-life browser versions is required.
 - **Responsive breakpoints** – use the following pixel thresholds:
 
@@ -47,27 +49,37 @@ The application uses a **responsive navigation** design that adapts to the avail
 
 The active tab / sidebar item is visually highlighted.
 
-### Navigation tabs / sidebar items
+### Navigation items
 
 | Icon | Label | Route | Notes |
 | --- | --- | --- | --- |
 | 🏠 | Home | `/` | |
 | ⬆️ | Upload | `/upload` | |
 | 📋 | Sessions | `/sessions` | |
-| ⚓ | Fleet | `/boats` | Secondary nav to `/boat-classes` |
-| 🗺️ | Courses | `/courses` | Secondary nav to `/marks` |
+| ⛵ | Fleet | `/boats` | Secondary nav to `/boat-classes` |
+| 📍 | Courses | `/courses` | Secondary nav to `/marks` |
+| 👥 | Teams | `/teams` | Badge shows count of pending team invitations |
+| 👤 | Account | `/account` | |
+| 🛡️ | Admin | `/admin/users` | Admin role only |
+| 📥 | Class requests | `/admin/boat-classes` | Admin role only; badge shows count of pending boat class requests |
 | ⚙️ | Settings | `/settings` | |
+
+Admin-only items are hidden entirely from non-admin users.
 
 **Fleet** groups Boats and Boat Classes. Tapping/clicking the Fleet tab lands on the Boats list; a secondary link or tab within the Fleet section navigates to Boat Classes.
 
 **Courses** groups Courses and Marks. Tapping/clicking the Courses tab lands on the Courses list; a secondary link within the section navigates to Marks.
+
+### Notification badges
+
+The **Teams** item and the **Class requests** item (admin only) display a red numeric badge when there are pending items (team invitations or boat class requests respectively). Counts are delivered in real time via a Server-Sent Events stream (`/api/v1/me/notifications/stream`). The stream reconnects automatically on window focus and on error (30-second retry).
 
 ### Deep-page navigation
 
 Session Detail and Race Viewer are reached by navigating into sessions and races, not directly from the tab bar.
 
 - **Session Detail** shows a breadcrumb: *Sessions → (session file name)*
-- **Race Viewer** shows a breadcrumb: *Sessions → (session file name) → Race n*
+- **Race Viewer** shows a breadcrumb: *Sessions → (session file name) → Race n* and a **← Back** button.
 
 The Race Viewer hides the bottom tab bar and left sidebar entirely to maximise screen space. A **← Back** button in the page header returns the user to Session Detail.
 
@@ -92,7 +104,7 @@ The Race Viewer hides the bottom tab bar and left sidebar entirely to maximise s
 
 ## Toast Notifications
 
-Toast notifications are used for all transient feedback (success, error, warning) triggered by user actions. They appear as small cards in the **top-right corner** of the screen (above the navigation bar on mobile).
+Toast notifications are used for all transient feedback (success, error, warning) triggered by user actions. They appear as small cards in the **bottom-right corner** of the screen.
 
 **Behaviour:**
 
@@ -108,6 +120,34 @@ Toast notifications are used for all transient feedback (success, error, warning
 
 ---
 
+### Auth Pages (MultiUser mode only)
+
+These pages are only reachable when the backend is in **MultiUser** mode. In **SingleUser** mode they are bypassed entirely.
+
+#### Login — `/login`
+
+- Email and password form.
+- On success, redirects to the page specified in the `?next=` query parameter, or to `/`.
+- Shows an inline error message on invalid credentials.
+- Waits for the backend provider check before rendering the form (Suspense boundary).
+
+#### First-time Setup — `/setup?userId=X&token=Y`
+
+- Shown when an admin creates a new user account. The admin shares the setup link.
+- Validates the token (expiry, single-use) before showing the form.
+- Collects a new password (minimum 12 characters) with a confirmation field.
+- On success redirects to `/`.
+
+#### Invitation — `/invite?token=X`
+
+- Self-registration via a shareable invitation link created by an admin.
+- Validates the token (expiry, uses remaining) before showing the form.
+- Collects: email address, display name, password (min 12 characters).
+- Displays the role the invitation grants and its expiry date.
+- On success redirects to `/`.
+
+---
+
 ### 1. Dashboard — `/`
 
 The landing page. Displays a card grid of six global statistics:
@@ -117,9 +157,9 @@ The landing page. Displays a card grid of six global statistics:
 | Boats | Total number of registered boats |
 | Sessions | Total number of uploaded sessions |
 | Races | Total number of detected races |
-| Total Distance | Total distance sailed (user's preferred Course Length unit: NM / km / m) |
-| Top Speed | All-time top speed (user's preferred Boat Speed unit: kn / km/h / mph) |
-| Race Time | Total accumulated race duration in hours and minutes |
+| Total session time | Total accumulated session duration in hours and minutes |
+| Distance sailed | Total distance sailed (user's preferred Course Length unit) |
+| Top SOG | All-time top speed over ground (user's preferred Boat Speed unit) |
 
 When no data exists at all, the cards are replaced by a prompt that links to the Upload page.
 
@@ -153,28 +193,41 @@ A **drag-and-drop upload area** with a file-picker fallback, filtered to `.vkx` 
 
 ### 3. Sessions List — `/sessions`
 
-A table of all recorded sessions.
+A table of all recorded sessions accessible to the current user: own sessions, sessions shared via teams, and public sessions.
+
+**Visibility filter tabs:**
+
+Three toggle buttons (all active by default) above the table control which sessions are shown:
+
+| Tab | Shows |
+| --- | --- |
+| Mine | Sessions uploaded by the current user |
+| Team | Sessions shared to a team the user belongs to |
+| Public | Sessions marked as public by their owners |
+
+Each session row displays inline badge chips to indicate visibility: team name chips (blue) for each team the session is shared with, and a "Public" chip (green) if the session is publicly visible.
 
 **Columns:**
 
 | Column | Sortable | Notes |
 | --- | --- | --- |
-| File | ✓ | File name; the entire row is clickable and navigates to Session Detail |
+| File | ✓ | File name + visibility badges; the entire row is clickable and navigates to Session Detail |
 | Boat | ✓ | Assigned boat name |
 | Course | | Assigned course name |
 | Started | ✓ | Local date and time |
-| Duration | ✓ | Human-readable duration (e.g. 2 h 15 min) |
+| Duration | ✓ | Human-readable duration (e.g. 2:15:00) |
 | Races | ✓ | Number of detected races in the session |
-| Actions | | Three-dot menu: **Delete** |
+| Actions | | Three-dot menu: **Delete** (only shown for sessions owned by the current user) |
 
 **Filters:**
 
 | Filter | Type |
 | --- | --- |
-| Date range | Date-range picker (Start – End) |
-| Boat | Dropdown (multi-select) |
+| Search | Free-text search on file name |
+| Date range | Date-range picker (From – To) |
+| Boat | Dropdown |
 
-**Delete session:** Clicking Delete in the row action menu shows a confirmation dialog: "Delete this session? This cannot be undone." On confirmation the session is permanently deleted.
+**Delete session:** Clicking Delete in the row action menu shows a confirmation dialog: "This will permanently delete the session and all derived data." On confirmation the session is permanently deleted.
 
 ---
 
@@ -184,21 +237,29 @@ Detail view for a single session.
 
 **Breadcrumb:** Sessions → *(current session file name)*
 
-**Page header actions:** A **Delete session** button (or action in a three-dot menu in the page header) allows deleting the session. Shows the same confirmation dialog as the Sessions List delete.
+A **Public** badge (green) appears in the breadcrumb when the session is publicly visible.
 
 **Metadata panel:**
+
+Displayed for all visitors. Only owners can edit.
 
 | Field | Notes |
 | --- | --- |
 | File name | |
-| Boat | Editable – dropdown of known boats |
+| Format | Format version and telemetry rate (Hz) |
 | Started | Local date-time |
-| Ended | Local date-time |
-| Telemetry Rate | Hz |
-| Format Version | |
-| Notes | Only shown when present |
+| Duration | Total session duration |
+| Fixed body frame | Yes / No (from VKX file) |
+| Uploaded | Local date-time of upload |
+| Boat | Assigned boat name (or "Unassigned") |
+| Visibility | Public / Private |
 
-**Boat assignment:** The Boat field in the metadata panel shows a dropdown of known boats. Changing the selection does **not** save automatically; the user must press an explicit **Save** button beneath the panel. A success toast confirms the save. If the user navigates away with unsaved changes, a confirmation dialog is shown ("You have unsaved changes. Leave anyway?").
+**Edit session panel:** Owners see an **Edit session** button that opens a side panel. Changes are saved with an explicit **Save** button inside the panel. The panel edits all session fields in one place:
+
+- Boat (dropdown of known boats; "Unassigned" option).
+- Notes (multi-line text; optional).
+- Visibility toggle (Public / Private).
+- Race courses (one dropdown per race, each selecting from known courses).
 
 **Race table:**
 
@@ -206,17 +267,21 @@ The backend API handles all physical race tracking limits intrinsically. The UI 
 
 | Column | Notes |
 | --- | --- |
-| Race # | Sequential number; the entire row is clickable and navigates to the Race Viewer |
-| Started | Local time |
-| Ended | Local time |
-| Duration | Formatted |
-| Course | Assigned course – dropdown, save per row |
+| Race # | Link that navigates to the Race Viewer |
+| Started | Local date-time |
+| Ended | Local date-time |
+| Duration | Formatted (e.g. `1:23:45`) |
+| Course | Assigned course name (read-only; edited via the Edit session panel) |
 
-**Course assignment:** The Course column in the race table shows a dropdown of known courses per row. Changing the selection does **not** save automatically; each row has an explicit **Save** button. A success toast confirms the save.
+**View session data:** A **View session data** button below the metadata panel navigates to the Session Viewer for the full continuous telemetry.
 
-**View Race →** also navigates to the Race Viewer for that race (in addition to the clickable row).
+**Sharing panel** (owners only): Allows sharing the session with teams the user belongs to.
 
-A **View Session Data** button or action is also available on this page to visualize the entire session telemetry globally without race-specific bounds.
+- Shows all teams the session is currently shared with, each with a **Remove** button.
+- A dropdown of the user's teams (filtered to teams not already shared) plus a **Share** button adds a new share.
+- If the user belongs to no teams, a prompt links to the Teams page.
+
+**Delete session** (owners only): A **Delete session** danger button at the bottom of the page. Confirmation dialog message: "This will permanently delete the session and all derived data."
 
 ---
 
@@ -231,9 +296,13 @@ A viewer page for the entire session. It works identically to the **Race Viewer*
 
 ---
 
-### 5. Race Viewer — `/sessions/{id}/races/{n}`
+### 5. Race Viewer — `/races/{id}`
 
-The most interactive page. Two-column layout: map on the left, controls and data on the right.
+The most interactive page. Two-column layout on desktop (map on the left, controls and data on the right); single-column stacked layout on mobile.
+
+The page header contains:
+- A **← Back** link to the parent session.
+- Toggle buttons to show/hide the **Gauges** panel and the **Charts** panel independently.
 
 #### 5.1 Map
 
@@ -255,14 +324,14 @@ A toggle control above or beside the map switches between:
 
 **What the map shows:**
 
-- **Race track** – the GPS track for the race as a polyline in the selected display mode.
 - **Pre-race countdown track** – if a countdown start time is known, this segment is drawn in a **dashed** style with a distinct colour to visually separate it from the race track.
+- **Race track** – the GPS track for the race as a polyline in the selected display mode.
 - **Course leg overlays** – mark-to-mark line segments when a course is assigned to the race.
 - **Course mark markers** – a **circle icon** for each course mark. The mark's name is shown as a **tooltip** on hover.
 - **Start-line markers** – when the API provides start-line data:
   - **Boat end** – rendered as a **square** marker.
   - **Pin end** – rendered as a **triangle** marker.
-- **Playback position marker** – when the Playback Position Scrubber is active or replay is running, a boat-shaped or arrow marker moves along the track to show the current position.
+- **Playback position marker** – an arrow marker that moves along the track and rotates to the current course over ground, showing the current position.
 - **Highlighted segment** – the portion of the track within the selected Time Window is shown at full opacity; the rest of the track is dimmed. When no window is active the full track is shown at full opacity.
 
 **Auto-pan during replay:** When the map is zoomed in (past the fit-to-track zoom level) and replay is active, the map auto-pans to keep the playback position marker in frame. Auto-pan is disabled when the map is at the fit-to-track zoom level.
@@ -336,24 +405,20 @@ A **speed multiplier dropdown** (0.5×, 1×, 2×, 4×) controls playback speed r
 
 ##### Mode Toggle
 
-A two-button toggle that switches the data panel between:
+The Gauges and Charts panels are toggled independently via the **Gauges** and **Charts** buttons in the page header. Both can be shown or hidden simultaneously.
 
-- **Historical** – shows telemetry charts.
-- **Current** – shows live-value gauges.
+**Race Viewer state** – all interactive state (selected time window, playback position, gauges/charts visibility, replay speed) is **ephemeral**: it resets to defaults each time the page loads and is not reflected in the URL.
 
-**Race Viewer state** – all interactive state (selected time window, playback position, mode, replay speed) is **ephemeral**: it resets to defaults each time the page loads and is not reflected in the URL.
+#### 5.3 Telemetry Charts
 
-#### 5.3 Telemetry Charts (Historical mode)
-
-A set of time-series chart panels. Each panel has a labelled Y-axis and one or more data series.
-The X-axis is shared across all panels and represents elapsed race time.
+A set of time-series chart panels, visible when the **Charts** toggle is active. Each panel has a labelled Y-axis and one or more data series. The X-axis is shared across all panels and represents elapsed race time.
 
 | Panel | Series | Unit |
 | --- | --- | --- |
-| Speed (SOG) | Speed over ground | User preference (kn / km/h / mph) |
-| Heading | Course over ground | Degrees |
-| Wind | Wind speed · Wind direction | User preference (kn / m/s) · Degrees |
-| Heel & Trim | Heel angle · Trim angle | Degrees |
+| Speed (SOG) | Speed over ground (smoothed) | User preference (kn / km/h / mph) |
+| Heading (COG) | Course over ground (smoothed) | Degrees |
+| Heel & Trim | Heel angle · Trim angle (from IMU quaternion) | Degrees |
+| Wind | Wind speed · Wind direction | User preference (kn / m/s / km/h) · Degrees |
 | Speed Through Water | Speed through water | User preference *(shown only when data is present)* |
 | Depth | Water depth | Metres *(shown only when data is present)* |
 | Temperature | Water temperature | °C *(shown only when data is present)* |
@@ -366,29 +431,23 @@ All chart crosshair lines are **locked together** – moving the crosshair on an
 
 | Channel | Formula |
 | --- | --- |
-| Heel | Derived from IMU quaternion (positive = starboard heel) |
-| Trim | Derived from IMU quaternion (positive = bow up) |
+| Heel | Derived from IMU quaternion roll (positive = starboard heel) |
+| Trim | Derived from IMU quaternion pitch (positive = bow up) |
 
-#### 5.4 Gauges (Current mode)
+**Smoothing:** SOG, COG, and IMU channels are smoothed with a Savitzky-Golay filter (polynomial order 2, window 11 samples). Angular signals (COG, wind direction) are smoothed via sin/cos decomposition to avoid wrap-around artefacts. Quaternions are smoothed component-wise before conversion to Euler angles.
 
-Four analogue-style gauges showing the interpolated values at the **Playback Position Scrubber** position:
+#### 5.4 Gauges
+
+Analogue-style gauges are visible when the **Gauges** toggle is active. Values are interpolated at the current Playback Position Scrubber position.
 
 | Gauge | Value |
 | --- | --- |
 | Speed | Speed over ground (user unit) |
-| Heading | Heading in degrees, compass-style |
-| Heel | Heel angle in degrees |
-| Trim | Trim angle in degrees |
+| Heading | Course over ground — shown as a **CompassRose** (rotating dial with N/S/E/W labels and a rotating needle) |
+| Heel | Heel angle — shown as an **Inclinometer** (horizontal bar, ±45° range, colour-coded green/yellow/red) |
+| Trim | Trim angle — shown as an **Inclinometer** (horizontal bar, smaller ±5° range) |
 
-For the Heading gauge, there needs to be two display modes:
-
-- **Numeric** – just show the heading value in degrees (e.g. "135°").
-- **Compass** – show the heading on a compass rose, with a pointer indicating the direction. The compass should be oriented so that the boat's current course is always pointing up, and the rose rotates around it to show the heading relative to the course.
-
-For the Heel and Trim gauges, there needs to be two display modes:
-
-- **Numeric** – just show the angle value in degrees (e.g. "15°").
-- **Inclinometer** – show the angle on a semicircular gauge, with a pointer indicating the angle. The gauge should be oriented so that 0° is in the center, positive angles (e.g. starboard heel) point to the right, and negative angles (e.g. port heel) point to the left. Heel is typically a larger angle (e.g. up to 45° or more), while Trim is usually smaller (e.g. up to 5°), so the gauge scales should reflect that.
+The numeric value in degrees is always visible alongside the gauge widget.
 
 #### 5.5 Optional telemetry visibility
 
@@ -398,18 +457,18 @@ Chart panels for optional channels (Speed Through Water, Depth, Temperature, Loa
 
 **Data Sampling & Handling Missing Data:**
 
-- **Down-sampling:** Because there is no down-sampling implemented on the backend, the frontend must implement a down-sampling algorithm (e.g., Douglas-Peucker for paths, or time-based decimation) before rendering massive telemetry arrays to prevent chart and map performance degradation or browser crashes.
-- **Missing Data (Dropouts):** If a specific telemetry channel (e.g., wind) temporarily drops out or returns null values while other channels (e.g., GPS) continue, the frontend should carry forward (forward-fill) the last known good value for that channel until a new data point is received to keep gauges and charts stable.
+- **Down-sampling:** Because there is no down-sampling implemented on the backend, the frontend must implement a down-sampling algorithm (Douglas-Peucker for GPS paths; time-based decimation capped at 2 000 points for chart series) before rendering massive telemetry arrays to prevent performance degradation.
+- **Missing Data (Dropouts):** If a specific telemetry channel (e.g., wind) temporarily drops out or returns null values while other channels (e.g., GPS) continue, the frontend carries forward (forward-fill) the last known good value for that channel until a new data point is received, keeping gauges and charts stable.
 
-All data fetches for the Race Viewer are fired **in parallel** when the page loads. Each data source (positions, course, wind, speed-through-water, depth, temperature, load, shift angles) loads independently and shows its own skeleton placeholder until its response arrives. This means parts of the page become interactive as soon as their data is ready, without waiting for slower channels.
+All data fetches for the Race Viewer are fired **in parallel** when the page loads. Position data and course data load independently; each shows its own skeleton placeholder until its response arrives.
 
-The frontend **caches each response** keyed by `(sessionId, raceNumber, channel)`. Navigating back to the same race reuses the cached data without re-fetching, making reloads near-instant. Time window filtering is performed client-side against the cached full response; the API is not re-queried when the Time Window Slicer is adjusted.
+Time window filtering is performed **client-side** against the cached full response; the API is not re-queried when the Time Window Slicer is adjusted.
 
 #### 5.7 Start Analysis Panel
 
-A compact panel in the right column, rendered **below the Mode Toggle** and above the AI Race Summary. It is derived entirely from the `startAnalysis` field of `RaceDetailDto` — no extra API call is needed.
+A compact panel in the right column, rendered below the playback controls. It is derived entirely from the `startAnalysis` field of `RaceDetailDto` — no extra API call is needed.
 
-**Visibility:** The panel is **hidden entirely** when `startAnalysis` is `null` (i.e., no start line data was recorded for the race). It is never shown in a collapsed or disabled state.
+**Visibility:** The panel is **hidden entirely** when `startAnalysis` is `null`. It is never shown in a collapsed or disabled state.
 
 **Displayed metrics:**
 
@@ -423,11 +482,11 @@ A compact panel in the right column, rendered **below the Mode Toggle** and abov
 
 The **time bias** row is the most prominent element and uses a larger font. The other metrics are displayed at normal size beneath it.
 
-When the `startAnalysis` panel is visible, the map also highlights the **crossing point** on the track with a distinct marker (e.g. a star or diamond icon). Hovering the marker shows a tooltip with the same crossing time and time bias.
+When the `startAnalysis` panel is visible, the map also highlights the **crossing point** on the track with a distinct marker. Hovering the marker shows a tooltip with the crossing time and time bias.
 
 #### 5.8 AI Race Summary Report
 
-A panel in the right column, rendered **below the Start Analysis panel** (or below the Mode Toggle when no start analysis is available). It is always present — even when `startAnalysis` is null — because the report can still be generated without start line data.
+A panel in the right column, rendered below the Start Analysis panel (or below the playback controls when no start analysis is available). It is always present because the report can be generated without start line data.
 
 **The report is never auto-generated.** The user must explicitly click **Generate Report** to trigger generation.
 
@@ -525,36 +584,34 @@ The metadata panel has an explicit **Save** button. The unsaved changes guard ap
 
 ### 7. Boat Classes — `/boat-classes`
 
-Full CRUD management of boat class templates.
+Boat class management. The page adapts based on the user's role.
 
-**List table columns:**
+**Admin view:**
 
-| Column | Sortable | Notes |
-| --- | --- | --- |
-| Name | ✓ | |
-| LOA (m) | ✓ | |
-| Beam (m) | ✓ | |
-| Weight (kg) | ✓ | |
-| Actions | | Three-dot menu: **Edit**, **Delete** |
-
-**Filters:**
-
-| Filter | Type |
-| --- | --- |
-| Search | Free-text search on Name |
-
-**Create / Edit form** (shown as a panel below the list or in a side panel):
+- **List table** with columns: Name, Length (m), Width (m), Weight (kg), Actions (three-dot menu: **Edit**, **Delete**).
+- **Filters:** Free-text search on Name.
+- **Create / Edit form** (inline side panel):
 
 | Field | Input type |
 | --- | --- |
 | Name | Text |
-| LOA – length overall | Number (metres, 2 decimal places) |
-| Beam | Number (metres, 2 decimal places) |
-| Weight | Number (kg, 1 decimal place) |
-| Bowsprit | Number (metres, 2 decimal places) |
-| **Sails** | Sub-table – each row has: Name (text) · Area in m² (number). Rows can be added and removed. This list of sails is only editable from this section. It cannot be edited from the individual boat assignment. |
+| Length overall (m) | Number (2 decimal places) |
+| Width / Beam (m) | Number (2 decimal places) |
+| Weight (kg) | Number (1 decimal place) |
 
-**Delete:** Shows a confirmation dialog. If the boat class is assigned to one or more boats, deletion is **blocked**: the dialog shows "This boat class is used by *n* boat(s). Reassign or delete those boats before deleting this class." Note: All deletes (boats, boat classes, marks, courses, sessions) are "hard deletes." There is no archiving or soft-delete functionality.
+- **Delete:** Shows a confirmation dialog. If the boat class is assigned to one or more boats, deletion is **blocked**: "This boat class is used by *n* boat(s). Reassign or delete those boats before deleting this class." All deletes are hard deletes; there is no archiving or soft-delete.
+
+**User view (non-admin):**
+
+- Reads the same list of approved boat classes (for reference when assigning boats).
+- A **Request new boat class** form allows users to submit a new class for admin approval. Fields: Name, Length (m), Width (m), Weight (kg), Notes (optional).
+- Below the form, **My requests** shows the status of any requests the user has submitted:
+
+| Status | Colour |
+| --- | --- |
+| Pending review | Amber |
+| Approved | Green |
+| Rejected | Red |
 
 ---
 
@@ -641,28 +698,115 @@ Legs can be added with an *+ Add Leg* button, removed individually, and reordere
 
 ### 10. Settings — `/settings`
 
-The configuration page for assigning user units and local preferences that dictate how metrics are represented. Preferences are stored in the browser (`localStorage`) so they persist between visits without requiring a user account.
+The configuration page for assigning user units and local preferences that dictate how metrics are represented. Preferences are stored in the browser (`localStorage`) so they persist between visits.
 
 **Preference fields:**
 
 | Preference | Options | Default |
 | --- | --- | --- |
 | Boat Speed unit | Knots (kn), Kilometres per hour (km/h), Miles per hour (mph) | Knots |
-| Wind Speed unit | Knots (kn), Metres per second (m/s) | Knots |
-| Course Length unit | Metres (m), Kilometres (km), Nautical miles (NM) | Nautical miles (NM) |
+| Wind Speed unit | Knots (kn), Metres per second (m/s), Kilometres per hour (km/h) | Knots |
+| Course Length unit | Nautical miles (nm), Kilometres (km), Miles (mi), Metres (m) | Nautical miles |
 
 The chosen units are applied everywhere values are displayed: chart Y-axis labels, gauge labels, and stats cards on the Dashboard.
 
 **Unit conversion is display-only.** The API always returns data in SI / base units (metres per second for speeds, metres for distances). All conversions to the user's preferred units are performed in the frontend before rendering.
 
 **Data Storage Strategy:**
-All unit preferences are strictly persisted within the browser's `localStorage`. They are not transmitted or stored by the VKX API itself. Ensure the UI reads the active state from localStorage to format telemetry grids and maps globally.
-
-**Settings is a dedicated page** and is never open simultaneously with the Race Viewer or other data pages in the same tab.
+All unit preferences are strictly persisted within the browser's `localStorage` under the key `vakaros.units`. They are not transmitted or stored by the VKX API itself.
 
 **Multi-tab behaviour:** If the application is open in multiple browser tabs and the user changes a preference in one tab, the other tabs detect the `localStorage` change event and automatically refresh their displayed values to apply the new units.
 
-**Reset to Defaults:** A **Reset to Defaults** button restores all preferences to their default values and shows a success toast.
+**Reset to Defaults:** A **Reset to Defaults** button restores all preferences to their default values and shows an info toast.
+
+---
+
+### 11. Teams — `/teams`
+
+Team management for session sharing and collaboration.
+
+**Page layout:**
+
+- **Pending invitations** section (if any) lists teams the user has been invited to join, with **Accept** and **Decline** buttons per invitation. Each invitation shows the team name, inviter, and expiry date.
+- **My teams** section lists all teams the user is a member of. Clicking a team navigates to Team Detail.
+- A **Create team** button opens a form to create a new team (name required).
+
+#### 11a. Team Detail — `/teams/{id}`
+
+**Members list** (visible to all members):
+Shows the display name, email, and role of each member. Team admins see a **Remove** button next to each member (except themselves).
+
+**Invite member** (team admin only):
+An email input field with an **Invite** button. Shows an error if the user is not found, already a member, or an invitation is already pending.
+
+**Pending invitations** (team admin only):
+A list of outstanding invitations (invitee details, sent date, expiry) that have not yet been accepted or declined.
+
+**Sessions shared with this team:**
+A list of all sessions currently shared with the team.
+
+---
+
+### 12. Account — `/account`
+
+Personal account management page.
+
+**Profile section:**
+- Display name — editable text field with an explicit **Save** button.
+- Email address — read-only.
+- Roles — read-only list.
+
+**Change password section:**
+- Current password, new password, and confirm new password fields.
+- Explicit **Save** button; shows success or error toast.
+
+**Personal access tokens (PAT):**
+- Token list shows: name, creation date, prefix (first few characters for identification), and a **Revoke** button per token.
+- A **Create token** form collects a token name and generates a new token on submit.
+- The full token value is displayed **once only** after creation (with a warning that it will not be shown again). The user must copy it before leaving the panel.
+- Tokens use the prefix `vkx_` for identification in API clients.
+
+**Sign out:**
+A **Sign out** danger button at the bottom of the page. Calls the logout endpoint and redirects to `/login`.
+
+---
+
+### 13. Admin — User Management — `/admin/users`
+
+Admin-only page. Redirects non-admin users to `/`.
+
+**Create known user:**
+A form to create a new user account by email and display name, with a role selector (User / Admin). On creation the backend generates a one-time setup link that is displayed to the admin to share with the new user.
+
+**Shareable invitation links:**
+- Create invitation links that allow self-registration without admin involvement.
+- Options: max uses (or unlimited), expiry in days (or never), optional note.
+- Created links are listed with: URL, uses remaining, expiry date, and a **Revoke** button.
+
+**Users list:**
+- Columns: display name, email, roles, status (active / pending setup).
+- Actions per row: **New setup link** (generates a new setup link for a pending user), **Change role** dropdown (disabled for the current user), **Delete** (disabled for the current user).
+
+---
+
+### 14. Admin — Boat Class Requests — `/admin/boat-classes`
+
+Admin-only page. Redirects non-admin users to `/`.
+
+**Pending requests section:**
+A table of boat class requests awaiting review:
+
+| Column | Notes |
+| --- | --- |
+| Name | Requested class name |
+| Requested by | Submitter display name |
+| Dimensions | Length / Width / Weight |
+| Notes | Optional notes from the submitter |
+| Submitted | Date submitted |
+| Actions | **Approve** (creates the boat class) · **Reject** |
+
+**Reviewed section:**
+Shows previously approved or rejected requests with their outcome and reviewer.
 
 ---
 
@@ -672,18 +816,24 @@ All endpoints are defined in the OpenAPI specification generated by the `Vakaros
 
 | Domain | Operations |
 | --- | --- |
-| Stats | Summary |
-| Sessions | List, Get, Upload, Patch, Delete |
+| Auth | Login, Logout, Providers |
+| Me / Stats | Profile, Stats summary |
+| Notifications | SSE stream (notification counts) |
+| Sessions | List, Get, Upload, Patch, Delete, Shares (List, Add, Remove) |
 | Races | List, Get, Patch |
-| Positions | Get |
+| Positions | Get (with optional countdown `from` offset) |
 | Wind | Get |
 | Speed Through Water | Get |
 | Depth | Get |
 | Temperature | Get |
 | Load | Get |
 | Shift Angles | Get |
-| Race Summary | Get, Generate (POST), Delete |
+| Race Summary | Get, Generate (POST/SSE), Delete |
 | Courses | List, Get, Create, Update, Delete |
 | Marks | List, Get, Create, Update, Delete |
-| Boat Classes | List, Get, Create, Update, Delete |
+| Boat Classes | List, Get, Create, Update, Delete, Requests (List, Submit, Approve, Reject) |
 | Boats | List, Get, Stats, Create, Update, Delete |
+| Teams | List, Get, Create, Members (List, Remove), Invitations (Create, List, Accept, Decline) |
+| Users (admin) | List, Create, Update role, Delete, Setup link |
+| Invitations (admin) | List, Create, Revoke |
+| Personal Access Tokens | List, Create, Revoke |
