@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/controls";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Ship, Layers, Flag, Clock, Route, Gauge } from "lucide-react";
+import { Sailboat, Layers, Flag, Clock, Route, Gauge } from "lucide-react";
 
 export default function DashboardPage() {
   const { prefs } = useUnitPrefs();
@@ -61,7 +61,7 @@ export default function DashboardPage() {
   }
 
   const cards = [
-    { label: "Boats", value: String(n(stats.totalBoats)), icon: Ship },
+      { label: "Boats", value: String(n(stats.totalBoats)), icon: Sailboat },
     { label: "Sessions", value: String(n(stats.totalSessions)), icon: Layers },
     { label: "Races", value: String(n(stats.totalRaces)), icon: Flag },
     { label: "Total session time", value: formatDuration(n(stats.totalSessionDurationSeconds)), icon: Clock },
