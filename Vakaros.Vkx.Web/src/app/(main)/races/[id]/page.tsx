@@ -12,14 +12,14 @@ import { CompassRose, HeelTrimCard, NumericGauge, Inclinometer } from "@/compone
 import { Card } from "@/components/ui/controls";
 import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import type { RaceDetail, Position, Course, Boat, SessionDetail } from "@/lib/schemas";
+import type { RaceDetail, Position, Course, Boat } from "@/lib/schemas";
 import { n } from "@/lib/schemas";
 import { interpolatePosition } from "@/lib/track-utils";
 import { useUnitPrefs } from "@/store/settings";
 import { convertSpeed, radiansToDegrees, speedUnitLabel } from "@/lib/units";
 import { useRaceViewerStore } from "@/store/race-viewer";
 
-interface PageProps { params: Promise<{ id: string; raceNumber: string }>; }
+interface PageProps { params: Promise<{ id: string }>; }
 
 function quatToHeelTrim(w: number, x: number, y: number, z: number) {
   const sinr_cosp = 2 * (w * x + y * z);
@@ -31,8 +31,7 @@ function quatToHeelTrim(w: number, x: number, y: number, z: number) {
 }
 
 export default function RaceViewerPage({ params }: PageProps) {
-  const { id, raceNumber } = use(params);
-  const raceNum = Number(raceNumber);
+  const { id: raceId } = use(params);
   const { prefs } = useUnitPrefs();
   const showGauges = useRaceViewerStore((s) => s.showGauges);
   const showCharts = useRaceViewerStore((s) => s.showCharts);
@@ -40,7 +39,6 @@ export default function RaceViewerPage({ params }: PageProps) {
   const windowStart = useRaceViewerStore((s) => s.windowStart);
   const windowEnd = useRaceViewerStore((s) => s.windowEnd);
 
-  const [raceId, setRaceId] = useState<string | null>(null);
   const [race, setRace] = useState<RaceDetail | null>(null);
   const [positions, setPositions] = useState<Position[] | null>(null);
   const [course, setCourse] = useState<Course | null>(null);
@@ -49,33 +47,33 @@ export default function RaceViewerPage({ params }: PageProps) {
 
   useEffect(() => {
     let alive = true;
-    // Fetch session to resolve the raceId from the races list, and session for boat info.
-    Promise.all([
-      fetch(`/api/v1/sessions/${id}`).then((r) => r.ok ? r.json() as Promise<SessionDetail> : Promise.reject(r.status)),
-    ])
-      .then(async ([sessionData]) => {
-        if (!alive) return;
-        const raceEntry = sessionData.races.find((r) => n(r.raceNumber) === raceNum);
-        if (!raceEntry?.id) { setError(`Race ${raceNum} not found`); return; }
-        const resolvedRaceId = String(raceEntry.id);
-        setRaceId(resolvedRaceId);
+    const raceBase = `/api/v1/races/${raceId}`;
 
-        const raceBase = `/api/v1/races/${resolvedRaceId}`;
-        const raceData: RaceDetail = await fetch(raceBase).then((r) => r.ok ? r.json() : Promise.reject(r.status));
+    fetch(raceBase)
+      .then((r) => r.ok ? r.json() as Promise<RaceDetail> : Promise.reject(r.status))
+      .then(async (raceData) => {
         if (!alive) return;
         setRace(raceData);
 
         const countdown = raceData.countdownDurationSeconds != null ? n(raceData.countdownDurationSeconds) : 0;
         const fromParam = countdown > 0 ? `?from=${-countdown}` : "";
+
         const fetches: Promise<unknown>[] = [
           fetch(`${raceBase}/telemetry/positions${fromParam}`).then((r) => r.ok ? r.json() as Promise<Position[]> : Promise.reject(r.status)),
           raceData.courseId != null
             ? fetch(`/api/v1/courses/${raceData.courseId}`).then((r) => r.ok ? r.json() : null)
             : Promise.resolve(null),
         ];
-        if (sessionData.boatId) {
-          fetches.push(fetch(`/api/v1/boats/${sessionData.boatId}`).then((r) => r.ok ? r.json() as Promise<Boat> : null));
+
+        // Fetch boat info for length (needed for start line rendering)
+        if (raceData.sessionId) {
+          fetches.push(
+            fetch(`/api/v1/sessions/${raceData.sessionId}`)
+              .then((r) => r.ok ? r.json() : null)
+              .then((s) => s?.boatId ? fetch(`/api/v1/boats/${s.boatId}`).then((r) => r.ok ? r.json() : null) : null)
+          );
         }
+
         const [posData, courseData, boatData] = await Promise.all(fetches);
         if (!alive) return;
         setPositions(posData as Position[]);
@@ -91,7 +89,7 @@ export default function RaceViewerPage({ params }: PageProps) {
       })
       .catch((e) => alive && setError(`Failed to load race (${e})`));
     return () => { alive = false; };
-  }, [id, raceNum]);
+  }, [raceId]);
 
   const startMs = race ? new Date(race.startedAt).getTime() : 0;
   const duration = race ? n(race.durationSeconds) : 0;
@@ -101,8 +99,6 @@ export default function RaceViewerPage({ params }: PageProps) {
   const racePositions = useMemo(() => positions?.filter((p) => new Date(p.time).getTime() >= startMs) ?? null, [positions, startMs]);
   const preRacePositions = useMemo(() => positions?.filter((p) => new Date(p.time).getTime() < startMs) ?? null, [positions, startMs]);
 
-  // Positions within the selected time window — used for map highlight.
-  // Only shown in Historical mode when the window is narrowed (not covering full data range).
   const windowStartMs = startMs + (windowStart - raceStartOffset) * 1000;
   const windowEndMs = startMs + (windowEnd - raceStartOffset) * 1000;
   const isWindowNarrowed = windowStart > 0 || windowEnd < totalDuration;
@@ -117,7 +113,6 @@ export default function RaceViewerPage({ params }: PageProps) {
     [positions, windowStartMs, windowEndMs, showCharts, isWindowNarrowed]
   );
 
-  // Resolve current position (snap to nearest) — used for gauges and heel/trim.
   const targetMs = startMs + (position - raceStartOffset) * 1000;
   const currentPos = useMemo(() => {
     if (!positions || !positions.length) return null;
@@ -132,7 +127,6 @@ export default function RaceViewerPage({ params }: PageProps) {
     return positions[best];
   }, [positions, targetMs]);
 
-  // Interpolated position for the map boat arrow — smooth between GPS samples.
   const playbackArrow = useMemo(() => {
     if (!positions || !positions.length) return null;
     const interp = interpolatePosition(positions, targetMs);
@@ -141,7 +135,6 @@ export default function RaceViewerPage({ params }: PageProps) {
   }, [positions, targetMs]);
 
   const heelTrim = currentPos ? quatToHeelTrim(n(currentPos.quaternionW), n(currentPos.quaternionX), n(currentPos.quaternionY), n(currentPos.quaternionZ)) : null;
-
   const compactMode = !showCharts;
 
   const startLine = race && race.pinEnd && race.boatEnd ? {
@@ -151,6 +144,8 @@ export default function RaceViewerPage({ params }: PageProps) {
 
   const legs = course?.legs.map((l) => ({ latitude: n(l.latitude), longitude: n(l.longitude), markName: l.markName })) ?? [];
 
+  const sessionId = race?.sessionId;
+
   if (error) return <ErrorBanner message={error} />;
   if (!race || !positions) return <SkeletonLoader className="h-96" />;
 
@@ -158,7 +153,7 @@ export default function RaceViewerPage({ params }: PageProps) {
     <div className="flex flex-col gap-3 lg:h-[calc(100vh-3rem)]">
       {/* Compact header bar */}
       <div className="flex items-center gap-2 py-1">
-        <Link href={`/sessions/${id}`} className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary">
+        <Link href={sessionId ? `/sessions/${sessionId}` : "/sessions"} className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary">
           <ArrowLeft className="h-4 w-4" /> Back
         </Link>
         <span className="text-text-secondary">·</span>
@@ -187,8 +182,8 @@ export default function RaceViewerPage({ params }: PageProps) {
       </div>
 
       {/* Two-column body — fills remaining height on desktop */}
-      <div className={`flex flex-col gap-4 flex-1 min-h-0 lg:flex-row`}>
-        {/* Left column: playback controls + map — expands in compact mode */}
+      <div className="flex flex-col gap-4 flex-1 min-h-0 lg:flex-row">
+        {/* Left column: playback controls + map */}
         <div className={`flex flex-col gap-3 min-h-0 lg:shrink-0 ${compactMode ? "lg:flex-1" : "lg:w-[42%]"}`}>
           <PlaybackControls raceStartOffset={raceStartOffset} duration={totalDuration} />
           <RaceMap
@@ -204,7 +199,7 @@ export default function RaceViewerPage({ params }: PageProps) {
           />
         </div>
 
-        {/* Right column: scrollable detail panel — auto-width strip in compact mode */}
+        {/* Right column: scrollable detail panel */}
         <div className={`flex flex-col gap-4 min-h-0 ${compactMode ? "lg:w-auto lg:shrink-0" : "flex-1 lg:overflow-y-auto"}`}>
           {showGauges && !compactMode && (
             <div className="grid grid-cols-3 gap-3">
@@ -217,7 +212,6 @@ export default function RaceViewerPage({ params }: PageProps) {
           {showGauges && compactMode && (
             <Card className="p-3 lg:p-2 flex-shrink-0">
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary lg:mb-3">Gauges</h3>
-              {/* Mobile: 2-col/4-col grid  |  Desktop: vertical stack */}
               <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 lg:grid-cols-1 lg:gap-y-3">
                 <div>
                   <div className="text-xs text-text-secondary">SOG</div>
@@ -242,12 +236,12 @@ export default function RaceViewerPage({ params }: PageProps) {
             </Card>
           )}
 
-          <StartAnalysisPanel data={race.startAnalysis} raceId={raceId ?? ""} compact={compactMode} />
+          <StartAnalysisPanel data={race.startAnalysis} raceId={raceId} compact={compactMode} />
 
           {showCharts && (
             <>
               <TimeWindowSlicer raceStartOffset={raceStartOffset} />
-              <TelemetryPanels raceId={raceId ?? ""} raceStartMs={startMs} raceStartOffset={raceStartOffset} />
+              <TelemetryPanels raceId={raceId} raceStartMs={startMs} raceStartOffset={raceStartOffset} />
             </>
           )}
         </div>

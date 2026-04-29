@@ -222,7 +222,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
                 {(session.races as Race[]).map((r) => (
                   <tr key={String(r.raceNumber)} className="border-t border-border-default text-sm">
                     <td className="px-3 py-2">
-                      <Link className="text-action-primary hover:underline" href={`/sessions/${id}/races/${r.raceNumber}`}>
+                      <Link className="text-action-primary hover:underline" href={`/races/${r.id}`}>
                         Race {n(r.raceNumber)}
                       </Link>
                     </td>

@@ -3317,6 +3317,8 @@ export interface components {
         RaceDetailDto: {
             /** Format: uuid */
             id: string;
+            /** Format: uuid */
+            sessionId: string;
             /** Format: int32 */
             raceNumber: number | string;
             /** Format: uuid */

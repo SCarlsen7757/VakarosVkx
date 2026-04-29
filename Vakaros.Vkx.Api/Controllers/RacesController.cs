@@ -56,7 +56,7 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
 
         var duration = race.EndedAt.HasValue ? (race.EndedAt.Value - race.StartedAt).TotalSeconds : (double?)null;
         var startAnalysisResult = await startAnalysis.ComputeAsync(race, race.SessionId, pinEnd, boatEnd, ct);
-        return Ok(new RaceDetailDto(race.Id, race.RaceNumber, race.CourseId, race.CountdownStartedAt, race.CountdownDurationSeconds,
+        return Ok(new RaceDetailDto(race.Id, race.SessionId, race.RaceNumber, race.CourseId, race.CountdownStartedAt, race.CountdownDurationSeconds,
             race.StartedAt, race.EndedAt, duration, race.SailedDistanceMeters, race.MaxSpeedOverGround, race.Notes,
             pinEnd, boatEnd, startAnalysisResult));
     }

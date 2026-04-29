@@ -5055,6 +5055,7 @@
       "RaceDetailDto": {
         "required": [
           "id",
+          "sessionId",
           "raceNumber",
           "courseId",
           "countdownStartedAt",
@@ -5072,6 +5073,10 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
             "type": "string",
             "format": "uuid"
           },

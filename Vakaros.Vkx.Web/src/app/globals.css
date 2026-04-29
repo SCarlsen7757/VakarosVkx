@@ -34,4 +34,40 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--border-default) / 0.25) 25%,
+    rgb(var(--border-default) / 0.55) 50%,
+    rgb(var(--border-default) / 0.25) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* Parent container: one wave sweeps across all child skeleton bars simultaneously */
+.shimmer-container {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(var(--bg-elevated) / 0.18) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
 .leaflet-container { background: rgb(var(--bg-surface)); }
