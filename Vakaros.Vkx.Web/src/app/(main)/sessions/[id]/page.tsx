@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { api } from "@/lib/api";
 import type { SessionDetail, Boat, Course, Race, SessionShare } from "@/lib/schemas";
 import { n } from "@/lib/schemas";
@@ -10,7 +11,7 @@ import { formatDuration } from "@/lib/units";
 import { Button, Card, Select, Textarea } from "@/components/ui/controls";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { SkeletonLoader } from "@/components/ui/skeleton-loader";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useToast } from "@/hooks/useToast";
 import { ChevronRight, Globe, Lock, Pencil, X } from "lucide-react";
 import type { components } from "@/lib/api-types";
@@ -39,6 +40,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
   const { id } = use(params);
   const router = useRouter();
   const toast = useToast();
+  const { navigate, isPending } = useNavigate();
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [boats, setBoats] = useState<Boat[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -153,7 +155,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
   };
 
   if (error) return <ErrorBanner message={error} onRetry={load} />;
-  if (!session) return <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <SkeletonLoader key={i} className="h-12" />)}</div>;
+  if (isPending || !session) return <PageSkeleton />;
 
   const dur = (new Date(session.endedAt).getTime() - new Date(session.startedAt).getTime()) / 1000;
   const sharedTeamIds = new Set(shares.map((s) => s.teamId));
@@ -194,12 +196,12 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
             <div><dt className="text-text-secondary">Visibility</dt><dd>{session.isPublic ? "Public" : "Private"}</dd></div>
           </dl>
           <div className="mt-4">
-            <Link
-              href={`/sessions/${id}/viewer`}
+            <button
+              onClick={() => navigate(`/sessions/${id}/viewer`)}
               className="inline-flex items-center rounded-md border border-border-default bg-bg-surface px-3 py-1.5 text-sm font-medium hover:bg-bg-elevated"
             >
               View session data
-            </Link>
+            </button>
           </div>
         </Card>
 
@@ -222,9 +224,12 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
                 {(session.races as Race[]).map((r) => (
                   <tr key={String(r.raceNumber)} className="border-t border-border-default text-sm">
                     <td className="px-3 py-2">
-                      <Link className="text-action-primary hover:underline" href={`/races/${r.id}`}>
+                      <button
+                        className="text-action-primary hover:underline"
+                        onClick={() => navigate(`/races/${r.id}`)}
+                      >
                         Race {n(r.raceNumber)}
-                      </Link>
+                      </button>
                     </td>
                     <td className="px-3 py-2 text-text-secondary">{new Date(r.startedAt).toLocaleString()}</td>
                     <td className="px-3 py-2 text-text-secondary">{r.endedAt ? new Date(r.endedAt).toLocaleString() : "—"}</td>

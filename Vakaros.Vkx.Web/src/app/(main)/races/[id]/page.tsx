@@ -10,7 +10,7 @@ import { PlaybackControls } from "@/components/race-viewer/playback-controls";
 import { StartAnalysisPanel } from "@/components/race-viewer/start-analysis-panel";
 import { CompassRose, HeelTrimCard, NumericGauge, Inclinometer } from "@/components/gauges/gauges";
 import { Card } from "@/components/ui/controls";
-import { SkeletonLoader } from "@/components/ui/skeleton-loader";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import type { RaceDetail, Position, Course, Boat } from "@/lib/schemas";
 import { n } from "@/lib/schemas";
@@ -147,7 +147,7 @@ export default function RaceViewerPage({ params }: PageProps) {
   const sessionId = race?.sessionId;
 
   if (error) return <ErrorBanner message={error} />;
-  if (!race || !positions) return <SkeletonLoader className="h-96" />;
+  if (!race || !positions) return <PageSkeleton />;
 
   return (
     <div className="flex flex-col gap-3 lg:h-[calc(100vh-3rem)]">
