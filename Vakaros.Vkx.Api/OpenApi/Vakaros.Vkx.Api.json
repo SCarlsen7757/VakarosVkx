@@ -1,8 +1,9 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Vakaros.Vkx.Api | v1",
-    "version": "1.0.0"
+    "title": "GetDocument.Insider | v1",
+    "description": "GetDocument Command-line Tool inside man",
+    "version": "1.0"
   },
   "paths": {
     "/api/v1/admin/boat-class-requests": {

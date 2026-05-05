@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/OpenApi</OpenApiDocumentsDirectory>
+    <AssemblyTitle>Vakaros VKX API</AssemblyTitle>
   </PropertyGroup>
 
   <UsingTask TaskName="_SetSkipDbMigrationEnv" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
@@ -23,6 +24,7 @@
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" Version="10.0.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="10.0.0" />
+    <PackageReference Include="Asp.Versioning.OpenApi" Version="10.0.0-rc.1" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
@@ -58,14 +60,15 @@
   <!--
     OpenAPI document generation & TypeScript type generation
     =========================================================
-    Microsoft.Extensions.ApiDescription.Server generates OpenAPI spec files at build time.
-    The output filename is controlled by the MSBuild property <OpenApiDocumentName>, which
-    defaults to the assembly name when not set explicitly → Vakaros.Vkx.Api.json.
+    Microsoft.Extensions.ApiDescription.Server (dotnet-getdocument.dll) generates OpenAPI spec
+    files at build time. When the document name is "v1" (the default), the tool intentionally
+    omits the version from the filename → Vakaros.Vkx.Api.json.
 
     To add a v2 API:
-      1. Register the document in Program.cs:  builder.Services.AddOpenApi("v2");
+      1. Register the additional version in Program.cs via AddApiVersioning opts.
       2. Add a second GenerateTypeScriptTypes target below (copy GenerateTypeScriptTypesV1,
-         change Inputs to v2.json, Outputs to api-types-v2.ts, Command to "npm run gen:api:v2").
+         change Inputs to Vakaros.Vkx.Api_v2.json, Outputs to api-types-v2.ts, Command to "npm run gen:api:v2").
+         (non-default document names are appended: {ProjectName}_{documentName}.json)
       3. The npm script "gen:api:v2" is already scaffolded in package.json.
       4. Document the new version's types in src/lib/schemas.ts.
   -->

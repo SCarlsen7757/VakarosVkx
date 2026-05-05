@@ -38,13 +38,13 @@ builder.Services
         opts.ReportApiVersions = true;
         opts.ApiVersionReader = new UrlSegmentApiVersionReader();
     })
-    .AddMvc()
     .AddApiExplorer(opts =>
     {
         opts.GroupNameFormat = "'v'VVV";
         opts.SubstituteApiVersionInUrl = true;
-    });
-builder.Services.AddOpenApi("v1");
+    })
+    .AddMvc()
+    .AddOpenApi();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddResponseCompression(opts =>
@@ -222,7 +222,7 @@ if (Environment.GetEnvironmentVariable("SKIP_DB_MIGRATION") != "true")
 // ── Pipeline ─────────────────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi().WithDocumentPerVersion();
     app.MapScalarApiReference();
     app.MapGet("/", ctx => { ctx.Response.Redirect("/scalar/v1"); return Task.CompletedTask; });
     app.MapGet("/swagger", ctx => { ctx.Response.Redirect("/scalar/v1"); return Task.CompletedTask; });
