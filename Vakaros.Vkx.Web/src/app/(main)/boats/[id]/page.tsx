@@ -13,7 +13,7 @@ import { useUnitPrefs } from "@/store/settings";
 import { convertSpeed, convertDistance, formatDuration, speedUnitLabel, distanceUnitLabel } from "@/lib/units";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
-import { ChevronRight, Globe } from "lucide-react";
+import { ChevronRight, Globe, Lock } from "lucide-react";
 
 export default function BoatDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -87,10 +87,12 @@ export default function BoatDetailPage({ params }: { params: Promise<{ id: strin
           </label>
           <label className="sm:col-span-2"><span className="text-sm text-text-secondary">Description</span><Input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></label>
           <div className="sm:col-span-2 flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={draft.isPublic} onChange={(e) => setDraft({ ...draft, isPublic: e.target.checked })} className="h-4 w-4 rounded border-border-default accent-action-primary" />
-              <span className="text-sm">Make this boat public</span>
-            </label>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-text-secondary">Visibility</span>
+              <Button variant="secondary" onClick={() => setDraft({ ...draft, isPublic: !draft.isPublic })}>
+                {draft.isPublic ? <><Globe className="mr-1 h-4 w-4" /> Public</> : <><Lock className="mr-1 h-4 w-4" /> Private</>}
+              </Button>
+            </div>
             {draft.isPublic && (
               <Link href={`/b/${id}`} className="inline-flex items-center gap-1 text-sm text-action-primary hover:underline" target="_blank">
                 <Globe className="h-3.5 w-3.5" /> View public page

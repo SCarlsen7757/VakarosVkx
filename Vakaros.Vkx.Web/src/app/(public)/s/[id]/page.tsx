@@ -2,18 +2,20 @@
 
 import { use, useEffect, useState } from "react";
 import React from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import type { SessionDetail, Race } from "@/lib/schemas";
-import { n } from "@/lib/schemas";
 import { formatDuration } from "@/lib/units";
 import { Card } from "@/components/ui/controls";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { RaceTable } from "@/components/session/race-table";
 import { Globe } from "lucide-react";
 
 export default function PublicSessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,38 +67,10 @@ export default function PublicSessionDetailPage({ params }: { params: Promise<{ 
       </Card>
 
       {races.length > 0 && (
-        <Card className="overflow-hidden">
-          <div className="border-b border-border-default px-4 py-3">
-            <h2 className="text-lg font-semibold">Races</h2>
-          </div>
-          <table className="w-full">
-            <thead className="bg-bg-elevated">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">#</th>
-                <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">Started</th>
-                <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">Duration</th>
-                <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">Distance</th>
-                <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">Max speed</th>
-              </tr>
-            </thead>
-            <tbody>
-              {races.map((r) => {
-                const rd = r.endedAt ? (new Date(r.endedAt).getTime() - new Date(r.startedAt).getTime()) / 1000 : null;
-                return (
-                  <tr key={String(r.id)} className="border-t border-border-default text-sm">
-                    <td className="px-3 py-2 font-medium">
-                      <Link href={`/r/${r.id}`} className="hover:text-action-primary">{r.raceNumber ?? "—"}</Link>
-                    </td>
-                    <td className="px-3 py-2 text-text-secondary">{new Date(r.startedAt).toLocaleString()}</td>
-                    <td className="px-3 py-2 font-mono">{rd != null ? formatDuration(rd) : "—"}</td>
-                    <td className="px-3 py-2 font-mono">{r.sailedDistanceMeters != null ? `${n(r.sailedDistanceMeters).toFixed(0)} m` : "—"}</td>
-                    <td className="px-3 py-2 font-mono">{r.maxSpeedOverGround != null ? `${n(r.maxSpeedOverGround).toFixed(2)} m/s` : "—"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </Card>
+        <RaceTable
+          races={races}
+          onRowClick={(r) => router.push(`/r/${r.id}`)}
+        />
       )}
     </div>
   );
@@ -110,3 +84,4 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
     </div>
   );
 }
+

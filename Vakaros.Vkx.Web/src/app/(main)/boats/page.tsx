@@ -11,7 +11,7 @@ import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { FilterToolbar, SearchInput } from "@/components/ui/filter-toolbar";
 import { ThreeDotMenu } from "@/components/ui/three-dot-menu";
 import { useToast } from "@/hooks/useToast";
-import { Plus, X, Globe } from "lucide-react";
+import { Plus, X, Globe, Lock } from "lucide-react";
 
 interface Draft { name: string; sailNumber: string; boatClassId: string; description: string; isPublic: boolean; }
 const emptyDraft = (classes: BoatClass[]): Draft => ({ name: "", sailNumber: "", boatClassId: classes[0] ? String(classes[0].id) : "", description: "", isPublic: false });
@@ -141,10 +141,12 @@ export default function BoatsPage() {
               </Select>
             </label>
             <label className="block"><span className="text-sm text-text-secondary">Description</span><Textarea value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={draft.isPublic} onChange={(e) => setDraft({ ...draft, isPublic: e.target.checked })} className="h-4 w-4 rounded border-border-default accent-action-primary" />
-              <span className="text-sm">Make this boat public</span>
-            </label>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-text-secondary">Visibility</span>
+              <Button variant="secondary" onClick={() => setDraft({ ...draft, isPublic: !draft.isPublic })}>
+                {draft.isPublic ? <><Globe className="mr-1 h-4 w-4" /> Public</> : <><Lock className="mr-1 h-4 w-4" /> Private</>}
+              </Button>
+            </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="secondary" onClick={() => setPanelId(null)}>Cancel</Button>
               <Button onClick={submit}>Save</Button>

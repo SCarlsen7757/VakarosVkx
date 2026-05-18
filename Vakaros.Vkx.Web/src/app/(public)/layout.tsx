@@ -15,7 +15,11 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       {!loading && !showNav && (
         <div className="flex items-center justify-between border-b border-border-default bg-bg-elevated px-4 py-2 text-sm">
           <Link href="/sessions" className="font-semibold">Vakaros VKX</Link>
-          <Link href="/login" className="rounded-md bg-action-primary px-3 py-1 text-white hover:opacity-90">Sign in</Link>
+          <div className="flex items-center gap-4">
+            <Link href="/sessions" className="text-text-secondary hover:text-text-primary">Sessions</Link>
+            <Link href="/boat-classes" className="text-text-secondary hover:text-text-primary">Boat classes</Link>
+            <Link href="/login" className="rounded-md bg-action-primary px-3 py-1 text-white hover:opacity-90">Sign in</Link>
+          </div>
         </div>
       )}
       <div className="flex flex-1">

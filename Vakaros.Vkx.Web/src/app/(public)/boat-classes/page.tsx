@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { BoatClass, BoatClassRequest } from "@/lib/schemas";
@@ -134,7 +135,12 @@ export default function BoatClassesPage() {
       <div className="space-y-6">
         <div>
           <div className="mb-4 flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Boat classes</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold">Boat classes</h1>
+              {isLoggedIn && (
+                <Link href="/boats" className="text-sm text-action-primary hover:underline">← Fleet</Link>
+              )}
+            </div>
             {isAdmin && <Button onClick={() => startEdit(null)}><Plus className="h-4 w-4" /> New class</Button>}
             {isLoggedIn && !isAdmin && (
               <Button variant="secondary" onClick={() => setShowRequestForm((v) => !v)}>

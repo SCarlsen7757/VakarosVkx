@@ -9,6 +9,7 @@ import type { SessionDetail, Boat, Course, Race, SessionShare } from "@/lib/sche
 import { n } from "@/lib/schemas";
 import { formatDuration } from "@/lib/units";
 import { Button, Card, Input, Select, Textarea } from "@/components/ui/controls";
+import { RaceTable } from "@/components/session/race-table";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
@@ -208,42 +209,11 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </Card>
 
-        <Card className="overflow-hidden">
-          <h2 className="px-5 pt-4 text-lg font-semibold">Races</h2>
-          {session.races.length === 0 ? (
-            <p className="px-5 py-8 text-sm text-text-secondary">No races detected in this session.</p>
-          ) : (
-            <table className="w-full">
-              <thead className="bg-bg-elevated text-xs uppercase tracking-wider text-text-secondary">
-                <tr>
-                  <th className="px-3 py-2 text-left">Race #</th>
-                  <th className="px-3 py-2 text-left">Started</th>
-                  <th className="px-3 py-2 text-left">Ended</th>
-                  <th className="px-3 py-2 text-left">Duration</th>
-                  <th className="px-3 py-2 text-left">Course</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(session.races as Race[]).map((r) => (
-                  <tr key={String(r.raceNumber)} className="border-t border-border-default text-sm">
-                    <td className="px-3 py-2">
-                      <button
-                        className="text-action-primary hover:underline"
-                        onClick={() => navigate(`/races/${r.id}`)}
-                      >
-                        Race {n(r.raceNumber)}
-                      </button>
-                    </td>
-                    <td className="px-3 py-2 text-text-secondary">{new Date(r.startedAt).toLocaleString()}</td>
-                    <td className="px-3 py-2 text-text-secondary">{r.endedAt ? new Date(r.endedAt).toLocaleString() : "—"}</td>
-                    <td className="px-3 py-2 font-mono">{r.durationSeconds != null ? formatDuration(n(r.durationSeconds)) : "—"}</td>
-                    <td className="px-3 py-2 text-text-secondary">{r.courseName ?? "None"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </Card>
+        <RaceTable
+          races={session.races as Race[]}
+          onRowClick={(r) => navigate(`/races/${r.id}`)}
+          showCourse
+        />
 
         {session.isOwned && (
           <Card className="p-5">
