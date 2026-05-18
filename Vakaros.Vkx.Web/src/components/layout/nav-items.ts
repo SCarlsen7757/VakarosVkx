@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Home, Upload, Layers, Sailboat, MapPin, Users, UserCircle, Settings as SettingsIcon, ShieldCheck, Inbox, BookOpen, LogIn, type LucideIcon,
+  Home, Upload, Layers, Sailboat, MapPin, Users, UserCircle, Settings as SettingsIcon, ShieldCheck, Inbox, LogIn, type LucideIcon,
 } from "lucide-react";
 
 export interface NavItem {
@@ -21,7 +21,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/upload", label: "Upload", icon: Upload, matchPrefix: "/upload", authRequired: true },
   { href: "/sessions", label: "Sessions", icon: Layers, matchPrefix: "/sessions" },
   { href: "/boats", label: "Fleet", icon: Sailboat, matchPrefix: "/boats" },
-  { href: "/boat-classes", label: "Boat classes", icon: BookOpen, matchPrefix: "/boat-classes" },
   { href: "/courses", label: "Courses", icon: MapPin, matchPrefix: "/course", authRequired: true },
   { href: "/teams", label: "Teams", icon: Users, matchPrefix: "/teams", authRequired: true },
   { href: "/account", label: "Account", icon: UserCircle, matchPrefix: "/account", authRequired: true },

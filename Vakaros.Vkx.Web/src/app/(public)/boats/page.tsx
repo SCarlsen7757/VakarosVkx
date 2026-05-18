@@ -87,9 +87,8 @@ export default function BoatsPage() {
   if (!isLoggedIn) {
     return (
       <div>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4">
           <h1 className="text-2xl font-bold">Fleet</h1>
-          <Link href="/login" className="rounded-md bg-action-primary px-3 py-1.5 text-sm text-white hover:opacity-90">Sign in to manage your fleet</Link>
         </div>
         <FilterToolbar>
           <SearchInput value={search} onChange={setSearch} placeholder="Name or sail #…" />
@@ -135,7 +134,7 @@ export default function BoatsPage() {
             <option value="">All classes</option>
             {classes.map((c) => <option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
           </Select>
-          <Link href="/boat-classes" className="ml-auto text-sm text-action-primary hover:underline">Manage boat classes →</Link>
+          <Link href="/boat-classes" className="ml-auto text-sm text-action-primary hover:underline">Boat classes →</Link>
         </FilterToolbar>
 
         <Card className="mt-4 overflow-hidden">
