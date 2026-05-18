@@ -17,7 +17,7 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Home", icon: Home, matchPrefix: "/", authRequired: true },
+  { href: "/", label: "Home", icon: Home, matchPrefix: "/" },
   { href: "/upload", label: "Upload", icon: Upload, matchPrefix: "/upload", authRequired: true },
   { href: "/sessions", label: "Sessions", icon: Layers, matchPrefix: "/sessions" },
   { href: "/boats", label: "Fleet", icon: Sailboat, matchPrefix: "/boats" },
