@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Vakaros.Vkx.Api.Audit;
 using Vakaros.Vkx.Api.Auth;
+using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Api.Models.Entities;
 using Vakaros.Vkx.Shared.Dtos.Admin;
 
@@ -16,6 +17,7 @@ namespace Vakaros.Vkx.Api.Controllers;
 [Authorize(Roles = AuthConstants.AdminRole)]
 [Route("api/v{version:apiVersion}/admin/users")]
 public class AdminController(
+    AppDbContext db,
     UserManager<AppUser> userManager,
     IAuditService audit,
     ICurrentUser currentUser,
@@ -34,6 +36,15 @@ public class AdminController(
                 !string.IsNullOrEmpty(u.PasswordHash), u.CreatedAt));
         }
         return Ok(result);
+    }
+
+    [HttpGet("stats")]
+    [EndpointSummary("Quick admin stats: user count and team count.")]
+    public async Task<ActionResult<AdminStatsDto>> GetStats(CancellationToken ct)
+    {
+        var userCount = await userManager.Users.CountAsync(ct);
+        var teamCount = await db.Teams.CountAsync(ct);
+        return Ok(new AdminStatsDto(userCount, teamCount));
     }
 
     [HttpPost]

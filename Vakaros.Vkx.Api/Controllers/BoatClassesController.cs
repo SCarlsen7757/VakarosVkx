@@ -20,7 +20,8 @@ public class BoatClassesController(AppDbContext db) : ControllerBase
     {
         var classes = await db.BoatClasses
             .OrderBy(bc => bc.Name)
-            .Select(bc => new BoatClassDto(bc.Id, bc.Name, bc.Length, bc.Width, bc.Weight))
+            .Select(bc => new BoatClassDto(bc.Id, bc.Name, bc.Length, bc.Width, bc.Weight,
+                db.Boats.Count(b => b.BoatClassId == bc.Id)))
             .ToListAsync(ct);
         return Ok(classes);
     }

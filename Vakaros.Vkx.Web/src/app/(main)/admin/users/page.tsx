@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { components } from "@/lib/api-types";
 import { useAuth } from "@/lib/auth-context";
+import type { AdminStats } from "@/lib/schemas";
+import { Users, UsersRound } from "lucide-react";
 
 type AdminUser = components["schemas"]["AdminUserDto"];
 type Invitation = components["schemas"]["InvitationDto"];
@@ -11,6 +13,7 @@ type Invitation = components["schemas"]["InvitationDto"];
 export default function AdminUsersPage() {
   const { me } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState<"User" | "Admin">("User");
@@ -26,12 +29,14 @@ export default function AdminUsersPage() {
   const [invError, setInvError] = useState<string | null>(null);
 
   async function load() {
-    const [{ data: u }, { data: i }] = await Promise.all([
+    const [{ data: u }, { data: i }, { data: s }] = await Promise.all([
       api.GET("/api/v1/admin/users"),
       api.GET("/api/v1/admin/invitations"),
+      api.GET("/api/v1/admin/users/stats" as any, {} as any),
     ]);
     setUsers(u ?? []);
     setInvitations(i ?? []);
+    if (s) setAdminStats(s as AdminStats);
   }
 
   useEffect(() => { void load(); }, []);
@@ -108,6 +113,25 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-action-primary">User management</h1>
+
+      {adminStats && (
+        <div className="flex gap-4">
+          <div className="flex items-center gap-3 rounded-lg border border-border-default bg-bg-surface px-5 py-4">
+            <Users className="h-6 w-6 text-action-primary" />
+            <div>
+              <div className="text-xs uppercase tracking-wider text-text-secondary">Users</div>
+              <div className="font-mono text-2xl font-semibold">{adminStats.userCount}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 rounded-lg border border-border-default bg-bg-surface px-5 py-4">
+            <UsersRound className="h-6 w-6 text-action-primary" />
+            <div>
+              <div className="text-xs uppercase tracking-wider text-text-secondary">Teams</div>
+              <div className="font-mono text-2xl font-semibold">{adminStats.teamCount}</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Invite a known user (per-user setup link)</h2>

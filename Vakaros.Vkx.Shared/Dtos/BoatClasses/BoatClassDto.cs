@@ -8,4 +8,5 @@ public record BoatClassDto(
     string Name,
     double? Length,
     double? Width,
-    double? Weight);
+    double? Weight,
+    int BoatCount = 0);

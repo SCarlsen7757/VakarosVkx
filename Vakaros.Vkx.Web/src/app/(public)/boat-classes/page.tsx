@@ -176,6 +176,7 @@ export default function BoatClassesPage() {
                   <th className="px-3 py-2 text-left">Length (m)</th>
                   <th className="px-3 py-2 text-left">Width (m)</th>
                   <th className="px-3 py-2 text-left">Weight (kg)</th>
+                  <th className="px-3 py-2 text-left">Boats</th>
                   {isAdmin && <th className="w-10"></th>}
                 </tr>
               </thead>
@@ -190,6 +191,7 @@ export default function BoatClassesPage() {
                     <td className="px-3 py-2 text-text-secondary">{c.length ?? "—"}</td>
                     <td className="px-3 py-2 text-text-secondary">{c.width ?? "—"}</td>
                     <td className="px-3 py-2 text-text-secondary">{c.weight ?? "—"}</td>
+                    <td className="px-3 py-2 text-text-secondary">{c.boatCount}</td>
                     {isAdmin && (
                       <td className="px-3 py-2">
                         <ThreeDotMenu items={[
@@ -200,7 +202,7 @@ export default function BoatClassesPage() {
                     )}
                   </tr>
                 ))}
-                {list.length === 0 && <tr><td colSpan={isAdmin ? 5 : 4} className="px-3 py-8 text-center text-text-secondary">No boat classes yet.</td></tr>}
+                {list.length === 0 && <tr><td colSpan={isAdmin ? 6 : 5} className="px-3 py-8 text-center text-text-secondary">No boat classes yet.</td></tr>}
               </tbody>
             </table>
           </Card>

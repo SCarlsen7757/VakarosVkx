@@ -28,6 +28,8 @@ export type ShiftAngle = Schemas["ShiftAngleDto"];
 export type StartAnalysis = Schemas["StartAnalysisDto"];
 export type RaceSummary = Schemas["RaceSummaryDto"];
 export type StartLineLength = Schemas["StartLineLengthDto"];
+export type PlatformStats = Schemas["PlatformStatsDto"];
+export type AdminStats = Schemas["AdminStatsDto"];
 
 export function n(v: number | string | null | undefined): number {
   if (v == null) return NaN;

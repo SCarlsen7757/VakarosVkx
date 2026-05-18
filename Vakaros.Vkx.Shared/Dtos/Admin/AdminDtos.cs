@@ -15,3 +15,5 @@ public record CreateUserResponse(AdminUserDto User, string SetupUrl);
 public record UpdateUserRequest(string? DisplayName, string? Role);
 
 public record RegenerateSetupLinkResponse(string SetupUrl);
+
+public record AdminStatsDto(int UserCount, int TeamCount);

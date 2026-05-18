@@ -143,9 +143,8 @@ public class BoatsController(AppDbContext db, ICurrentUser currentUser) : Contro
             .FirstOrDefaultAsync(ct);
         if (boat is null) return NotFound();
 
-        // Owners see stats for all their sessions; anonymous/non-owner viewers only see stats for public sessions.
+        // Stats include all sessions regardless of visibility — only aggregate numbers are exposed.
         var sessionQuery = db.Sessions.Where(s => s.BoatId == id);
-        if (!isOwner) sessionQuery = sessionQuery.Where(s => s.IsPublic);
 
         var sessions = await sessionQuery
             .Include(s => s.Races)
