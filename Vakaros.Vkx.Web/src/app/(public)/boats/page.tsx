@@ -92,6 +92,7 @@ export default function BoatsPage() {
         </div>
         <FilterToolbar>
           <SearchInput value={search} onChange={setSearch} placeholder="Name or sail #…" />
+          <Link href="/boat-classes" className="ml-auto text-sm text-action-primary hover:underline">Boat classes →</Link>
         </FilterToolbar>
         <Card className="mt-4 overflow-hidden">
           <table className="w-full">
