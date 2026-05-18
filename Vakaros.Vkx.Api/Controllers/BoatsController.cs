@@ -17,8 +17,22 @@ namespace Vakaros.Vkx.Api.Controllers;
 public class BoatsController(AppDbContext db, ICurrentUser currentUser) : ControllerBase
 {
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<List<BoatDto>>> GetAll(CancellationToken ct)
     {
+        if (!currentUser.IsAuthenticated)
+        {
+            var publicBoats = await db.Boats
+                .Where(b => b.IsPublic)
+                .OrderBy(b => b.Name)
+                .Select(b => new BoatDto(
+                    b.Id, b.Name, b.SailNumber,
+                    new BoatClassSummaryDto(b.BoatClass.Id, b.BoatClass.Name, b.BoatClass.Length, b.BoatClass.Width, b.BoatClass.Weight),
+                    b.Description, b.IsPublic, b.CreatedAt))
+                .ToListAsync(ct);
+            return Ok(publicBoats);
+        }
+
         var userId = currentUser.UserId;
         var boats = await db.Boats
             .Where(b => b.OwnerUserId == userId)

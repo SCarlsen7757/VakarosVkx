@@ -73,8 +73,14 @@ function badgeForItem(item: NavItem, badges: { pendingInvites: number; pendingBo
 
 function useVisibleNavItems(): NavItem[] {
   const { me, providers } = useAuth();
+  const isLoggedIn = !!me || providers?.mode === "SingleUser";
   const isAdmin = providers?.mode === "SingleUser" || !!me?.roles?.includes("Admin");
-  return NAV_ITEMS.filter((i) => !i.adminOnly || isAdmin);
+  return NAV_ITEMS.filter((i) => {
+    if (i.adminOnly && !isAdmin) return false;
+    if (i.authRequired && !isLoggedIn) return false;
+    if (i.anonOnly && isLoggedIn) return false;
+    return true;
+  });
 }
 
 export function Sidebar() {

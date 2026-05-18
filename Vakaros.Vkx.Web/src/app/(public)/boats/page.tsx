@@ -11,12 +11,15 @@ import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { FilterToolbar, SearchInput } from "@/components/ui/filter-toolbar";
 import { ThreeDotMenu } from "@/components/ui/three-dot-menu";
 import { useToast } from "@/hooks/useToast";
+import { useAuth } from "@/lib/auth-context";
 import { Plus, X, Globe, Lock } from "lucide-react";
 
 interface Draft { name: string; sailNumber: string; boatClassId: string; description: string; isPublic: boolean; }
 const emptyDraft = (classes: BoatClass[]): Draft => ({ name: "", sailNumber: "", boatClassId: classes[0] ? String(classes[0].id) : "", description: "", isPublic: false });
 
 export default function BoatsPage() {
+  const { me, providers, loading } = useAuth();
+  const isLoggedIn = !!me || providers?.mode === "SingleUser";
   const toast = useToast();
   const [boats, setBoats] = useState<Boat[] | null>(null);
   const [classes, setClasses] = useState<BoatClass[]>([]);
@@ -35,9 +38,12 @@ export default function BoatsPage() {
   };
 
   useEffect(() => {
+    if (loading) return;
     load();
-    api.GET("/api/v1/boat-classes" as any, {} as any).then(({ data }: any) => setClasses((data as BoatClass[]) ?? []));
-  }, []);
+    if (isLoggedIn) {
+      api.GET("/api/v1/boat-classes" as any, {} as any).then(({ data }: any) => setClasses((data as BoatClass[]) ?? []));
+    }
+  }, [loading, isLoggedIn]);
 
   const filtered = useMemo(() => {
     if (!boats) return [];
@@ -73,9 +79,49 @@ export default function BoatsPage() {
     else toast.push({ kind: "error", message: "Delete failed." });
   };
 
+  if (loading) return <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <SkeletonLoader key={i} className="h-12" />)}</div>;
   if (error) return <ErrorBanner message={error} onRetry={load} />;
   if (!boats) return <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <SkeletonLoader key={i} className="h-12" />)}</div>;
 
+  // Anonymous read-only view — shows only public boats
+  if (!isLoggedIn) {
+    return (
+      <div>
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Fleet</h1>
+          <Link href="/login" className="rounded-md bg-action-primary px-3 py-1.5 text-sm text-white hover:opacity-90">Sign in to manage your fleet</Link>
+        </div>
+        <FilterToolbar>
+          <SearchInput value={search} onChange={setSearch} placeholder="Name or sail #…" />
+        </FilterToolbar>
+        <Card className="mt-4 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-bg-elevated text-xs uppercase tracking-wider text-text-secondary">
+              <tr>
+                <th className="px-3 py-2 text-left">Name</th>
+                <th className="px-3 py-2 text-left">Sail #</th>
+                <th className="px-3 py-2 text-left">Class</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((b) => (
+                <tr key={String(b.id)} className="border-t border-border-default text-sm hover:bg-bg-elevated/40">
+                  <td className="px-3 py-2">
+                    <Link href={`/b/${b.id}`} className="text-action-primary hover:underline">{b.name}</Link>
+                  </td>
+                  <td className="px-3 py-2 text-text-secondary">{b.sailNumber ?? "—"}</td>
+                  <td className="px-3 py-2 text-text-secondary">{b.boatClass.name}</td>
+                </tr>
+              ))}
+              {filtered.length === 0 && <tr><td colSpan={3} className="px-3 py-8 text-center text-text-secondary">No public boats yet.</td></tr>}
+            </tbody>
+          </table>
+        </Card>
+      </div>
+    );
+  }
+
+  // Authenticated management view
   return (
     <div className={panelId ? "grid gap-6 lg:grid-cols-[1fr_28rem]" : undefined}>
       <div>
@@ -167,4 +213,3 @@ export default function BoatsPage() {
     </div>
   );
 }
-
