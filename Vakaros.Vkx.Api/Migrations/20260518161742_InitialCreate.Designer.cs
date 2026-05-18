@@ -12,7 +12,7 @@ using Vakaros.Vkx.Api.Data;
 namespace Vakaros.Vkx.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260426172516_InitialCreate")]
+    [Migration("20260518161742_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -310,6 +310,10 @@ namespace Vakaros.Vkx.Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_public");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
@@ -430,6 +434,19 @@ namespace Vakaros.Vkx.Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
+                    b.Property<string>("FinishLineSource")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("finish_line_source");
+
+                    b.Property<Guid?>("FinishMark1Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("finish_mark1_id");
+
+                    b.Property<Guid?>("FinishMark2Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("finish_mark2_id");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
@@ -439,13 +456,34 @@ namespace Vakaros.Vkx.Api.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("owner_user_id");
 
+                    b.Property<string>("StartLineSource")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("start_line_source");
+
+                    b.Property<Guid?>("StartMark1Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("start_mark1_id");
+
+                    b.Property<Guid?>("StartMark2Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("start_mark2_id");
+
                     b.Property<int>("Year")
                         .HasColumnType("integer")
                         .HasColumnName("year");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FinishMark1Id");
+
+                    b.HasIndex("FinishMark2Id");
+
                     b.HasIndex("OwnerUserId");
+
+                    b.HasIndex("StartMark1Id");
+
+                    b.HasIndex("StartMark2Id");
 
                     b.ToTable("courses", (string)null);
                 });
@@ -460,13 +498,27 @@ namespace Vakaros.Vkx.Api.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("course_id");
 
+                    b.Property<Guid?>("GateMarkId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("gate_mark_id");
+
                     b.Property<string>("LegName")
                         .HasColumnType("text")
                         .HasColumnName("leg_name");
 
+                    b.Property<string>("LegType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("leg_type");
+
                     b.Property<Guid>("MarkId")
                         .HasColumnType("uuid")
                         .HasColumnName("mark_id");
+
+                    b.Property<string>("PassingSide")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("passing_side");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer")
@@ -475,6 +527,8 @@ namespace Vakaros.Vkx.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CourseId");
+
+                    b.HasIndex("GateMarkId");
 
                     b.HasIndex("MarkId");
 
@@ -866,6 +920,10 @@ namespace Vakaros.Vkx.Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("model");
 
+                    b.Property<Guid>("RaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("race_id");
+
                     b.Property<int>("RaceNumber")
                         .HasColumnType("integer")
                         .HasColumnName("race_number");
@@ -875,6 +933,9 @@ namespace Vakaros.Vkx.Api.Migrations
                         .HasColumnName("session_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RaceId")
+                        .IsUnique();
 
                     b.HasIndex("SessionId", "RaceNumber")
                         .IsUnique();
@@ -925,6 +986,10 @@ namespace Vakaros.Vkx.Api.Migrations
                     b.Property<Guid?>("CourseId")
                         .HasColumnType("uuid")
                         .HasColumnName("course_id");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("text")
+                        .HasColumnName("display_name");
 
                     b.Property<DateTimeOffset>("EndedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1279,6 +1344,37 @@ namespace Vakaros.Vkx.Api.Migrations
                     b.Navigation("RequestedByUser");
                 });
 
+            modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.Course", b =>
+                {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Mark", "FinishMark1")
+                        .WithMany()
+                        .HasForeignKey("FinishMark1Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Mark", "FinishMark2")
+                        .WithMany()
+                        .HasForeignKey("FinishMark2Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Mark", "StartMark1")
+                        .WithMany()
+                        .HasForeignKey("StartMark1Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Mark", "StartMark2")
+                        .WithMany()
+                        .HasForeignKey("StartMark2Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("FinishMark1");
+
+                    b.Navigation("FinishMark2");
+
+                    b.Navigation("StartMark1");
+
+                    b.Navigation("StartMark2");
+                });
+
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.CourseLeg", b =>
                 {
                     b.HasOne("Vakaros.Vkx.Api.Models.Entities.Course", "Course")
@@ -1287,6 +1383,11 @@ namespace Vakaros.Vkx.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Mark", "GateMark")
+                        .WithMany()
+                        .HasForeignKey("GateMarkId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Vakaros.Vkx.Api.Models.Entities.Mark", "Mark")
                         .WithMany("CourseLegs")
                         .HasForeignKey("MarkId")
@@ -1294,6 +1395,8 @@ namespace Vakaros.Vkx.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Course");
+
+                    b.Navigation("GateMark");
 
                     b.Navigation("Mark");
                 });
@@ -1373,11 +1476,19 @@ namespace Vakaros.Vkx.Api.Migrations
 
             modelBuilder.Entity("Vakaros.Vkx.Api.Models.Entities.RaceSummaryReport", b =>
                 {
+                    b.HasOne("Vakaros.Vkx.Api.Models.Entities.Race", "Race")
+                        .WithMany()
+                        .HasForeignKey("RaceId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Vakaros.Vkx.Api.Models.Entities.Session", "Session")
                         .WithMany()
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Race");
 
                     b.Navigation("Session");
                 });

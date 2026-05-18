@@ -46,22 +46,6 @@ namespace Vakaros.Vkx.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "courses",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    owner_user_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    name = table.Column<string>(type: "text", nullable: false),
-                    year = table.Column<int>(type: "integer", nullable: false),
-                    description = table.Column<string>(type: "text", nullable: true),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_courses", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "DataProtectionKeys",
                 columns: table => new
                 {
@@ -197,6 +181,7 @@ namespace Vakaros.Vkx.Api.Migrations
                     sail_number = table.Column<string>(type: "text", nullable: true),
                     boat_class_id = table.Column<Guid>(type: "uuid", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
+                    is_public = table.Column<bool>(type: "boolean", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -211,30 +196,49 @@ namespace Vakaros.Vkx.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "course_legs",
+                name: "courses",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    course_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    mark_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    sort_order = table.Column<int>(type: "integer", nullable: false),
-                    leg_name = table.Column<string>(type: "text", nullable: true)
+                    owner_user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "text", nullable: false),
+                    year = table.Column<int>(type: "integer", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    start_line_source = table.Column<string>(type: "text", nullable: false),
+                    start_mark1_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    start_mark2_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    finish_line_source = table.Column<string>(type: "text", nullable: false),
+                    finish_mark1_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    finish_mark2_id = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_course_legs", x => x.id);
+                    table.PrimaryKey("PK_courses", x => x.id);
                     table.ForeignKey(
-                        name: "FK_course_legs_courses_course_id",
-                        column: x => x.course_id,
-                        principalTable: "courses",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_course_legs_marks_mark_id",
-                        column: x => x.mark_id,
+                        name: "FK_courses_marks_finish_mark1_id",
+                        column: x => x.finish_mark1_id,
                         principalTable: "marks",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_courses_marks_finish_mark2_id",
+                        column: x => x.finish_mark2_id,
+                        principalTable: "marks",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_courses_marks_start_mark1_id",
+                        column: x => x.start_mark1_id,
+                        principalTable: "marks",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_courses_marks_start_mark2_id",
+                        column: x => x.start_mark2_id,
+                        principalTable: "marks",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -428,6 +432,42 @@ namespace Vakaros.Vkx.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "course_legs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    course_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    mark_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    gate_mark_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    sort_order = table.Column<int>(type: "integer", nullable: false),
+                    leg_name = table.Column<string>(type: "text", nullable: true),
+                    leg_type = table.Column<string>(type: "text", nullable: false),
+                    passing_side = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_course_legs", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_course_legs_courses_course_id",
+                        column: x => x.course_id,
+                        principalTable: "courses",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_course_legs_marks_gate_mark_id",
+                        column: x => x.gate_mark_id,
+                        principalTable: "marks",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_course_legs_marks_mark_id",
+                        column: x => x.mark_id,
+                        principalTable: "marks",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "sessions",
                 columns: table => new
                 {
@@ -436,6 +476,7 @@ namespace Vakaros.Vkx.Api.Migrations
                     boat_id = table.Column<Guid>(type: "uuid", nullable: true),
                     course_id = table.Column<Guid>(type: "uuid", nullable: true),
                     file_name = table.Column<string>(type: "text", nullable: false),
+                    display_name = table.Column<string>(type: "text", nullable: true),
                     content_hash = table.Column<string>(type: "text", nullable: false),
                     format_version = table.Column<short>(type: "smallint", nullable: false),
                     telemetry_rate_hz = table.Column<short>(type: "smallint", nullable: false),
@@ -565,29 +606,6 @@ namespace Vakaros.Vkx.Api.Migrations
                     table.PrimaryKey("PK_positions", x => new { x.time, x.session_id });
                     table.ForeignKey(
                         name: "FK_positions_sessions_session_id",
-                        column: x => x.session_id,
-                        principalTable: "sessions",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "race_summary_reports",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    session_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    race_number = table.Column<int>(type: "integer", nullable: false),
-                    content = table.Column<string>(type: "text", nullable: false),
-                    model = table.Column<string>(type: "text", nullable: false),
-                    context_hash = table.Column<string>(type: "text", nullable: false),
-                    generated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_race_summary_reports", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_race_summary_reports_sessions_session_id",
                         column: x => x.session_id,
                         principalTable: "sessions",
                         principalColumn: "id",
@@ -753,6 +771,35 @@ namespace Vakaros.Vkx.Api.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "race_summary_reports",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    session_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    race_number = table.Column<int>(type: "integer", nullable: false),
+                    race_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    content = table.Column<string>(type: "text", nullable: false),
+                    model = table.Column<string>(type: "text", nullable: false),
+                    context_hash = table.Column<string>(type: "text", nullable: false),
+                    generated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_race_summary_reports", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_race_summary_reports_races_race_id",
+                        column: x => x.race_id,
+                        principalTable: "races",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_race_summary_reports_sessions_session_id",
+                        column: x => x.session_id,
+                        principalTable: "sessions",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_audit_events_at",
                 table: "audit_events",
@@ -789,14 +836,39 @@ namespace Vakaros.Vkx.Api.Migrations
                 column: "course_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_course_legs_gate_mark_id",
+                table: "course_legs",
+                column: "gate_mark_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_course_legs_mark_id",
                 table: "course_legs",
                 column: "mark_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_courses_finish_mark1_id",
+                table: "courses",
+                column: "finish_mark1_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_courses_finish_mark2_id",
+                table: "courses",
+                column: "finish_mark2_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_courses_owner_user_id",
                 table: "courses",
                 column: "owner_user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_courses_start_mark1_id",
+                table: "courses",
+                column: "start_mark1_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_courses_start_mark2_id",
+                table: "courses",
+                column: "start_mark2_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_declinations_session_id",
@@ -845,6 +917,12 @@ namespace Vakaros.Vkx.Api.Migrations
                 name: "IX_positions_session_id",
                 table: "positions",
                 column: "session_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_race_summary_reports_race_id",
+                table: "race_summary_reports",
+                column: "race_id",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_race_summary_reports_session_id_race_number",
@@ -1015,9 +1093,6 @@ namespace Vakaros.Vkx.Api.Migrations
                 name: "race_timer_events");
 
             migrationBuilder.DropTable(
-                name: "races");
-
-            migrationBuilder.DropTable(
                 name: "role_claims");
 
             migrationBuilder.DropTable(
@@ -1054,7 +1129,7 @@ namespace Vakaros.Vkx.Api.Migrations
                 name: "wind_readings");
 
             migrationBuilder.DropTable(
-                name: "marks");
+                name: "races");
 
             migrationBuilder.DropTable(
                 name: "teams");
@@ -1076,6 +1151,9 @@ namespace Vakaros.Vkx.Api.Migrations
 
             migrationBuilder.DropTable(
                 name: "boat_classes");
+
+            migrationBuilder.DropTable(
+                name: "marks");
         }
     }
 }

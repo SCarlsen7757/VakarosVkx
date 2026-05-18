@@ -11,10 +11,10 @@ import { SkeletonLoader } from "@/components/ui/skeleton-loader";
 import { FilterToolbar, SearchInput } from "@/components/ui/filter-toolbar";
 import { ThreeDotMenu } from "@/components/ui/three-dot-menu";
 import { useToast } from "@/hooks/useToast";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Globe } from "lucide-react";
 
-interface Draft { name: string; sailNumber: string; boatClassId: string; description: string; }
-const emptyDraft = (classes: BoatClass[]): Draft => ({ name: "", sailNumber: "", boatClassId: classes[0] ? String(classes[0].id) : "", description: "" });
+interface Draft { name: string; sailNumber: string; boatClassId: string; description: string; isPublic: boolean; }
+const emptyDraft = (classes: BoatClass[]): Draft => ({ name: "", sailNumber: "", boatClassId: classes[0] ? String(classes[0].id) : "", description: "", isPublic: false });
 
 export default function BoatsPage() {
   const toast = useToast();
@@ -24,7 +24,7 @@ export default function BoatsPage() {
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("");
   const [panelId, setPanelId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft>({ name: "", sailNumber: "", boatClassId: "", description: "" });
+  const [draft, setDraft] = useState<Draft>({ name: "", sailNumber: "", boatClassId: "", description: "", isPublic: false });
   const [confirmDelete, setConfirmDelete] = useState<Boat | null>(null);
 
   const load = () => {
@@ -52,12 +52,12 @@ export default function BoatsPage() {
   const openNew = () => { setPanelId("new"); setDraft(emptyDraft(classes)); };
   const openEdit = (b: Boat) => {
     setPanelId(String(b.id));
-    setDraft({ name: b.name, sailNumber: b.sailNumber ?? "", boatClassId: String(b.boatClass.id), description: b.description ?? "" });
+    setDraft({ name: b.name, sailNumber: b.sailNumber ?? "", boatClassId: String(b.boatClass.id), description: b.description ?? "", isPublic: b.isPublic });
   };
 
   const submit = async () => {
     if (!draft.name || !draft.boatClassId) { toast.push({ kind: "warning", message: "Name and class are required." }); return; }
-    const body = { name: draft.name, sailNumber: draft.sailNumber || null, boatClassId: draft.boatClassId, description: draft.description || null };
+    const body = { name: draft.name, sailNumber: draft.sailNumber || null, boatClassId: draft.boatClassId, description: draft.description || null, isPublic: draft.isPublic };
     const isNew = panelId === "new";
     const url = isNew ? "/api/v1/boats" : `/api/v1/boats/${panelId}`;
     const res = await fetch(url, { method: isNew ? "POST" : "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -106,7 +106,7 @@ export default function BoatsPage() {
             <tbody>
               {filtered.map((b) => (
                 <tr key={String(b.id)} className="cursor-pointer border-t border-border-default text-sm hover:bg-bg-elevated/40" onClick={() => openEdit(b)}>
-                  <td className="px-3 py-2"><Link className="text-action-primary hover:underline" href={`/boats/${b.id}`} onClick={(e) => e.stopPropagation()}>{b.name}</Link></td>
+                  <td className="px-3 py-2"><Link className="text-action-primary hover:underline" href={`/boats/${b.id}`} onClick={(e) => e.stopPropagation()}>{b.name}</Link>{b.isPublic && <span className="ml-2 inline-flex items-center gap-1 rounded bg-green-500/15 px-1.5 py-0.5 text-xs text-green-400"><Globe className="h-3 w-3" />Public</span>}</td>
                   <td className="px-3 py-2 text-text-secondary">{b.sailNumber ?? "—"}</td>
                   <td className="px-3 py-2 text-text-secondary">{b.boatClass.name}</td>
                   <td className="px-3 py-2 text-text-secondary"><span className="block max-w-[16rem] truncate">{b.description ?? "—"}</span></td>
@@ -141,6 +141,10 @@ export default function BoatsPage() {
               </Select>
             </label>
             <label className="block"><span className="text-sm text-text-secondary">Description</span><Textarea value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={draft.isPublic} onChange={(e) => setDraft({ ...draft, isPublic: e.target.checked })} className="h-4 w-4 rounded border-border-default accent-action-primary" />
+              <span className="text-sm">Make this boat public</span>
+            </label>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="secondary" onClick={() => setPanelId(null)}>Cancel</Button>
               <Button onClick={submit}>Save</Button>

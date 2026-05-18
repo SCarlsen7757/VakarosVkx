@@ -2323,6 +2323,10 @@ export interface paths {
                     year?: number | string;
                     from?: string;
                     to?: string;
+                    search?: string;
+                    visibility?: string;
+                    page?: number | string;
+                    pageSize?: number | string;
                 };
                 header?: never;
                 path?: never;
@@ -2336,9 +2340,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SessionSummaryDto"][];
-                        "application/json": components["schemas"]["SessionSummaryDto"][];
-                        "text/json": components["schemas"]["SessionSummaryDto"][];
+                        "text/plain": components["schemas"]["PagedResultOfSessionSummaryDto"];
+                        "application/json": components["schemas"]["PagedResultOfSessionSummaryDto"];
+                        "text/json": components["schemas"]["PagedResultOfSessionSummaryDto"];
                     };
                 };
             };
@@ -2463,6 +2467,46 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/v1/sessions/{id}/course-layout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Coordinate-only course layout for a public session (anonymous safe). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PublicCourseLayoutDto"];
+                        "application/json": components["schemas"]["PublicCourseLayoutDto"];
+                        "text/json": components["schemas"]["PublicCourseLayoutDto"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/sessions/{sessionId}/shares": {
@@ -2997,6 +3041,7 @@ export interface components {
             sailNumber: null | string;
             boatClass: components["schemas"]["BoatClassSummaryDto"];
             description: null | string;
+            isPublic: boolean;
             /** Format: date-time */
             createdAt: string;
         };
@@ -3040,6 +3085,16 @@ export interface components {
             createdAt: string;
             /** Format: double */
             totalLengthMeters: number | string;
+            startLineSource: string;
+            /** Format: uuid */
+            startMark1Id: null | string;
+            /** Format: uuid */
+            startMark2Id: null | string;
+            finishLineSource: string;
+            /** Format: uuid */
+            finishMark1Id: null | string;
+            /** Format: uuid */
+            finishMark2Id: null | string;
             legs: components["schemas"]["CourseLegDto"][];
         };
         CourseLegDto: {
@@ -3048,18 +3103,31 @@ export interface components {
             /** Format: uuid */
             markId: string;
             markName: string;
+            /** Format: uuid */
+            gateMarkId: null | string;
+            gateMarkName: null | string;
             /** Format: int32 */
             sortOrder: number | string;
             legName: null | string;
+            legType: string;
+            passingSide: string;
             /** Format: double */
             latitude: number | string;
             /** Format: double */
             longitude: number | string;
+            /** Format: double */
+            gateLatitude: null | number | string;
+            /** Format: double */
+            gateLongitude: null | number | string;
         };
         CourseLegRequest: {
             /** Format: uuid */
             markId: string;
+            /** Format: uuid */
+            gateMarkId: null | string;
             legName: null | string;
+            legType: string;
+            passingSide: string;
         };
         CourseSummaryDto: {
             /** Format: uuid */
@@ -3098,12 +3166,23 @@ export interface components {
             /** Format: uuid */
             boatClassId: string;
             description: null | string;
+            isPublic: null | boolean;
         };
         CreateCourseRequest: {
             name: string;
             /** Format: int32 */
             year: number | string;
             description: null | string;
+            startLineSource: null | string;
+            /** Format: uuid */
+            startMark1Id: null | string;
+            /** Format: uuid */
+            startMark2Id: null | string;
+            finishLineSource: null | string;
+            /** Format: uuid */
+            finishMark1Id: null | string;
+            /** Format: uuid */
+            finishMark2Id: null | string;
             legs: components["schemas"]["CourseLegRequest"][];
         };
         CreateInvitationRequest: {
@@ -3252,6 +3331,15 @@ export interface components {
             /** Format: int32 */
             pendingBoatClassRequests: number | string;
         };
+        PagedResultOfSessionSummaryDto: {
+            items: components["schemas"]["SessionSummaryDto"][];
+            /** Format: int32 */
+            total: number | string;
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            pageSize: number | string;
+        };
         PatchRaceRequest: {
             /** Format: uuid */
             courseId: null | string;
@@ -3264,6 +3352,7 @@ export interface components {
             courseId: null | string;
             notes: null | string;
             isPublic: null | boolean;
+            displayName: null | string;
         };
         PendingTeamInviteDto: {
             /** Format: uuid */
@@ -3313,6 +3402,41 @@ export interface components {
             quaternionY: number | string;
             /** Format: float */
             quaternionZ: number | string;
+        };
+        PublicCourseLayoutDto: {
+            startLineSource: string;
+            /** Format: double */
+            startLat1: null | number | string;
+            /** Format: double */
+            startLng1: null | number | string;
+            /** Format: double */
+            startLat2: null | number | string;
+            /** Format: double */
+            startLng2: null | number | string;
+            finishLineSource: string;
+            /** Format: double */
+            finishLat1: null | number | string;
+            /** Format: double */
+            finishLng1: null | number | string;
+            /** Format: double */
+            finishLat2: null | number | string;
+            /** Format: double */
+            finishLng2: null | number | string;
+            legs: components["schemas"]["PublicCourseLegDto"][];
+        };
+        PublicCourseLegDto: {
+            /** Format: int32 */
+            sortOrder: number | string;
+            legType: string;
+            passingSide: string;
+            /** Format: double */
+            lat1: number | string;
+            /** Format: double */
+            lng1: number | string;
+            /** Format: double */
+            lat2: null | number | string;
+            /** Format: double */
+            lng2: null | number | string;
         };
         RaceDetailDto: {
             /** Format: uuid */
@@ -3401,6 +3525,7 @@ export interface components {
             courseId: null | string;
             courseName: null | string;
             fileName: string;
+            displayName: null | string;
             contentHash: string;
             /** Format: int16 */
             formatVersion: number | string;
@@ -3437,6 +3562,7 @@ export interface components {
             courseId: null | string;
             courseName: null | string;
             fileName: string;
+            displayName: null | string;
             /** Format: int16 */
             formatVersion: number | string;
             /** Format: int16 */
@@ -3571,12 +3697,23 @@ export interface components {
             /** Format: uuid */
             boatClassId: string;
             description: null | string;
+            isPublic: null | boolean;
         };
         UpdateCourseRequest: {
             name: string;
             /** Format: int32 */
             year: number | string;
             description: null | string;
+            startLineSource: null | string;
+            /** Format: uuid */
+            startMark1Id: null | string;
+            /** Format: uuid */
+            startMark2Id: null | string;
+            finishLineSource: null | string;
+            /** Format: uuid */
+            finishMark1Id: null | string;
+            /** Format: uuid */
+            finishMark2Id: null | string;
             legs: components["schemas"]["CourseLegRequest"][];
         };
         UpdateMarkRequest: {

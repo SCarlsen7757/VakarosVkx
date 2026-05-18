@@ -1,0 +1,112 @@
+"use client";
+
+import { use, useEffect, useState } from "react";
+import React from "react";
+import Link from "next/link";
+import { api } from "@/lib/api";
+import type { SessionDetail, Race } from "@/lib/schemas";
+import { n } from "@/lib/schemas";
+import { formatDuration } from "@/lib/units";
+import { Card } from "@/components/ui/controls";
+import { ErrorBanner } from "@/components/ui/error-banner";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { Globe } from "lucide-react";
+
+export default function PublicSessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const [session, setSession] = useState<SessionDetail | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.GET(`/api/v1/sessions/{id}` as any, { params: { path: { id } } } as any).then(({ data, error }: any) => {
+      if (error) setError("This session is not available or is private.");
+      else setSession(data as SessionDetail);
+    });
+  }, [id]);
+
+  if (error) return <ErrorBanner message={error} />;
+  if (!session) return <PageSkeleton />;
+  if (!session.isPublic && !session.isOwned) {
+    return <ErrorBanner message="This session is not public." />;
+  }
+
+  const title = session.displayName ?? session.fileName;
+  const duration = (new Date(session.endedAt).getTime() - new Date(session.startedAt).getTime()) / 1000;
+  const races = (session.races ?? []) as Race[];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <Link href="/sessions" className="text-sm text-text-secondary hover:text-text-primary">← Sessions</Link>
+        <h1 className="text-2xl font-bold">{title}</h1>
+        <span className="inline-flex items-center gap-1 rounded bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-400">
+          <Globe className="h-3 w-3" /> Public
+        </span>
+      </div>
+      {session.displayName && (
+        <div className="text-sm text-text-secondary">File: {session.fileName}</div>
+      )}
+
+      <Card className="p-4">
+        <h2 className="mb-3 text-lg font-semibold">Overview</h2>
+        <dl className="grid grid-cols-2 gap-y-2 text-sm sm:grid-cols-4">
+          <Field label="Boat" value={
+            session.boatId
+              ? <Link href={`/b/${session.boatId}`} className="text-action-primary hover:underline">{session.boatName ?? "—"}</Link>
+              : (session.boatName ?? "—")
+          } />
+          <Field label="Started" value={new Date(session.startedAt).toLocaleString()} />
+          <Field label="Ended" value={new Date(session.endedAt).toLocaleString()} />
+          <Field label="Duration" value={formatDuration(duration)} />
+          <Field label="Format" value={`v${session.formatVersion}`} />
+          <Field label="Telemetry rate" value={`${session.telemetryRateHz} Hz`} />
+          <Field label="Races" value={String(races.length)} />
+        </dl>
+      </Card>
+
+      {races.length > 0 && (
+        <Card className="overflow-hidden">
+          <div className="border-b border-border-default px-4 py-3">
+            <h2 className="text-lg font-semibold">Races</h2>
+          </div>
+          <table className="w-full">
+            <thead className="bg-bg-elevated">
+              <tr>
+                <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">#</th>
+                <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">Started</th>
+                <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">Duration</th>
+                <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">Distance</th>
+                <th className="px-3 py-2 text-left text-xs uppercase text-text-secondary">Max speed</th>
+              </tr>
+            </thead>
+            <tbody>
+              {races.map((r) => {
+                const rd = r.endedAt ? (new Date(r.endedAt).getTime() - new Date(r.startedAt).getTime()) / 1000 : null;
+                return (
+                  <tr key={String(r.id)} className="border-t border-border-default text-sm">
+                    <td className="px-3 py-2 font-medium">
+                      <Link href={`/r/${r.id}`} className="hover:text-action-primary">{r.raceNumber ?? "—"}</Link>
+                    </td>
+                    <td className="px-3 py-2 text-text-secondary">{new Date(r.startedAt).toLocaleString()}</td>
+                    <td className="px-3 py-2 font-mono">{rd != null ? formatDuration(rd) : "—"}</td>
+                    <td className="px-3 py-2 font-mono">{r.sailedDistanceMeters != null ? `${n(r.sailedDistanceMeters).toFixed(0)} m` : "—"}</td>
+                    <td className="px-3 py-2 font-mono">{r.maxSpeedOverGround != null ? `${n(r.maxSpeedOverGround).toFixed(2)} m/s` : "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div>
+      <dt className="text-xs uppercase text-text-secondary">{label}</dt>
+      <dd className="font-medium">{value}</dd>
+    </div>
+  );
+}

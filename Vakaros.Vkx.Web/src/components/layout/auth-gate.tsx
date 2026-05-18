@@ -27,8 +27,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     if (loading) return;
     if (singleUser) return;
     if (!me) {
-      const next = encodeURIComponent(pathname ?? "/");
-      router.replace(`/login?next=${next}`);
+      // Send anonymous visitors to the public sessions explore page instead of the login screen
+      // so they can browse public content. They can sign in from there if they want.
+      router.replace("/sessions");
       return;
     }
     if (isAdminPath && !isAdmin) {

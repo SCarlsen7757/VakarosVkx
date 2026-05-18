@@ -26,21 +26,22 @@ public class BoatsController(AppDbContext db, ICurrentUser currentUser) : Contro
             .Select(b => new BoatDto(
                 b.Id, b.Name, b.SailNumber,
                 new BoatClassSummaryDto(b.BoatClass.Id, b.BoatClass.Name, b.BoatClass.Length, b.BoatClass.Width, b.BoatClass.Weight),
-                b.Description, b.CreatedAt))
+                b.Description, b.IsPublic, b.CreatedAt))
             .ToListAsync(ct);
         return Ok(boats);
     }
 
     [HttpGet("{id:guid}")]
+    [AllowAnonymous]
     public async Task<ActionResult<BoatDto>> GetById(Guid id, CancellationToken ct)
     {
-        var userId = currentUser.UserId;
+        var userId = currentUser.IsAuthenticated ? currentUser.UserId : (Guid?)null;
         var dto = await db.Boats
-            .Where(b => b.Id == id && b.OwnerUserId == userId)
+            .Where(b => b.Id == id && (b.IsPublic || (userId.HasValue && b.OwnerUserId == userId.Value)))
             .Select(b => new BoatDto(
                 b.Id, b.Name, b.SailNumber,
                 new BoatClassSummaryDto(b.BoatClass.Id, b.BoatClass.Name, b.BoatClass.Length, b.BoatClass.Width, b.BoatClass.Weight),
-                b.Description, b.CreatedAt))
+                b.Description, b.IsPublic, b.CreatedAt))
             .FirstOrDefaultAsync(ct);
         if (dto is null) return NotFound();
         return Ok(dto);
@@ -61,6 +62,7 @@ public class BoatsController(AppDbContext db, ICurrentUser currentUser) : Contro
             SailNumber = request.SailNumber,
             BoatClassId = request.BoatClassId,
             Description = request.Description,
+            IsPublic = request.IsPublic ?? false,
         };
         db.Boats.Add(boat);
         await db.SaveChangesAsync(ct);
@@ -70,7 +72,7 @@ public class BoatsController(AppDbContext db, ICurrentUser currentUser) : Contro
             .Select(b => new BoatDto(
                 b.Id, b.Name, b.SailNumber,
                 new BoatClassSummaryDto(b.BoatClass.Id, b.BoatClass.Name, b.BoatClass.Length, b.BoatClass.Width, b.BoatClass.Weight),
-                b.Description, b.CreatedAt))
+                b.Description, b.IsPublic, b.CreatedAt))
             .FirstAsync(ct);
         return CreatedAtAction(nameof(GetById), new { id = boat.Id }, dto);
     }
@@ -89,6 +91,7 @@ public class BoatsController(AppDbContext db, ICurrentUser currentUser) : Contro
         boat.SailNumber = request.SailNumber;
         boat.BoatClassId = request.BoatClassId;
         boat.Description = request.Description;
+        if (request.IsPublic.HasValue) boat.IsPublic = request.IsPublic.Value;
         await db.SaveChangesAsync(ct);
 
         var dto = await db.Boats
@@ -96,7 +99,7 @@ public class BoatsController(AppDbContext db, ICurrentUser currentUser) : Contro
             .Select(b => new BoatDto(
                 b.Id, b.Name, b.SailNumber,
                 new BoatClassSummaryDto(b.BoatClass.Id, b.BoatClass.Name, b.BoatClass.Length, b.BoatClass.Width, b.BoatClass.Weight),
-                b.Description, b.CreatedAt))
+                b.Description, b.IsPublic, b.CreatedAt))
             .FirstAsync(ct);
         return Ok(dto);
     }
@@ -113,17 +116,24 @@ public class BoatsController(AppDbContext db, ICurrentUser currentUser) : Contro
     }
 
     [HttpGet("{id:guid}/stats")]
+    [AllowAnonymous]
     [EndpointSummary("Aggregate statistics for a boat across all its sessions and races.")]
     public async Task<ActionResult<BoatStatsDto>> GetStats(Guid id, CancellationToken ct)
     {
-        var userId = currentUser.UserId;
+        var userId = currentUser.IsAuthenticated ? currentUser.UserId : (Guid?)null;
+        var isOwner = userId.HasValue && await db.Boats.AnyAsync(b => b.Id == id && b.OwnerUserId == userId.Value, ct);
+
         var boat = await db.Boats
             .Include(b => b.BoatClass)
-            .FirstOrDefaultAsync(b => b.Id == id && b.OwnerUserId == userId, ct);
+            .Where(b => b.Id == id && (b.IsPublic || (userId.HasValue && b.OwnerUserId == userId.Value)))
+            .FirstOrDefaultAsync(ct);
         if (boat is null) return NotFound();
 
-        var sessions = await db.Sessions
-            .Where(s => s.BoatId == id && s.OwnerUserId == userId)
+        // Owners see stats for all their sessions; anonymous/non-owner viewers only see stats for public sessions.
+        var sessionQuery = db.Sessions.Where(s => s.BoatId == id);
+        if (!isOwner) sessionQuery = sessionQuery.Where(s => s.IsPublic);
+
+        var sessions = await sessionQuery
             .Include(s => s.Races)
             .ToListAsync(ct);
 

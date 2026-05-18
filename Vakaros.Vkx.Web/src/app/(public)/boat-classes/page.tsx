@@ -33,6 +33,7 @@ export default function BoatClassesPage() {
   const toast = useToast();
   const { me } = useAuth();
   const isAdmin = me?.roles?.includes("Admin") ?? false;
+  const isLoggedIn = !!me;
   const [list, setList] = useState<BoatClass[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -59,8 +60,8 @@ export default function BoatClassesPage() {
 
   useEffect(() => {
     load();
-    if (!isAdmin) loadMyRequests();
-  }, [isAdmin]);
+    if (isLoggedIn && !isAdmin) loadMyRequests();
+  }, [isLoggedIn, isAdmin]);
 
   const startEdit = (c: BoatClass | null) => {
     if (c) {
@@ -135,14 +136,14 @@ export default function BoatClassesPage() {
           <div className="mb-4 flex items-center justify-between">
             <h1 className="text-2xl font-bold">Boat classes</h1>
             {isAdmin && <Button onClick={() => startEdit(null)}><Plus className="h-4 w-4" /> New class</Button>}
-            {!isAdmin && (
+            {isLoggedIn && !isAdmin && (
               <Button variant="secondary" onClick={() => setShowRequestForm((v) => !v)}>
                 {showRequestForm ? <><ChevronUp className="h-4 w-4" /> Cancel request</> : <><Plus className="h-4 w-4" /> Request a new class</>}
               </Button>
             )}
           </div>
 
-          {!isAdmin && showRequestForm && (
+          {isLoggedIn && !isAdmin && showRequestForm && (
             <Card className="mb-4 p-5">
               <h2 className="mb-3 text-base font-semibold">Request a new boat class</h2>
               <form onSubmit={submitRequest} className="space-y-3">
@@ -199,7 +200,7 @@ export default function BoatClassesPage() {
           </Card>
         </div>
 
-        {!isAdmin && myRequests !== null && myRequests.length > 0 && (
+        {isLoggedIn && !isAdmin && myRequests !== null && myRequests.length > 0 && (
           <div>
             <h2 className="mb-2 text-lg font-semibold">My requests</h2>
             <Card className="overflow-hidden">
@@ -259,3 +260,4 @@ export default function BoatClassesPage() {
     </div>
   );
 }
+

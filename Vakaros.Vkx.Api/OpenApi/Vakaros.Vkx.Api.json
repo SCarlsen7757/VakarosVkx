@@ -2738,6 +2738,46 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "visibility",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 25
+            }
           }
         ],
         "responses": {
@@ -2746,26 +2786,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SessionSummaryDto"
-                  }
+                  "$ref": "#/components/schemas/PagedResultOfSessionSummaryDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SessionSummaryDto"
-                  }
+                  "$ref": "#/components/schemas/PagedResultOfSessionSummaryDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SessionSummaryDto"
-                  }
+                  "$ref": "#/components/schemas/PagedResultOfSessionSummaryDto"
                 }
               }
             }
@@ -2888,6 +2919,47 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/course-layout": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Coordinate-only course layout for a public session (anonymous safe).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCourseLayoutDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCourseLayoutDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCourseLayoutDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3757,6 +3829,7 @@
           "sailNumber",
           "boatClass",
           "description",
+          "isPublic",
           "createdAt"
         ],
         "type": "object",
@@ -3782,6 +3855,9 @@
               "null",
               "string"
             ]
+          },
+          "isPublic": {
+            "type": "boolean"
           },
           "createdAt": {
             "type": "string",
@@ -3913,6 +3989,12 @@
           "description",
           "createdAt",
           "totalLengthMeters",
+          "startLineSource",
+          "startMark1Id",
+          "startMark2Id",
+          "finishLineSource",
+          "finishMark1Id",
+          "finishMark2Id",
           "legs"
         ],
         "type": "object",
@@ -3950,6 +4032,40 @@
             ],
             "format": "double"
           },
+          "startLineSource": {
+            "type": "string"
+          },
+          "startMark1Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "startMark2Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "finishLineSource": {
+            "type": "string"
+          },
+          "finishMark1Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "finishMark2Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
           "legs": {
             "type": "array",
             "items": {
@@ -3963,10 +4079,16 @@
           "id",
           "markId",
           "markName",
+          "gateMarkId",
+          "gateMarkName",
           "sortOrder",
           "legName",
+          "legType",
+          "passingSide",
           "latitude",
-          "longitude"
+          "longitude",
+          "gateLatitude",
+          "gateLongitude"
         ],
         "type": "object",
         "properties": {
@@ -3981,6 +4103,19 @@
           "markName": {
             "type": "string"
           },
+          "gateMarkId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "gateMarkName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "sortOrder": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -3994,6 +4129,12 @@
               "null",
               "string"
             ]
+          },
+          "legType": {
+            "type": "string"
+          },
+          "passingSide": {
+            "type": "string"
           },
           "latitude": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
@@ -4010,13 +4151,34 @@
               "string"
             ],
             "format": "double"
+          },
+          "gateLatitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "gateLongitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
       "CourseLegRequest": {
         "required": [
           "markId",
-          "legName"
+          "gateMarkId",
+          "legName",
+          "legType",
+          "passingSide"
         ],
         "type": "object",
         "properties": {
@@ -4024,11 +4186,24 @@
             "type": "string",
             "format": "uuid"
           },
+          "gateMarkId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
           "legName": {
             "type": [
               "null",
               "string"
             ]
+          },
+          "legType": {
+            "type": "string"
+          },
+          "passingSide": {
+            "type": "string"
           }
         }
       },
@@ -4172,7 +4347,8 @@
           "name",
           "sailNumber",
           "boatClassId",
-          "description"
+          "description",
+          "isPublic"
         ],
         "type": "object",
         "properties": {
@@ -4194,6 +4370,12 @@
               "null",
               "string"
             ]
+          },
+          "isPublic": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -4202,6 +4384,12 @@
           "name",
           "year",
           "description",
+          "startLineSource",
+          "startMark1Id",
+          "startMark2Id",
+          "finishLineSource",
+          "finishMark1Id",
+          "finishMark2Id",
           "legs"
         ],
         "type": "object",
@@ -4222,6 +4410,46 @@
               "null",
               "string"
             ]
+          },
+          "startLineSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startMark1Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "startMark2Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "finishLineSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "finishMark1Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "finishMark2Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           },
           "legs": {
             "type": "array",
@@ -4813,6 +5041,47 @@
           }
         }
       },
+      "PagedResultOfSessionSummaryDto": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionSummaryDto"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "PatchRaceRequest": {
         "required": [
           "courseId",
@@ -4840,7 +5109,8 @@
           "boatId",
           "courseId",
           "notes",
-          "isPublic"
+          "isPublic",
+          "displayName"
         ],
         "type": "object",
         "properties": {
@@ -4868,6 +5138,12 @@
             "type": [
               "null",
               "boolean"
+            ]
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
             ]
           }
         }
@@ -5050,6 +5326,170 @@
               "string"
             ],
             "format": "float"
+          }
+        }
+      },
+      "PublicCourseLayoutDto": {
+        "required": [
+          "startLineSource",
+          "startLat1",
+          "startLng1",
+          "startLat2",
+          "startLng2",
+          "finishLineSource",
+          "finishLat1",
+          "finishLng1",
+          "finishLat2",
+          "finishLng2",
+          "legs"
+        ],
+        "type": "object",
+        "properties": {
+          "startLineSource": {
+            "type": "string"
+          },
+          "startLat1": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "startLng1": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "startLat2": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "startLng2": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "finishLineSource": {
+            "type": "string"
+          },
+          "finishLat1": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "finishLng1": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "finishLat2": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "finishLng2": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "legs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicCourseLegDto"
+            }
+          }
+        }
+      },
+      "PublicCourseLegDto": {
+        "required": [
+          "sortOrder",
+          "legType",
+          "passingSide",
+          "lat1",
+          "lng1",
+          "lat2",
+          "lng2"
+        ],
+        "type": "object",
+        "properties": {
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "legType": {
+            "type": "string"
+          },
+          "passingSide": {
+            "type": "string"
+          },
+          "lat1": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lng1": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lat2": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lng2": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
@@ -5410,6 +5850,7 @@
           "courseId",
           "courseName",
           "fileName",
+          "displayName",
           "contentHash",
           "formatVersion",
           "telemetryRateHz",
@@ -5456,6 +5897,12 @@
           },
           "fileName": {
             "type": "string"
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "contentHash": {
             "type": "string"
@@ -5545,6 +5992,7 @@
           "courseId",
           "courseName",
           "fileName",
+          "displayName",
           "formatVersion",
           "telemetryRateHz",
           "isFixedToBodyFrame",
@@ -5591,6 +6039,12 @@
           },
           "fileName": {
             "type": "string"
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "formatVersion": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -6053,7 +6507,8 @@
           "name",
           "sailNumber",
           "boatClassId",
-          "description"
+          "description",
+          "isPublic"
         ],
         "type": "object",
         "properties": {
@@ -6075,6 +6530,12 @@
               "null",
               "string"
             ]
+          },
+          "isPublic": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -6083,6 +6544,12 @@
           "name",
           "year",
           "description",
+          "startLineSource",
+          "startMark1Id",
+          "startMark2Id",
+          "finishLineSource",
+          "finishMark1Id",
+          "finishMark2Id",
           "legs"
         ],
         "type": "object",
@@ -6103,6 +6570,46 @@
               "null",
               "string"
             ]
+          },
+          "startLineSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startMark1Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "startMark2Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "finishLineSource": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "finishMark1Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "finishMark2Id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           },
           "legs": {
             "type": "array",

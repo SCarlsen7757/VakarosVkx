@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 import type { SessionDetail, Boat, Course, Race, SessionShare } from "@/lib/schemas";
 import { n } from "@/lib/schemas";
 import { formatDuration } from "@/lib/units";
-import { Button, Card, Select, Textarea } from "@/components/ui/controls";
+import { Button, Card, Input, Select, Textarea } from "@/components/ui/controls";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
@@ -21,6 +21,7 @@ type TeamDto = components["schemas"]["TeamDto"];
 interface SessionDraft {
   boatId: string;
   isPublic: boolean;
+  displayName: string;
   notes: string;
   raceCourses: Record<string, string>; // raceId → courseId
 }
@@ -31,6 +32,7 @@ function buildDraft(session: SessionDetail, races: Race[]): SessionDraft {
   return {
     boatId: String(session.boatId ?? ""),
     isPublic: session.isPublic ?? false,
+    displayName: session.displayName ?? "",
     notes: session.notes ?? "",
     raceCourses,
   };
@@ -50,7 +52,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
   const [myTeams, setMyTeams] = useState<TeamDto[]>([]);
   const [shareTeamId, setShareTeamId] = useState<string>("");
   const [panelOpen, setPanelOpen] = useState(false);
-  const [draft, setDraft] = useState<SessionDraft>({ boatId: "", isPublic: false, notes: "", raceCourses: {} });
+  const [draft, setDraft] = useState<SessionDraft>({ boatId: "", isPublic: false, displayName: "", notes: "", raceCourses: {} });
   const [saving, setSaving] = useState(false);
 
   const load = () => {
@@ -97,6 +99,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
         body: JSON.stringify({
           boatId: draft.boatId || null,
           isPublic: draft.isPublic,
+          displayName: draft.displayName.trim() || null,
           notes: draft.notes || null,
         }),
       });
@@ -168,7 +171,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
         <nav className="flex items-center gap-1 text-sm text-text-secondary">
           <Link href="/sessions" className="hover:text-text-primary">Sessions</Link>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-text-primary">{session.fileName}</span>
+          <span className="text-text-primary">{session.displayName ?? session.fileName}</span>
           {session.isPublic && (
             <span className="ml-2 inline-flex items-center gap-1 rounded bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-400">
               <Globe className="h-3 w-3" /> Public
@@ -290,6 +293,15 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
           </div>
 
           <div className="space-y-4">
+            <label className="block">
+              <span className="text-sm text-text-secondary">Display name</span>
+              <Input
+                value={draft.displayName}
+                onChange={(e) => setDraft({ ...draft, displayName: e.target.value })}
+                placeholder={session.fileName}
+              />
+            </label>
+
             <label className="block">
               <span className="text-sm text-text-secondary">Boat</span>
               <Select value={draft.boatId} onChange={(e) => setDraft({ ...draft, boatId: e.target.value })}>

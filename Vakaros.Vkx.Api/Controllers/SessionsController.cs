@@ -7,6 +7,8 @@ using Vakaros.Vkx.Api.Auth;
 using Vakaros.Vkx.Api.Data;
 using Vakaros.Vkx.Api.Models.Entities;
 using Vakaros.Vkx.Api.Services;
+using Vakaros.Vkx.Shared.Dtos;
+using Vakaros.Vkx.Shared.Dtos.Courses;
 using Vakaros.Vkx.Shared.Dtos.Races;
 using Vakaros.Vkx.Shared.Dtos.Sessions;
 using Vakaros.Vkx.Shared.Dtos.Shares;
@@ -45,7 +47,7 @@ public class SessionsController(
 
         var dto = new SessionDetailDto(
             session.Id, session.BoatId, null, session.CourseId, null,
-            session.FileName, session.ContentHash, session.FormatVersion,
+            session.FileName, session.DisplayName, session.ContentHash, session.FormatVersion,
             session.TelemetryRateHz, session.IsFixedToBodyFrame, session.IsPublic,
             session.StartedAt, session.EndedAt, session.UploadedAt, session.Notes,
             IsOwned: true,
@@ -61,16 +63,28 @@ public class SessionsController(
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult<List<SessionSummaryDto>>> GetAll(
+    public async Task<ActionResult<PagedResult<SessionSummaryDto>>> GetAll(
         [FromQuery] Guid? boatId,
         [FromQuery] Guid? courseId,
         [FromQuery] int? year,
         [FromQuery] DateTimeOffset? from,
         [FromQuery] DateTimeOffset? to,
-        CancellationToken ct)
+        [FromQuery] string? search,
+        [FromQuery] string? visibility,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken ct = default)
     {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 25;
+        if (pageSize > 100) pageSize = 100;
+
         var visibleIds = sessionAuth.ReadableSessionIds();
         var userId = currentUser.IsAuthenticated ? currentUser.UserId : (Guid?)null;
+
+        var userTeamIds = userId.HasValue
+            ? await db.TeamMembers.Where(m => m.UserId == userId.Value).Select(m => m.TeamId).ToListAsync(ct)
+            : [];
 
         var query = db.Sessions.Where(s => visibleIds.Contains(s.Id))
             .Include(s => s.Boat)
@@ -85,19 +99,47 @@ public class SessionsController(
         if (from.HasValue) query = query.Where(s => s.StartedAt >= from.Value);
         if (to.HasValue) query = query.Where(s => s.StartedAt <= to.Value);
 
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim();
+            var pattern = $"%{s}%";
+            query = query.Where(x =>
+                EF.Functions.ILike(x.FileName, pattern) ||
+                (x.DisplayName != null && EF.Functions.ILike(x.DisplayName, pattern)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(visibility))
+        {
+            var vis = visibility.Trim().ToLowerInvariant();
+            switch (vis)
+            {
+                case "mine":
+                    if (!userId.HasValue) return Ok(new PagedResult<SessionSummaryDto>([], 0, page, pageSize));
+                    query = query.Where(x => x.OwnerUserId == userId.Value);
+                    break;
+                case "team":
+                    if (!userId.HasValue || userTeamIds.Count == 0)
+                        return Ok(new PagedResult<SessionSummaryDto>([], 0, page, pageSize));
+                    query = query.Where(x => x.OwnerUserId != userId.Value
+                        && x.Shares.Any(sh => userTeamIds.Contains(sh.TeamId)));
+                    break;
+                case "public":
+                    query = query.Where(x => x.IsPublic);
+                    break;
+            }
+        }
+
+        var total = await query.CountAsync(ct);
         var sessions = await query
             .OrderByDescending(s => s.UploadedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(ct);
 
-        // For team-shared sessions, determine which teams the current user is a member of
-        var userTeamIds = userId.HasValue
-            ? await db.TeamMembers.Where(m => m.UserId == userId.Value).Select(m => m.TeamId).ToListAsync(ct)
-            : [];
-
-        var result = sessions.Select(s => new SessionSummaryDto(
+        var items = sessions.Select(s => new SessionSummaryDto(
             s.Id, s.BoatId, s.Boat?.Name,
             s.CourseId, s.Course?.Name,
-            s.FileName, s.FormatVersion, s.TelemetryRateHz, s.IsFixedToBodyFrame,
+            s.FileName, s.DisplayName, s.FormatVersion, s.TelemetryRateHz, s.IsFixedToBodyFrame,
             s.StartedAt, s.EndedAt, s.UploadedAt, s.Notes, s.Races.Count,
             IsOwned: userId.HasValue && s.OwnerUserId == userId.Value,
             IsPublic: s.IsPublic,
@@ -107,7 +149,7 @@ public class SessionsController(
                 .ToList()
         )).ToList();
 
-        return Ok(result);
+        return Ok(new PagedResult<SessionSummaryDto>(items, total, page, pageSize));
     }
 
     [HttpGet("{id:guid}")]
@@ -128,6 +170,51 @@ public class SessionsController(
         return Ok(BuildDetail(session, isOwned));
     }
 
+    [HttpGet("{id:guid}/course-layout")]
+    [AllowAnonymous]
+    [EndpointSummary("Coordinate-only course layout for a public session (anonymous safe).")]
+    public async Task<ActionResult<PublicCourseLayoutDto>> GetCourseLayout(Guid id, CancellationToken ct)
+    {
+        // Only expose course geometry for sessions that are explicitly public.
+        // Owners/team members should use the regular course endpoint with full details.
+        var session = await db.Sessions
+            .Where(s => s.Id == id && s.IsPublic)
+            .Select(s => new { s.CourseId })
+            .FirstOrDefaultAsync(ct);
+        if (session is null || session.CourseId is null) return NotFound();
+
+        var course = await db.Courses
+            .Where(c => c.Id == session.CourseId)
+            .Include(c => c.StartMark1)
+            .Include(c => c.StartMark2)
+            .Include(c => c.FinishMark1)
+            .Include(c => c.FinishMark2)
+            .Include(c => c.Legs.OrderBy(l => l.SortOrder))
+                .ThenInclude(l => l.Mark)
+            .Include(c => c.Legs)
+                .ThenInclude(l => l.GateMark)
+            .FirstOrDefaultAsync(ct);
+        if (course is null) return NotFound();
+
+        var legs = course.Legs.OrderBy(l => l.SortOrder).Select(l => new PublicCourseLegDto(
+            l.SortOrder,
+            l.LegType.ToString(),
+            l.PassingSide.ToString(),
+            l.Mark.Latitude, l.Mark.Longitude,
+            l.GateMark?.Latitude, l.GateMark?.Longitude
+        )).ToList();
+
+        var dto = new PublicCourseLayoutDto(
+            course.StartLineSource.ToString(),
+            course.StartMark1?.Latitude, course.StartMark1?.Longitude,
+            course.StartMark2?.Latitude, course.StartMark2?.Longitude,
+            course.FinishLineSource.ToString(),
+            course.FinishMark1?.Latitude, course.FinishMark1?.Longitude,
+            course.FinishMark2?.Latitude, course.FinishMark2?.Longitude,
+            legs);
+        return Ok(dto);
+    }
+
     [HttpPatch("{id:guid}")]
     [Authorize]
     public async Task<ActionResult<SessionDetailDto>> Patch(Guid id, PatchSessionRequest request, CancellationToken ct)
@@ -145,6 +232,8 @@ public class SessionsController(
         if (request.CourseId.HasValue) session.CourseId = request.CourseId.Value;
         if (request.Notes is not null) session.Notes = request.Notes;
         if (request.IsPublic.HasValue) session.IsPublic = request.IsPublic.Value;
+        if (request.DisplayName is not null)
+            session.DisplayName = string.IsNullOrWhiteSpace(request.DisplayName) ? null : request.DisplayName.Trim();
         await db.SaveChangesAsync(ct);
         await db.Entry(session).Reference(s => s.Boat).LoadAsync(ct);
         await db.Entry(session).Reference(s => s.Course).LoadAsync(ct);
@@ -219,7 +308,7 @@ public class SessionsController(
         new(
             session.Id, session.BoatId, session.Boat?.Name,
             session.CourseId, session.Course?.Name,
-            session.FileName, session.ContentHash, session.FormatVersion,
+            session.FileName, session.DisplayName, session.ContentHash, session.FormatVersion,
             session.TelemetryRateHz, session.IsFixedToBodyFrame, session.IsPublic,
             session.StartedAt, session.EndedAt, session.UploadedAt, session.Notes,
             isOwned,

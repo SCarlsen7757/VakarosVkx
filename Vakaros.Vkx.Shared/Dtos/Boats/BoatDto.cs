@@ -7,4 +7,5 @@ public record BoatDto(Guid Id,
                       string? SailNumber,
                       BoatClassSummaryDto BoatClass,
                       string? Description,
+                      bool IsPublic,
                       DateTimeOffset CreatedAt);

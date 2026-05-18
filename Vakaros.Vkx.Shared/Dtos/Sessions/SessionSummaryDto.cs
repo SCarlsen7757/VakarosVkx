@@ -7,6 +7,7 @@ public record SessionSummaryDto(
     Guid? CourseId,
     string? CourseName,
     string FileName,
+    string? DisplayName,
     short FormatVersion,
     short TelemetryRateHz,
     bool IsFixedToBodyFrame,

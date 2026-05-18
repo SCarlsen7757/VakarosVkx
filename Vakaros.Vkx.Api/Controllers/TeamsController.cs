@@ -211,7 +211,7 @@ public class TeamsController(
         var result = sessions.Select(s => new SessionSummaryDto(
             s.Id, s.BoatId, s.Boat?.Name,
             s.CourseId, s.Course?.Name,
-            s.FileName, s.FormatVersion, s.TelemetryRateHz, s.IsFixedToBodyFrame,
+            s.FileName, s.DisplayName, s.FormatVersion, s.TelemetryRateHz, s.IsFixedToBodyFrame,
             s.StartedAt, s.EndedAt, s.UploadedAt, s.Notes, s.Races.Count,
             IsOwned: s.OwnerUserId == userId,
             IsPublic: s.IsPublic,

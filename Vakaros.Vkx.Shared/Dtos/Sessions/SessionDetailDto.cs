@@ -9,6 +9,7 @@ public record SessionDetailDto(
     Guid? CourseId,
     string? CourseName,
     string FileName,
+    string? DisplayName,
     string ContentHash,
     short FormatVersion,
     short TelemetryRateHz,

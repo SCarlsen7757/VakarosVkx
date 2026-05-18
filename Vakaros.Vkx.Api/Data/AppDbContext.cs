@@ -104,6 +104,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(b => b.SailNumber).HasColumnName("sail_number");
             e.Property(b => b.BoatClassId).HasColumnName("boat_class_id");
             e.Property(b => b.Description).HasColumnName("description");
+            e.Property(b => b.IsPublic).HasColumnName("is_public");
             e.Property(b => b.CreatedAt).HasColumnName("created_at");
             e.HasOne(b => b.BoatClass).WithMany().HasForeignKey(b => b.BoatClassId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(b => b.OwnerUserId);
@@ -136,6 +137,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(c => c.Year).HasColumnName("year");
             e.Property(c => c.Description).HasColumnName("description");
             e.Property(c => c.CreatedAt).HasColumnName("created_at");
+            e.Property(c => c.StartLineSource).HasColumnName("start_line_source").HasConversion<string>();
+            e.Property(c => c.StartMark1Id).HasColumnName("start_mark1_id");
+            e.Property(c => c.StartMark2Id).HasColumnName("start_mark2_id");
+            e.Property(c => c.FinishLineSource).HasColumnName("finish_line_source").HasConversion<string>();
+            e.Property(c => c.FinishMark1Id).HasColumnName("finish_mark1_id");
+            e.Property(c => c.FinishMark2Id).HasColumnName("finish_mark2_id");
+            e.HasOne(c => c.StartMark1).WithMany().HasForeignKey(c => c.StartMark1Id).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(c => c.StartMark2).WithMany().HasForeignKey(c => c.StartMark2Id).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(c => c.FinishMark1).WithMany().HasForeignKey(c => c.FinishMark1Id).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(c => c.FinishMark2).WithMany().HasForeignKey(c => c.FinishMark2Id).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(c => c.OwnerUserId);
         });
 
@@ -146,10 +157,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(cl => cl.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(cl => cl.CourseId).HasColumnName("course_id");
             e.Property(cl => cl.MarkId).HasColumnName("mark_id");
+            e.Property(cl => cl.GateMarkId).HasColumnName("gate_mark_id");
             e.Property(cl => cl.SortOrder).HasColumnName("sort_order");
             e.Property(cl => cl.LegName).HasColumnName("leg_name");
+            e.Property(cl => cl.LegType).HasColumnName("leg_type").HasConversion<string>();
+            e.Property(cl => cl.PassingSide).HasColumnName("passing_side").HasConversion<string>();
             e.HasOne(cl => cl.Course).WithMany(c => c.Legs).HasForeignKey(cl => cl.CourseId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(cl => cl.Mark).WithMany(m => m.CourseLegs).HasForeignKey(cl => cl.MarkId);
+            e.HasOne(cl => cl.GateMark).WithMany().HasForeignKey(cl => cl.GateMarkId).OnDelete(DeleteBehavior.Restrict);
         });
 
         // ── Sessions ────────────────────────────────────────────────────────
@@ -162,6 +177,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(s => s.BoatId).HasColumnName("boat_id");
             e.Property(s => s.CourseId).HasColumnName("course_id");
             e.Property(s => s.FileName).HasColumnName("file_name").IsRequired();
+            e.Property(s => s.DisplayName).HasColumnName("display_name");
             e.Property(s => s.ContentHash).HasColumnName("content_hash").IsRequired();
             e.HasIndex(s => new { s.OwnerUserId, s.ContentHash }).IsUnique();
             e.HasIndex(s => s.OwnerUserId);

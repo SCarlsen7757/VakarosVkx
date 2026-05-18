@@ -7,6 +7,7 @@ public class Session
     public Guid? BoatId { get; set; }
     public Guid? CourseId { get; set; }
     public string FileName { get; set; } = string.Empty;
+    public string? DisplayName { get; set; }
     public string ContentHash { get; set; } = string.Empty;
     public short FormatVersion { get; set; }
     public short TelemetryRateHz { get; set; }

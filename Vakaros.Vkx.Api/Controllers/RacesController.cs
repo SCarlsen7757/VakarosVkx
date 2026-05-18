@@ -17,6 +17,7 @@ namespace Vakaros.Vkx.Api.Controllers;
 [Route("api/v{version:apiVersion}/races")]
 public class RacesController(AppDbContext db, StartAnalysisService startAnalysis, SessionAuthorizer sessionAuth) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<List<RaceDto>>> GetAll([FromQuery] Guid sessionId, CancellationToken ct)
     {
@@ -35,6 +36,7 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
         return Ok(races);
     }
 
+    [AllowAnonymous]
     [HttpGet("{raceId:guid}")]
     public async Task<ActionResult<RaceDetailDto>> GetById(Guid raceId, CancellationToken ct)
     {
@@ -61,6 +63,7 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
             pinEnd, boatEnd, startAnalysisResult));
     }
 
+    [AllowAnonymous]
     [HttpGet("{raceId:guid}/telemetry/positions")]
     public async Task<IActionResult> GetPositions(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
@@ -76,6 +79,7 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
         return Ok(positions);
     }
 
+    [AllowAnonymous]
     [HttpGet("{raceId:guid}/telemetry/wind")]
     public async Task<IActionResult> GetWind(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
@@ -91,6 +95,7 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
         return Ok(readings);
     }
 
+    [AllowAnonymous]
     [HttpGet("{raceId:guid}/telemetry/speed-through-water")]
     public async Task<IActionResult> GetSpeedThroughWater(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
@@ -106,6 +111,7 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
         return Ok(readings);
     }
 
+    [AllowAnonymous]
     [HttpGet("{raceId:guid}/telemetry/depth")]
     public async Task<IActionResult> GetDepth(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
@@ -121,6 +127,7 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
         return Ok(readings);
     }
 
+    [AllowAnonymous]
     [HttpGet("{raceId:guid}/telemetry/temperature")]
     public async Task<IActionResult> GetTemperature(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
@@ -136,6 +143,7 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
         return Ok(readings);
     }
 
+    [AllowAnonymous]
     [HttpGet("{raceId:guid}/telemetry/load")]
     public async Task<IActionResult> GetLoad(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
@@ -151,6 +159,7 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
         return Ok(readings);
     }
 
+    [AllowAnonymous]
     [HttpGet("{raceId:guid}/telemetry/shift-angles")]
     public async Task<IActionResult> GetShiftAngles(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
     {
@@ -166,6 +175,7 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
         return Ok(readings);
     }
 
+    [AllowAnonymous]
     [HttpGet("{raceId:guid}/telemetry")]
     [EndpointSummary("Fetches all telemetry channels in a single request.")]
     public async Task<ActionResult<RaceTelemetryDto>> GetTelemetry(Guid raceId, [FromQuery] double? from, [FromQuery] double? to, CancellationToken ct)
@@ -221,6 +231,7 @@ public class RacesController(AppDbContext db, StartAnalysisService startAnalysis
         return Ok(new RaceTelemetryDto(positions, wind, stw, depth, temperature, load, shiftAngles));
     }
 
+    [AllowAnonymous]
     [HttpGet("{raceId:guid}/analysis/start-line-length")]
     public async Task<ActionResult<StartLineLengthDto>> GetStartLineLength(Guid raceId, CancellationToken ct)
     {

@@ -13,7 +13,7 @@ import { useUnitPrefs } from "@/store/settings";
 import { convertSpeed, convertDistance, formatDuration, speedUnitLabel, distanceUnitLabel } from "@/lib/units";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Globe } from "lucide-react";
 
 export default function BoatDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -24,7 +24,7 @@ export default function BoatDetailPage({ params }: { params: Promise<{ id: strin
   const [stats, setStats] = useState<BoatStats | null>(null);
   const [classes, setClasses] = useState<BoatClass[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [draft, setDraft] = useState({ name: "", sailNumber: "", boatClassId: "", description: "" });
+  const [draft, setDraft] = useState({ name: "", sailNumber: "", boatClassId: "", description: "", isPublic: false });
   const [confirm, setConfirm] = useState(false);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function BoatDetailPage({ params }: { params: Promise<{ id: strin
       else {
         const b = data as Boat;
         setBoat(b);
-        setDraft({ name: b.name, sailNumber: b.sailNumber ?? "", boatClassId: String(b.boatClass.id), description: b.description ?? "" });
+        setDraft({ name: b.name, sailNumber: b.sailNumber ?? "", boatClassId: String(b.boatClass.id), description: b.description ?? "", isPublic: b.isPublic });
       }
     });
     api.GET(`/api/v1/boats/{id}/stats` as any, { params: { path: { id } } } as any).then(({ data }: any) => setStats(data as BoatStats));
@@ -49,6 +49,7 @@ export default function BoatDetailPage({ params }: { params: Promise<{ id: strin
         sailNumber: draft.sailNumber || null,
         boatClassId: draft.boatClassId,
         description: draft.description || null,
+        isPublic: draft.isPublic,
       }),
     });
     if (res.ok) toast.push({ kind: "success", message: "Boat saved." });
@@ -85,6 +86,17 @@ export default function BoatDetailPage({ params }: { params: Promise<{ id: strin
             </Select>
           </label>
           <label className="sm:col-span-2"><span className="text-sm text-text-secondary">Description</span><Input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></label>
+          <div className="sm:col-span-2 flex items-center justify-between">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={draft.isPublic} onChange={(e) => setDraft({ ...draft, isPublic: e.target.checked })} className="h-4 w-4 rounded border-border-default accent-action-primary" />
+              <span className="text-sm">Make this boat public</span>
+            </label>
+            {draft.isPublic && (
+              <Link href={`/b/${id}`} className="inline-flex items-center gap-1 text-sm text-action-primary hover:underline" target="_blank">
+                <Globe className="h-3.5 w-3.5" /> View public page
+              </Link>
+            )}
+          </div>
         </div>
         <div className="mt-4 flex justify-end"><Button onClick={save}>Save</Button></div>
       </Card>
